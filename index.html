@@ -24,6 +24,7 @@
   --scrim:rgba(8,20,19,.48);
   --funk:"Unbounded","Archivo","Arial Black",sans-serif; --block-ink:#15110A;
   --c-received:#FFD23F; --c-inspected:#FF8A5C; --c-processed:#8FA8FF; --c-closed:#4FE0A0;
+  --s-waiting:#2F5BC2; --s-action:#7A4FD0; --c-waiting:#8FA8FF; --c-action:#C9A6FF;
   --display:"Archivo","Arial Narrow",Arial,sans-serif;
   --body:"Instrument Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
   --mono:"IBM Plex Mono",ui-monospace,Menlo,Consolas,monospace;
@@ -129,10 +130,10 @@ input.hit{animation:hit .9s var(--out)}
 .pick{display:flex;flex-direction:column;gap:5px;min-width:0}
 .pick>span{font-size:11.5px;font-weight:600;letter-spacing:.02em;color:var(--muted);padding-left:2px}
 .dot{width:8px;height:8px;border-radius:50%;background:currentColor;flex:none}
-.pill{font-size:12.5px;font-weight:600;padding:3px 10px 3px 8px;border-radius:999px;white-space:nowrap;text-transform:capitalize;display:inline-flex;align-items:center;gap:6px;background:color-mix(in srgb,currentColor 13%,transparent)}
+.pill{font-size:12.5px;font-weight:600;padding:3px 10px 3px 8px;border-radius:999px;white-space:nowrap;display:inline-flex;align-items:center;gap:6px;background:color-mix(in srgb,currentColor 13%,transparent)}
 .pill.pop{animation:pop .55s var(--spring)}
 @keyframes pop{0%{transform:scale(.8);opacity:.3}60%{transform:scale(1.12)}100%{transform:scale(1)}}
-.st-received{color:var(--s-received)} .st-inspected{color:var(--s-inspected)} .st-processed{color:var(--s-processed)} .st-closed{color:var(--s-closed)}
+.st-waiting{color:var(--s-waiting)} .st-action{color:var(--s-action)} .st-received{color:var(--s-received)} .st-inspected{color:var(--s-inspected)} .st-processed{color:var(--s-processed)} .st-closed{color:var(--s-closed)}
 .trk{display:flex;gap:3px;width:64px;flex:none}
 .trk i{flex:1;height:5px;border-radius:3px;background:var(--line);overflow:hidden;position:relative}
 .trk i.on::after{content:"";position:absolute;inset:0;background:currentColor;border-radius:3px}
@@ -146,11 +147,12 @@ input.hit{animation:hit .9s var(--out)}
 .hero-h b{display:inline-block;background:var(--tape);color:var(--tape-ink);padding:.02em .24em;border-radius:.2em;rotate:-4deg;margin-right:.22em;font-variant-numeric:tabular-nums}
 .hero-s{margin:0;color:var(--muted)}
 .stgs{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px 12px;padding-block:8px 6px}
-@media (min-width:900px){.stgs{grid-template-columns:repeat(4,minmax(0,1fr));gap:16px}}
+@media (min-width:900px){.stgs{grid-template-columns:repeat(5,minmax(0,1fr));gap:14px}.stgs .stg:last-child:nth-child(odd){grid-column:auto}}
 .stg{position:relative;text-align:left;border:2px solid var(--block-ink);border-radius:24px;padding:16px 16px 14px;display:flex;flex-direction:column;gap:5px;cursor:pointer;color:var(--block-ink);min-width:0;box-shadow:0 7px 0 var(--block-ink);transition:rotate .35s var(--spring),translate .35s var(--spring),box-shadow .2s}
 .stg:nth-child(odd){rotate:-1.4deg} .stg:nth-child(even){rotate:1.4deg}
 .stg:hover,.stg:focus-visible{rotate:0deg;translate:0 -7px;box-shadow:0 14px 0 var(--block-ink)}
 .stg:active{translate:0 3px;box-shadow:0 3px 0 var(--block-ink)}
+.stg-waiting{background:var(--c-waiting)} .stg-action{background:var(--c-action)} .stg:last-child:nth-child(odd){grid-column:1/-1}
 .stg-received{background:var(--c-received)} .stg-inspected{background:var(--c-inspected)} .stg-processed{background:var(--c-processed)} .stg-closed{background:var(--c-closed)}
 .stg-n{font:500 11px var(--mono);letter-spacing:.06em;text-transform:uppercase;opacity:.75}
 .stg-t{font:600 clamp(15px,1.9vw,20px)/1.15 var(--funk);letter-spacing:-.02em}
@@ -296,12 +298,12 @@ td{padding:9px 8px;border-bottom:1px solid var(--line);vertical-align:top}
 .sh-b{overflow-y:auto;padding:4px 16px 16px;display:flex;flex-direction:column;gap:18px;min-height:0;overscroll-behavior:contain}
 .sh-f{display:flex;flex-wrap:wrap;gap:10px;padding:12px 16px;border-top:1px solid var(--line);flex:none}
 .sh-f .btn{flex:1 1 150px}
-.steps{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(4,1fr);position:relative}
-.steps::before,.steps .bar2{content:"";position:absolute;left:12.5%;top:13px;height:4px;border-radius:2px}
-.steps::before{right:12.5%;background:var(--line)}
-.steps .bar2{background:var(--ink);width:calc(75% * var(--to));animation:stepbar .5s var(--out) backwards}
-@keyframes stepbar{from{width:calc(75% * var(--from))}}
-.steps button{position:relative;z-index:1;width:100%;border:0;background:none;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:6px;padding:0 2px 4px;font-size:12.5px;font-weight:500;color:var(--muted);text-transform:capitalize}
+.steps{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(5,1fr);position:relative}
+.steps::before,.steps .bar2{content:"";position:absolute;left:10%;top:13px;height:4px;border-radius:2px}
+.steps::before{right:10%;background:var(--line)}
+.steps .bar2{background:var(--ink);width:calc(80% * var(--to));animation:stepbar .5s var(--out) backwards}
+@keyframes stepbar{from{width:calc(80% * var(--from))}}
+.steps button{position:relative;z-index:1;width:100%;border:0;background:none;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:6px;padding:0 2px 4px;font-size:12.5px;line-height:1.2;text-align:center;font-weight:500;color:var(--muted)}
 .steps button::before{content:"";width:30px;height:30px;border-radius:50%;background:var(--surface);border:2px solid var(--line);box-sizing:border-box;transition:transform .2s var(--spring)}
 .steps button:hover::before{transform:scale(1.1)}
 .steps li.done button::before{background:var(--ink);border-color:var(--ink)}
@@ -309,6 +311,8 @@ td{padding:9px 8px;border-bottom:1px solid var(--line);vertical-align:top}
 .steps li.cur button::before{background:var(--ink);border-color:var(--ink);box-shadow:0 0 0 5px color-mix(in srgb,var(--ink) 16%,transparent)}
 .steps li.cur.moved button::before{animation:pop .5s var(--spring)}
 .steps button[disabled]{cursor:default}
+.dec{display:flex;flex-direction:column;gap:12px;padding:14px;border-radius:14px;background:var(--sunk)}
+.dec-t{margin:0;font:600 20px var(--display)} .todo{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:6px}
 .kv{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin:0}
 .kv div{min-width:0} .kv dt{font-size:11.5px;font-weight:600;color:var(--muted);letter-spacing:.02em} .kv dd{margin:2px 0 0;overflow-wrap:anywhere}
 .it{display:flex;flex-direction:column;gap:6px;padding:12px 0;border-top:1px solid var(--line)}
@@ -331,7 +335,7 @@ td{padding:9px 8px;border-bottom:1px solid var(--line);vertical-align:top}
 :root:root:root{--bg:#05070D;--surface:rgba(255,255,255,.06);--sunk:rgba(255,255,255,.09);--ink:#FFFFFF;--muted:#B9C7E0;--line:rgba(255,255,255,.15);
   --accent:#5EEBFF;--accent-ink:#04121A;--ok:#5CF2B0;--warn:#FFC766;--bad:#FF8A9A;--tape:#5EEBFF;--tape-ink:#04121A;
   --s-received:#7FEBFF;--s-inspected:#86CBFF;--s-processed:#93AEFF;--s-closed:#A893FF;
-  --c-received:#7FEBFF;--c-inspected:#86CBFF;--c-processed:#93AEFF;--c-closed:#A893FF;
+  --c-received:#7FEBFF;--c-inspected:#86CBFF;--c-waiting:#8DBBFF;--c-action:#93AEFF;--c-closed:#A893FF;--s-waiting:#8DBBFF;--s-action:#93AEFF;
   --shadow:0 24px 70px rgba(0,0,0,.55);--scrim:rgba(3,6,12,.62);--block-ink:#EAF2FF;--solid:#111A2B;color-scheme:dark}
 html{background:#070B14}
 body{background:radial-gradient(900px 620px at 10% -8%,rgba(94,235,255,.24),transparent 62%),radial-gradient(820px 620px at 96% 8%,rgba(165,120,255,.26),transparent 62%),radial-gradient(900px 700px at 55% 110%,rgba(94,180,255,.16),transparent 62%),#05070D;background-attachment:fixed;min-height:100vh}
@@ -364,7 +368,7 @@ select option{background:var(--solid);color:var(--ink)}
 .stg>*{position:relative}
 .stg:hover,.stg:focus-visible{translate:0 -7px;box-shadow:inset 0 1px 0 rgba(255,255,255,.4),0 30px 80px -18px var(--c)}
 .stg:active{translate:0 1px;box-shadow:inset 0 1px 0 rgba(255,255,255,.28),0 10px 30px -14px var(--c)}
-.stg-received{--c:var(--c-received)} .stg-inspected{--c:var(--c-inspected)} .stg-processed{--c:var(--c-processed)} .stg-closed{--c:var(--c-closed)}
+.stg-waiting{--c:var(--c-waiting)} .stg-action{--c:var(--c-action)} .stg-received{--c:var(--c-received)} .stg-inspected{--c:var(--c-inspected)} .stg-processed{--c:var(--c-processed)} .stg-closed{--c:var(--c-closed)}
 .stg b{background:linear-gradient(180deg,#fff 20%,var(--c));-webkit-background-clip:text;background-clip:text;color:transparent;filter:drop-shadow(0 0 22px color-mix(in srgb,var(--c) 55%,transparent));padding-right:.06em}
 .stg-n{color:var(--c);opacity:1}
 .pk i{width:14px;height:14px;border-radius:4px;background:var(--c);box-shadow:0 0 12px var(--c)}
@@ -374,7 +378,9 @@ select option{background:var(--solid);color:var(--ink)}
 /* one colour family (cyan to violet), high contrast, larger type, less copy */
 body{font-size:17px}
 .stg{background:linear-gradient(180deg,rgba(127,235,255,.20),rgba(155,140,255,.10));border-color:rgba(127,235,255,.45);box-shadow:inset 0 1px 0 rgba(255,255,255,.3),0 22px 60px -26px #5EEBFF}
-.stg b{background:linear-gradient(180deg,#8EF0FF,#9B8CFF);-webkit-background-clip:text;background-clip:text;font-size:clamp(64px,9.5vw,112px)}
+.stg b{background:linear-gradient(180deg,#8EF0FF,#9B8CFF);-webkit-background-clip:text;background-clip:text;font-size:clamp(56px,7.2vw,96px)}
+.stg-inspected,.stg-action{border-color:#8EF0FF;box-shadow:inset 0 1px 0 rgba(255,255,255,.4),0 0 0 1px rgba(142,240,255,.5),0 24px 70px -22px #5EEBFF}
+.stg-t{min-height:2.3em}
 .stg-n,.stg-d{display:none}
 .stg-t{font-size:clamp(18px,2.2vw,24px);color:#fff}
 .stg-f{font-size:14.5px;color:var(--muted)}
@@ -480,7 +486,7 @@ async function boot(){
     const err=e=>{console.error(e);S.conn='lost';render()};
     db.doc('orgs/main').onSnapshot(s=>{S.org=Object.assign({name:'',color:'',logo:''},s.exists?s.data():{});applyBrand();if(S.tab==='settings')render()},err);
     db.collection('clients').onSnapshot(q=>{S.clients=q.docs.map(d=>Object.assign({id:d.id},d.data())).sort((a,b)=>String(a.name).localeCompare(b.name));S.gotClients=true;soft()},err);
-    db.collection('returns').orderBy('createdAt','desc').limit(1000).onSnapshot(q=>{S.returns=q.docs.map(d=>Object.assign({id:d.id},JSON.parse(JSON.stringify(d.data()))));S.gotReturns=true;soft()},err);
+    db.collection('returns').orderBy('createdAt','desc').limit(1000).onSnapshot(q=>{S.returns=q.docs.map(d=>Object.assign({id:d.id},JSON.parse(JSON.stringify(d.data()))));S.returns.forEach(r=>{if(r.status==='processed')r.status='waiting'});S.gotReturns=true;soft()},err);
   }
   render();
 }
@@ -529,8 +535,8 @@ async function saveReturn(){
   const body={jobNo:d.jobNo.trim(),clientId:d.clientId,orderNo:d.orderNo.trim(),tracking:d.tracking.trim(),carrier:d.carrier,dateReceived:d.dateReceived||today(),dateProcessed:d.dateProcessed||'',status:d.status,notes:d.notes.trim(),
     lines:d.lines.filter(l=>l.barcode||l.sku||l.name||l.photos.length).map(l=>({barcode:l.barcode.trim(),sku:l.sku.trim(),name:l.name.trim(),qtyExp:+l.qtyExp||0,qtyRecv:+l.qtyRecv||0,reason:l.reason,grade:l.grade,disposition:l.disposition,photos:l.photos})),
     createdAt:(prev&&prev.createdAt)||now,createdBy:(prev&&prev.createdBy)||by,updatedAt:now,history:hist};
-  if(prev&&prev.example)body.example=true;
-  if((body.status==='processed'||body.status==='closed')&&!body.dateProcessed)body.dateProcessed=today();
+  if(prev&&prev.example)body.example=true;if(prev&&prev.decision)body.decision=prev.decision;
+  if(body.status==='closed'&&!body.dateProcessed)body.dateProcessed=today();
   const btn=$('#saveBtn');if(btn)btn.disabled=true;
   try{const ref=S.editId?db.collection('returns').doc(S.editId):db.collection('returns').doc();await ref.set(body);learn(body);afterSave(body,ref.id)}
   catch(e){if(btn)btn.disabled=false;fail(e,'save this return')}
@@ -589,12 +595,12 @@ function vReport(){
 }
 function repData(){
   const r=S.rep,rs=S.returns.filter(x=>match(x,{client:r.client,from:r.from,to:r.to})).sort((a,b)=>String(a.dateReceived).localeCompare(b.dateReceived));
-  const rows=[];rs.forEach(x=>{const ls=x.lines&&x.lines.length?x.lines:[{}];ls.forEach(l=>rows.push([fmtD(x.dateReceived),x.jobNo,clientName(x.clientId),x.orderNo||'',l.sku||'',l.name||'',l.qtyExp??'',l.qtyRecv??'',l.reason||'',l.grade||'',l.disposition||'',SL(x.status)]))});
+  const rows=[];rs.forEach(x=>{const ls=x.lines&&x.lines.length?x.lines:[{}];ls.forEach(l=>rows.push([fmtD(x.dateReceived),x.jobNo,clientName(x.clientId),x.orderNo||'',l.sku||'',l.name||'',l.qtyExp??'',l.qtyRecv??'',l.reason||'',l.grade||'',l.disposition||'',decText(x.decision),SL(x.status)]))});
   const g=k=>rs.reduce((a,x)=>a+(x.lines||[]).filter(l=>l.grade===k).reduce((s,l)=>s+(+l.qtyRecv||0),0),0);
   const dp=k=>rs.reduce((a,x)=>a+(x.lines||[]).filter(l=>l.disposition===k).reduce((s,l)=>s+(+l.qtyRecv||0),0),0);
   return{rs,rows,units:rs.reduce((a,x)=>a+units(x),0),g:{A:g('A'),B:g('B'),C:g('C')},d:DISPO.map(k=>[k,dp(k)])};
 }
-const HEAD=['Received','Job','Client','Order','SKU','Product','Exp','Recv','Reason','Grade','Disposition','Status'];
+const HEAD=['Received','Job','Client','Order','SKU','Product','Exp','Recv','Reason','Grade','Disposition','Tenant decision','Status'];
 function summary(d){return'Returns: '+d.rs.length+'   Units received: '+d.units+'\nGrade A (resaleable): '+d.g.A+'   Grade B (repackage): '+d.g.B+'   Grade C (damaged): '+d.g.C+'\n'+d.d.map(x=>x[0]+': '+x[1]).join('   ')}
 function drawReport(){
   const el=$('#rep');if(!el)return;const d=repData(),r=S.rep,c=S.clients.find(x=>x.id===r.client);
@@ -669,7 +675,7 @@ async function examples(){
   const plan=[[0,'received'],[0,'received'],[1,'received'],[1,'inspected'],[2,'inspected'],[3,'processed'],[4,'closed'],[5,'received'],[6,'closed'],[7,'processed'],[9,'received'],[10,'closed'],[11,'closed'],[12,'closed']];
   try{await db.doc('clients/example').set({name:'Example Brand (sample)',code:'EXB',email:'',example:true});
     for(let i=0;i<plan.length;i++){const[ago,status]=plan[i],p=prods[i%4],date=daysAgo(ago),now=new Date(Date.now()-ago*864e5-i*1000).toISOString();
-      await db.collection('returns').doc('example'+i).set({example:true,jobNo:'SAMPLE-'+String(i+1).padStart(3,'0'),clientId:'example',orderNo:'#EX'+(1040+i),tracking:'',carrier:CARRIERS[1+i%3],dateReceived:date,dateProcessed:status==='processed'||status==='closed'?date:'',status,notes:'Example record',
+      await db.collection('returns').doc('example'+i).set({example:true,jobNo:'SAMPLE-'+String(i+1).padStart(3,'0'),clientId:'example',orderNo:'#EX'+(1040+i),tracking:'',carrier:CARRIERS[1+i%3],dateReceived:date,dateProcessed:status==='closed'?date:'',status,notes:'Example record',
         lines:[{barcode:p[0],sku:p[1],name:p[2],qtyExp:1+i%2,qtyRecv:1+i%2,reason:status==='received'?'':REASONS[i%5],grade:status==='received'?'':'ABC'[i%3],disposition:status==='received'?'':DISPO[i%4],photos:[]}],createdAt:now,createdBy:'',updatedAt:now,history:[{at:now,by:'',what:'Example record'}]})}
     toast('Example data loaded.');S.anim=true}catch(e){fail(e,'load example data')}
 }
@@ -719,7 +725,13 @@ const RM=()=>matchMedia('(prefers-reduced-motion: reduce)').matches;
 const P={arrow:'M5 12h14M13 6l6 6-6 6',x:'M6 6l12 12M18 6L6 18',grip:'M9 6h.01M15 6h.01M9 12h.01M15 12h.01M9 18h.01M15 18h.01',check:'M5 12.5l4.5 4.5L19 7.5',minus:'M5 12h14',plus:'M12 5v14M5 12h14',chev:'M6 9l6 6 6-6',filter:'M4 6h16M7 12h10M10 18h4',scan:'M4 8V5h3M17 5h3v3M20 16v3h-3M7 19H4v-3M8 9v6M12 9v6M16 9v6',pen:'M4 20h4L19 9l-4-4L4 16zM14 6l4 4'};
 const ic=(n,c)=>'<svg class="ic'+(c?' '+c:'')+'" viewBox="0 0 24 24" aria-hidden="true"><path d="'+P[n]+'"/></svg>';
 const cap=s=>s?s[0].toUpperCase()+s.slice(1):'';
-const SLAB={received:'Received',inspected:'Inspected',processed:'Sent to tenant',closed:'Closed'},SL=s=>SLAB[s]||cap(s);
+STATUS.splice(0,STATUS.length,'received','inspected','waiting','action','closed');
+const SLAB={received:'Received',inspected:'Inspected',waiting:'Waiting on tenant',action:'To action',closed:'Closed'},SL=s=>SLAB[s]||cap(s);
+const DSTOCK=[['shelf','Back to shelf'],['dispose','Dispose']],DCUST=[['','Nothing more'],['refund','Tenant refunds'],['replace','Send replacement']];
+const decText=d=>!d?'':[(DSTOCK.find(x=>x[0]===d.stock)||[])[1],d.customer&&(DCUST.find(x=>x[0]===d.customer)||[])[1]].filter(Boolean).join(' · ');
+const decTodo=d=>!d?[]:[d.stock==='shelf'?'Receive the stock back into inventory and put it on the shelf':'Dispose of the stock',d.customer==='replace'?'Send the customer a replacement':d.customer==='refund'?'No shipment needed: the tenant is refunding the customer':''].filter(Boolean);
+const needsSheet=s=>s==='inspected'||s==='waiting';
+S.dec={stock:'',customer:''};
 const nextStatus=s=>STATUS[STATUS.indexOf(s)+1]||null;
 const pill=(s,pop)=>'<span class="pill st-'+esc(s)+(pop?' pop':'')+'"><i class="dot"></i>'+esc(SL(s))+'</span>';
 const say=m=>{const l=$('#live');l.textContent='';setTimeout(()=>l.textContent=m,30)};
@@ -796,14 +808,14 @@ function panelOrder(){
     S.order=(Array.isArray(o)?o:[]).filter(k=>PANELS.includes(k));PANELS.forEach(k=>{if(!S.order.includes(k))S.order.push(k)})}
   return S.order;
 }
-const STG={received:['Received','On the dock, waiting to be checked'],inspected:['Inspected','Checked and photographed, needs a decision'],processed:['Sent to tenant','Emailed to the tenant, waiting for their answer'],closed:['Closed','Decided and finished']};
+const STG={received:['Received','On the dock, waiting to be checked'],inspected:['Inspected','Checked and photographed, tenant not emailed yet'],waiting:['Waiting on tenant','Emailed, waiting for their decision'],action:['To action','Tenant has decided, work still to do'],closed:['Closed','Done']};
 function board(all,rs){
   const sets={};STATUS.forEach(s=>sets[s]=(s==='closed'?rs:all).filter(r=>r.status===s));
   const open=all.filter(r=>r.status!=='closed').length,pl=S.period===1?'today':S.period?'last '+S.period+' days':'all time';
-  let h='<div class="hero"><p class="hero-k">Right now'+(S.dashClient?' · '+esc(clientName(S.dashClient)):'')+'</p><h2 class="hero-h"><b data-count="'+open+'">'+open+'</b>return'+(open===1?'':'s')+' on the floor</h2><p class="hero-s">'+sets.closed.length+' closed · '+pl+'</p></div>';
+  let h='<div class="hero"><p class="hero-k">Right now'+(S.dashClient?' · '+esc(clientName(S.dashClient)):'')+'</p><h2 class="hero-h"><b data-count="'+open+'">'+open+'</b>return'+(open===1?'':'s')+' on the floor</h2><p class="hero-s">'+sets.inspected.length+' to email · '+sets.action.length+' to action · '+sets.closed.length+' closed '+pl+'</p></div>';
   h+='<div class="stgs">'+STATUS.map((s,i)=>{const a=sets[s],old=a.length?Math.max(...a.map(r=>age(r.dateReceived))):0;
     return'<button class="stg stg-'+s+'" style="--i:'+i+'" data-act="toList" data-v="'+s+'" aria-label="'+STG[s][0]+': '+a.length+'. '+STG[s][1]+'. Show these returns.">'
-     +'<span class="stg-n">Stage '+(i+1)+' of 4 · '+cap(s)+'</span><span class="stg-t">'+STG[s][0]+'</span><b data-count="'+a.length+'">'+a.length+'</b><span class="stg-d">'+STG[s][1]+'</span>'
+     +'<span class="stg-n">Stage '+(i+1)+' of '+STATUS.length+'</span><span class="stg-t">'+STG[s][0]+'</span><b data-count="'+a.length+'">'+a.length+'</b><span class="stg-d">'+STG[s][1]+'</span>'
      +'<span class="pk" aria-hidden="true">'+a.slice(0,10).map((r,j)=>'<i style="--j:'+j+'" title="'+esc(r.jobNo)+'"></i>').join('')+(a.length>10?'<em>+'+(a.length-10)+'</em>':'')+'</span>'
      +'<span class="stg-f">'+(s==='closed'?'closed '+pl:a.length?'oldest '+old+' days':'all clear')+'</span></button>'}).join('')+'</div>';
   const tot=STATUS.reduce((x,s)=>x+sets[s].length,0);
@@ -907,7 +919,7 @@ function vForm(){
    +'<div class="fld"><span>Original order number</span><div class="with-btn"><input id="f-order" class="mono" data-f="orderNo" value="'+esc(d.orderNo)+'" aria-label="Original order number"><button class="btn" data-act="scan" data-v="orderNo" aria-label="Scan order number">'+ic('scan')+'</button></div></div>'
    +'<div class="fld"><span>Tracking number</span><div class="with-btn"><input id="f-track" class="mono" data-f="tracking" value="'+esc(d.tracking)+'" aria-label="Tracking number"><button class="btn" data-act="scan" data-v="tracking" aria-label="Scan tracking number">'+ic('scan')+'</button></div></div>'
    +'<label class="fld"><span>Carrier</span><select id="f-carrier" data-f="carrier">'+opts(CARRIERS,d.carrier)+'</select></label>'
-   +'<label class="fld"><span>Date processed</span><input id="f-proc" type="date" data-f="dateProcessed" value="'+esc(d.dateProcessed)+'"></label>'
+   +'<label class="fld"><span>Date closed</span><input id="f-proc" type="date" data-f="dateProcessed" value="'+esc(d.dateProcessed)+'"></label>'
    +'</div></div>';
   h+='<h3>Items in this return</h3>';
   d.lines.forEach((l,i)=>{
@@ -1019,28 +1031,29 @@ function drawRows(){
   el.innerHTML='<ul class="rows">'+rs.slice(0,300).map(r=>{
     const nx=nextStatus(r.status),was=S.lastStatus[r.id],ch=was&&was!==r.status,si=STATUS.indexOf(r.status),wi=STATUS.indexOf(was);
     return'<li class="rw'+(nx?'':' none')+(S.fresh===r.id?' fresh':'')+'" data-id="'+r.id+'">'
-     +(nx?'<div class="rw-under" aria-hidden="true"><span>'+ic('check')+(r.status==='inspected'?'Decide':'Mark '+SL(nx).toLowerCase())+'</span></div>':'')
+     +(nx?'<div class="rw-under" aria-hidden="true"><span>'+ic('check')+(r.status==='inspected'?'Email tenant':r.status==='waiting'?'Record decision':'Mark '+SL(nx).toLowerCase())+'</span></div>':'')
      +'<div class="rw-card"><button class="rw-main" data-act="open" data-v="'+r.id+'" aria-label="Open '+esc(r.jobNo)+', '+esc(clientName(r.clientId))+', '+esc(r.status)+'">'
      +'<span class="job">'+esc(r.jobNo)+'</span><span class="rw-cl">'+esc(clientName(r.clientId))+'</span>'
-     +'<span class="rw-meta"><span>'+fmtD(r.dateReceived)+'</span><span class="mono">'+esc(r.orderNo||'no order no.')+'</span><span>'+units(r)+' unit'+(units(r)===1?'':'s')+'</span>'
+     +'<span class="rw-meta"><span>'+fmtD(r.dateReceived)+'</span><span class="mono">'+esc(r.orderNo||'no order no.')+'</span><span>'+units(r)+' unit'+(units(r)===1?'':'s')+'</span>'+(r.decision?'<span class="tag">'+esc(decText(r.decision))+'</span>':'')
      +'<span class="trk st-'+esc(r.status)+'">'+STATUS.map((s,i)=>'<i class="'+(i<=si?'on':'')+(ch&&i<=si&&i>wi?' new':'')+'"></i>').join('')+'</span></span>'
      +pill(r.status,ch)+'</button>'
-     +(nx?'<button class="adv" data-act="advance" data-v="'+r.id+'" aria-label="'+(r.status==='inspected'?'Decide what happens to '+esc(r.jobNo):'Mark '+esc(r.jobNo)+' as '+SL(nx).toLowerCase())+'" title="'+(r.status==='inspected'?'Send to tenant or keep':'Mark '+SL(nx).toLowerCase())+'">'+ic('arrow')+'</button>':'')
+     +(nx?'<button class="adv" data-act="advance" data-v="'+r.id+'" aria-label="'+(needsSheet(r.status)?'Open '+esc(r.jobNo)+' for the next step':'Mark '+esc(r.jobNo)+' as '+SL(nx).toLowerCase())+'" title="'+(r.status==='inspected'?'Email tenant':r.status==='waiting'?'Record tenant decision':'Mark '+SL(nx).toLowerCase())+'">'+ic('arrow')+'</button>':'')
      +'</div></li>'}).join('')+'</ul>';
   S.lastStatus={};S.returns.forEach(r=>S.lastStatus[r.id]=r.status);
   placeSegs();
 }
 
 /* ---------- status changes (used by swipe, arrow button and detail sheet) ---------- */
-async function setStatus(id,status,quiet){
-  const r=S.returns.find(x=>x.id===id);if(!r||r.status===status||S.busy[id])return;
+async function setStatus(id,status,quiet,extra,what){
+  const r=S.returns.find(x=>x.id===id);if(!r||(r.status===status&&!extra)||S.busy[id])return;
   if(!S.db)return toast('Not connected, so this can\'t be saved yet.');
-  const prev={status:r.status,dateProcessed:r.dateProcessed||'',history:r.history||[]},now=new Date().toISOString();
-  const patch={status,updatedAt:now,history:prev.history.slice(-40).concat([{at:now,by:S.uid||'',what:'Status changed to '+status}])};
-  if((status==='processed'||status==='closed')&&!r.dateProcessed)patch.dateProcessed=today();
+  const prev={status:r.status,dateProcessed:r.dateProcessed||'',history:r.history||[],decision:r.decision||null},now=new Date().toISOString();
+  const patch={status,updatedAt:now,history:prev.history.slice(-40).concat([{at:now,by:S.uid||'',what:what||'Status changed to '+SL(status)}])};
+  if(extra)Object.assign(patch,extra);
+  if(status==='closed'&&!r.dateProcessed)patch.dateProcessed=today();
   S.busy[id]=true;
   try{await S.db.collection('returns').doc(id).update(patch);
-    if(!quiet)toast(r.jobNo+': '+SL(status).toLowerCase(),{label:'Undo',fn:async()=>{try{await S.db.collection('returns').doc(id).update({status:prev.status,dateProcessed:prev.dateProcessed,history:prev.history,updatedAt:new Date().toISOString()});toast(r.jobNo+' back to '+SL(prev.status).toLowerCase())}catch(e){fail(e,'undo that change')}}})}
+    if(!quiet)toast(r.jobNo+': '+SL(status).toLowerCase(),{label:'Undo',fn:async()=>{try{await S.db.collection('returns').doc(id).update({status:prev.status,dateProcessed:prev.dateProcessed,history:prev.history,decision:prev.decision,updatedAt:new Date().toISOString()});toast(r.jobNo+' back to '+SL(prev.status).toLowerCase())}catch(e){fail(e,'undo that change')}}})}
   catch(e){fail(e,'change the status')}
   delete S.busy[id];if(S.sheetId===id)renderSheet();
 }
@@ -1100,9 +1113,11 @@ function renderSheet(){
   let h='<div class="sh-grab" data-shgrab aria-hidden="true"><i></i></div>'
    +'<header class="sh-h" data-shgrab><div class="sh-ht"><span class="job big">'+esc(r.jobNo)+'</span><h2 id="sh-t">'+esc(clientName(r.clientId))+'</h2><p class="note">Received '+fmtD(r.dateReceived)+' · '+units(r)+' unit'+(units(r)===1?'':'s')+' across '+n+' item'+(n===1?'':'s')+'</p></div>'
    +'<button class="icb" data-act="closeSheet" aria-label="Close">'+ic('x')+'</button></header><div class="sh-b">'
-   +'<ol class="steps" aria-label="Status"><li class="bar2" role="presentation" style="--from:'+(wi/3)+';--to:'+(si/3)+(mvg?';animation-delay:-'+Math.round(now-mvg.t)+'ms':'')+'"></li>'
+   +'<ol class="steps" aria-label="Status"><li class="bar2" role="presentation" style="--from:'+(wi/(STATUS.length-1))+';--to:'+(si/(STATUS.length-1))+(mvg?';animation-delay:-'+Math.round(now-mvg.t)+'ms':'')+'"></li>'
    +STATUS.map((s,i)=>'<li class="'+(i<si?'done':i===si?'cur'+(was&&was!==r.status?' moved':''):'')+'"><button data-act="sheetStatus" data-v="'+s+'"'+(i===si?' aria-current="step"':'')+(busy?' disabled':'')+' aria-label="'+(i===si?SL(s)+', current status':'Set status to '+SL(s))+'">'+SL(s)+'</button></li>').join('')+'</ol>'
-   +'<dl class="kv"><div><dt>Order number</dt><dd class="mono">'+esc(r.orderNo||'—')+'</dd></div><div><dt>Tracking</dt><dd class="mono">'+esc(r.tracking||'—')+'</dd></div><div><dt>Carrier</dt><dd>'+esc(r.carrier||'—')+'</dd></div><div><dt>Processed</dt><dd>'+fmtD(r.dateProcessed)+'</dd></div></dl>';
+   +'<dl class="kv"><div><dt>Order number</dt><dd class="mono">'+esc(r.orderNo||'—')+'</dd></div><div><dt>Tracking</dt><dd class="mono">'+esc(r.tracking||'—')+'</dd></div><div><dt>Carrier</dt><dd>'+esc(r.carrier||'—')+'</dd></div><div><dt>Closed on</dt><dd>'+fmtD(r.dateProcessed)+'</dd></div></dl>';
+  if(r.status==='waiting')h+='<div class="dec"><h3>What did the tenant decide?</h3><div class="pick"><span>The stock</span>'+seg('dec-stock','The stock',DSTOCK,S.dec.stock)+'</div><div class="pick"><span>The customer</span>'+seg('dec-cust','The customer',DCUST,S.dec.customer)+'</div></div>';
+  else if(r.decision)h+='<div class="dec"><h3>Tenant decision</h3><p class="dec-t">'+esc(decText(r.decision))+'</p>'+(r.status==='action'?'<ul class="todo">'+decTodo(r.decision).map(t=>'<li>'+esc(t)+'</li>').join('')+'</ul>':'')+'</div>';
   h+='<div><h3>Items</h3>'+(n?r.lines.map(l=>{const e=+l.qtyExp||0,q=+l.qtyRecv||0,g=GRADES.find(x=>x[0]===l.grade);
     return'<div class="it"><div class="it-h"><b>'+esc(l.name||l.sku||l.barcode||'Item')+'</b>'+(l.sku?'<span class="mono note">'+esc(l.sku)+'</span>':'')+'<span class="q'+(q!==e?' ag w':'')+'">'+q+' of '+e+'</span></div>'
      +'<div class="tags">'+[l.reason,g&&g[1],l.disposition].filter(Boolean).map(t=>'<span class="tag">'+esc(t)+'</span>').join('')+(!(l.reason||g||l.disposition)?'<span class="note">Not graded yet</span>':'')+'</div>'
@@ -1110,9 +1125,11 @@ function renderSheet(){
   if(r.notes)h+='<div><h3>Notes</h3><p style="margin:6px 0 0;white-space:pre-wrap">'+esc(r.notes)+'</p></div>';
   if(r.history&&r.history.length)h+='<div><h3>History</h3><ul class="hist" style="margin-top:6px">'+r.history.slice(-5).reverse().map(x=>'<li>'+esc(new Date(x.at).toLocaleString('en-AU'))+' · '+esc(x.what)+'</li>').join('')+'</ul></div>';
   h+='</div><footer class="sh-f"><button class="btn" data-act="editOpen" data-v="'+r.id+'">'+ic('pen')+'Edit or email</button>'
-   +(r.status==='inspected'?'<button class="btn" data-act="keepClose" data-v="'+r.id+'"'+(busy?' disabled':'')+'>Keep and close</button><button class="btn pri" data-act="sendTenant" data-v="'+r.id+'"'+(busy?' disabled':'')+'>'+(busy?'Saving…':'Email tenant')+'</button>'
+   +(r.status==='inspected'?'<button class="btn pri" data-act="sendTenant" data-v="'+r.id+'"'+(busy?' disabled':'')+'>'+(busy?'Saving…':'Email tenant')+'</button>'
+     :r.status==='waiting'?'<button class="btn pri" data-act="saveDecision" data-v="'+r.id+'"'+(busy||!S.dec.stock?' disabled':'')+'>'+(busy?'Saving…':'Save decision')+'</button>'
+     :r.status==='action'?'<button class="btn pri" data-act="advance" data-v="'+r.id+'"'+(busy?' disabled':'')+'>'+(busy?'Saving…':'Mark done')+'</button>'
      :nx?'<button class="btn pri" data-act="advance" data-v="'+r.id+'"'+(busy?' disabled':'')+'>'+(busy?'Saving…':'Mark '+SL(nx).toLowerCase())+(busy?'':ic('arrow'))+'</button>':'')+'</footer>';
-  box.innerHTML=h;enhance(box);S.sheetStatus=r.status;
+  box.innerHTML=h;enhance(box);S.sheetStatus=r.status;placeSegs();
   const ns=box.querySelector('.sh-b');if(ns)ns.scrollTop=top;
   if(key){const f=box.querySelector('[data-act="'+key[0]+'"][data-v="'+key[1]+'"]:not([disabled])')||box.querySelector('[data-act="'+key[0]+'"]:not([disabled])');(f||$('#sheetP')).focus({preventScroll:true})}
 }
@@ -1127,7 +1144,7 @@ function morphFrames(from,to){
 function openSheet(id){
   if(S.sheetId||S.closing)return;
   const sh=$('#sheet'),p=$('#sheetP'),bg=sh.querySelector('.sheet-bg'),from=srcRect(id);
-  S.sheetId=id;S.sheetStatus=null;S.sheetMove=null;S.sheetFocus=document.activeElement;
+  S.dec={stock:'',customer:''};S.sheetId=id;S.sheetStatus=null;S.sheetMove=null;S.sheetFocus=document.activeElement;
   renderSheet();if(!S.sheetId)return;
   sh.hidden=false;document.documentElement.classList.add('lock');$('#shell').inert=true;p.style.transform='';bg.style.opacity='';
   if(!RM()){
@@ -1137,7 +1154,7 @@ function openSheet(id){
     bg.animate([{opacity:0},{opacity:1}],{duration:240});
     if(from)p.querySelectorAll('.sh-b,.sh-f').forEach(e=>e.animate([{opacity:0},{opacity:0,offset:.3},{opacity:1}],{duration:380}));
   }
-  p.focus({preventScroll:true});
+  placeSegs();p.focus({preventScroll:true});
 }
 function finishClose(){
   const sh=$('#sheet'),p=$('#sheetP'),id=S.sheetId;
@@ -1179,7 +1196,7 @@ function tenantMail(r,c){
   const items=(r.lines||[]).map(l=>'- '+(l.sku||l.barcode||'Item')+(l.name?' ('+l.name+')':'')+': received '+(+l.qtyRecv||0)+' of '+(+l.qtyExp||0)+[l.reason&&', reason: '+l.reason,l.grade&&', condition: '+g(l.grade)].filter(Boolean).join('')).join('\n');
   const body='Attention: '+(c.name||'')+' returns team\n\nA return has arrived at our warehouse and has been inspected. Please tell us what you would like done with it.\n\nJob: '+r.jobNo+(r.orderNo?'\nOrder: '+r.orderNo:'')+(r.tracking?'\nTracking: '+r.tracking:'')+'\nReceived: '+fmtD(r.dateReceived)
    +'\n\nItems:\n'+(items||'- none recorded')+(r.notes?'\n\nInspection notes: '+r.notes:'')+(np?'\n\nPhotos taken: '+np+'. Reply to this email and we will send them.':'')
-   +'\n\nPlease reply with one of:\n1. Return the stock to the shelf\n2. Send replacement stock to the customer\n3. Other instructions\n\nRegards,\n'+(S.org.name||'The warehouse')+' Returns Department'+(S.org.email?'\n'+S.org.email:'');
+   +'\n\nPlease reply and tell us:\n1. The stock: return it to the shelf, or dispose of it?\n2. The customer: will you refund them, or should we send a replacement?\n\nRegards,\n'+(S.org.name||'The warehouse')+' Returns Department'+(S.org.email?'\n'+S.org.email:'');
   return'mailto:'+encodeURIComponent(c.email)+'?'+(S.org.email?'cc='+encodeURIComponent(S.org.email)+'&':'')+'subject='+encodeURIComponent(subjFor(r))+'&body='+encodeURIComponent(body);
 }
 
@@ -1188,12 +1205,14 @@ Object.assign(ACT,{
   toastAct:()=>{const f=toast.fn;toast.fn=null;$('#toast').hidden=true;if(f)f()},
   open:v=>openSheet(v),closeSheet,
   editOpen:v=>{finishClose();editReturn(v)},
-  advance:v=>{const r=S.returns.find(x=>x.id===v),nx=r&&nextStatus(r.status);if(!nx)return;if(r.status==='inspected'){if(S.sheetId!==v)openSheet(v);return}setStatus(v,nx);if(S.sheetId===v)renderSheet()},
-  keepClose:v=>{setStatus(v,'closed');if(S.sheetId===v)renderSheet()},
+  advance:v=>{const r=S.returns.find(x=>x.id===v),nx=r&&nextStatus(r.status);if(!nx)return;if(needsSheet(r.status)){if(S.sheetId!==v)openSheet(v);return}setStatus(v,nx);if(S.sheetId===v)renderSheet()},
   sendTenant:v=>{const r=S.returns.find(x=>x.id===v);if(!r)return;const c=S.clients.find(x=>x.id===r.clientId)||{};
     if(!c.email)return toast('No email saved for this tenant. Add it in Settings, then try again.');
     const a=document.createElement('a');a.href=tenantMail(r,c);document.body.appendChild(a);a.click();a.remove();
-    setStatus(v,'processed');if(S.sheetId===v)renderSheet()},
+    setStatus(v,'waiting',false,null,'Emailed tenant for a decision');if(S.sheetId===v)renderSheet()},
+  saveDecision:v=>{if(!S.dec.stock)return toast('Choose what happens to the stock first.');
+    const d={stock:S.dec.stock,customer:S.dec.customer,at:new Date().toISOString(),by:S.uid||''};
+    setStatus(v,'action',false,{decision:d},'Tenant decision: '+decText(d));if(S.sheetId===v)renderSheet()},
   sheetStatus:v=>{setStatus(S.sheetId,v);renderSheet()},
   toList:v=>{S.flt.status=v;go('list')},
   clearFlt:()=>{S.flt.client='';S.flt.from='';S.flt.to='';['fc','ff','ft'].forEach(i=>{const e=$('#'+i);if(e)e.value=''});drawRows()},
@@ -1202,6 +1221,8 @@ Object.assign(ACT,{
     if(k==='period'){S.period=+v;S.anim=true;return render()}
     if(k==='fstatus'){S.flt.status=v;return drawRows()}
     if(k==='f-status'){S.draft.status=v;return pressSeg(b)}
+    if(k==='dec-stock'){S.dec.stock=v;return renderSheet()}
+    if(k==='dec-cust'){S.dec.customer=v;return renderSheet()}
     const[f,i]=k.split(':'),l=S.draft.lines[+i];if(!l)return;const key=f==='grade'?'grade':'disposition';
     if(l[key]===v){l[key]='';b.dataset.on='0'}else{l[key]=v;delete b.dataset.on}
     pressSeg(b);delete b.dataset.on;
