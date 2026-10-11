@@ -118,6 +118,8 @@ textarea{min-height:96px;resize:vertical}
 .with-btn{display:flex;gap:6px;align-items:stretch}
 .with-btn input{flex:1;min-width:0}
 .with-btn .btn{min-height:56px}
+.btn.mic.rec{background:var(--accent);border-color:var(--accent);color:var(--accent-ink);animation:rec 1s ease-in-out infinite}
+@keyframes rec{50%{box-shadow:0 0 0 8px color-mix(in srgb,var(--accent) 25%,transparent)}}
 input.hit{animation:hit .9s var(--out)}
 @keyframes hit{0%{background:color-mix(in srgb,var(--ok) 30%,var(--surface))}}
 
@@ -722,8 +724,35 @@ const ACT={
 Object.assign(S,{segPrev:{},order:null,filtersOpen:false,sheetId:null,sheetStatus:null,lastStatus:{},fresh:null,swiping:false,rowsDirty:false,dragging:false,dirty:false,enter:true,noClick:0,busy:{}});
 try{S.filtersOpen=localStorage.getItem('rd-filters')==='1'}catch(e){}
 const RM=()=>matchMedia('(prefers-reduced-motion: reduce)').matches;
-const P={arrow:'M5 12h14M13 6l6 6-6 6',x:'M6 6l12 12M18 6L6 18',grip:'M9 6h.01M15 6h.01M9 12h.01M15 12h.01M9 18h.01M15 18h.01',check:'M5 12.5l4.5 4.5L19 7.5',minus:'M5 12h14',plus:'M12 5v14M5 12h14',chev:'M6 9l6 6 6-6',filter:'M4 6h16M7 12h10M10 18h4',scan:'M4 8V5h3M17 5h3v3M20 16v3h-3M7 19H4v-3M8 9v6M12 9v6M16 9v6',pen:'M4 20h4L19 9l-4-4L4 16zM14 6l4 4'};
+const P={text:'M5 8V5h14v3M12 5v14M9 19h6',mic:'M12 3a3 3 0 00-3 3v6a3 3 0 006 0V6a3 3 0 00-3-3zM6 11a6 6 0 0012 0M12 17v4M9 21h6',arrow:'M5 12h14M13 6l6 6-6 6',x:'M6 6l12 12M18 6L6 18',grip:'M9 6h.01M15 6h.01M9 12h.01M15 12h.01M9 18h.01M15 18h.01',check:'M5 12.5l4.5 4.5L19 7.5',minus:'M5 12h14',plus:'M12 5v14M5 12h14',chev:'M6 9l6 6 6-6',filter:'M4 6h16M7 12h10M10 18h4',scan:'M4 8V5h3M17 5h3v3M20 16v3h-3M7 19H4v-3M8 9v6M12 9v6M16 9v6',pen:'M4 20h4L19 9l-4-4L4 16zM14 6l4 4'};
 const ic=(n,c)=>'<svg class="ic'+(c?' '+c:'')+'" viewBox="0 0 24 24" aria-hidden="true"><path d="'+P[n]+'"/></svg>';
+const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+const NUMW={zero:0,oh:0,o:0,one:1,won:1,two:2,to:2,too:2,three:3,four:4,for:4,five:5,six:6,seven:7,eight:8,ate:8,nine:9};
+function spokenCode(t){
+  return String(t||'').toLowerCase().replace(/number sign|hashtag|hash tag|hash|pound sign|pound/g,' # ').replace(/\b(order|job|number|no|is)\b/g,' ').replace(/\b(dash|hyphen|minus)\b/g,' - ').replace(/\b(slash|stroke)\b/g,' / ')
+    .split(/\s+/).filter(Boolean).map(w=>{const k=w.replace(/[.,!?]/g,'');return Object.prototype.hasOwnProperty.call(NUMW,k)?NUMW[k]:k}).join('').toUpperCase();
+}
+function loadOcr(){return loadOcr.p||(loadOcr.p=new Promise((res,rej)=>{const s=document.createElement('script');s.src='https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/tesseract.min.js';s.onload=res;s.onerror=()=>{loadOcr.p=null;rej(new Error('load'))};document.head.appendChild(s)}))}
+function findCodes(text){
+  const out=[],add=c=>{c=c.replace(/[-.,;:]+$/,'');if(c.replace(/[^A-Z0-9]/gi,'').length>=3&&!out.includes(c))out.push(c)},T=String(text||'').replace(/[|]/g,' ');let m;
+  const r1=/#\s?([A-Z0-9][A-Z0-9-]{2,})/gi;while((m=r1.exec(T)))add('#'+m[1].toUpperCase());
+  const r2=/\b(?:order|job|ref(?:erence)?|invoice|rma)[ \t]*(?:number|num|no|id)?\.?[ \t]*[:#-]?[ \t]*#?[ \t]*([A-Z0-9][A-Z0-9-]{2,})/gi;
+  while((m=r2.exec(T))){const c=m[1].toUpperCase().replace(/[-.,;:]+$/,'');if(/\d/.test(c)&&!out.includes('#'+c))add(c)}
+  return out.slice(0,6);
+}
+function setOrder(code){S.draft.orderNo=code;const f=$('#f-order');if(f){f.value=code;f.classList.remove('hit');void f.offsetWidth;f.classList.add('hit')}const p=$('#ocrPick');if(p)p.innerHTML=''}
+async function onOcr(file){
+  if(!file)return;toast('Reading the photo… this takes a few seconds');
+  let text='';
+  try{const c=await fileToImg(file,1800);await loadOcr();const r=await Tesseract.recognize(c,'eng');text=r.data.text}
+  catch(e){console.error(e);return toast('Could not read text on this device. Type or scan the number instead.')}
+  const codes=findCodes(text),p=$('#ocrPick');
+  if(!codes.length)return toast('No order or job number found. Get closer to the label and try again.');
+  if(codes.length===1){setOrder(codes[0]);return toast('Read '+codes[0]+'. Check it is right.')}
+  if(p)p.innerHTML='<span class="note">Found several. Tap the right one:</span>'+codes.map(c=>'<button type="button" class="btn" data-act="ocrPick" data-v="'+esc(c)+'">'+esc(c)+'</button>').join('');
+  toast('Found '+codes.length+' possible numbers. Tap the right one.');
+}
+const micBtn=(target,label)=>SR?'<button type="button" class="btn mic" data-act="mic" data-v="'+target+'" aria-label="Say the '+label+'">'+ic('mic')+'</button>':'';
 const cap=s=>s?s[0].toUpperCase()+s.slice(1):'';
 STATUS.splice(0,STATUS.length,'received','inspected','waiting','action','closed');
 const SLAB={received:'Received',inspected:'Inspected',waiting:'Waiting on tenant',action:'To action',closed:'Closed'},SL=s=>SLAB[s]||cap(s);
@@ -916,7 +945,7 @@ function vForm(){
    +'<label class="fld"><span>Job number</span><input id="f-job" class="mono" data-f="jobNo" value="'+esc(d.jobNo)+'" autocapitalize="characters"></label>'
    +'<label class="fld"><span>Date received</span><input id="f-date" type="date" data-f="dateReceived" value="'+esc(d.dateReceived)+'"></label>'
    +'</div><div class="pick"><span>Status</span>'+seg('f-status','Status',STATUS.map(s=>[s,'<i class="dot st-'+s+'"></i>'+SL(s)]),d.status)+'</div><div class="grid">'
-   +'<div class="fld"><span>Original order number</span><div class="with-btn"><input id="f-order" class="mono" data-f="orderNo" value="'+esc(d.orderNo)+'" aria-label="Original order number"><button class="btn" data-act="scan" data-v="orderNo" aria-label="Scan order number">'+ic('scan')+'</button></div></div>'
+   +'<div class="fld"><span>Original order number</span><div class="with-btn"><input id="f-order" class="mono" data-f="orderNo" value="'+esc(d.orderNo)+'" aria-label="Original order number"><button class="btn" data-act="scan" data-v="orderNo" aria-label="Scan order number">'+ic('scan')+'</button><button class="btn" data-act="ocr" aria-label="Read the order number from a photo of the label">'+ic('text')+'</button>'+micBtn('orderNo','order number')+'</div><div class="row" id="ocrPick" style="padding-top:6px"></div></div>'
    +'<div class="fld"><span>Tracking number</span><div class="with-btn"><input id="f-track" class="mono" data-f="tracking" value="'+esc(d.tracking)+'" aria-label="Tracking number"><button class="btn" data-act="scan" data-v="tracking" aria-label="Scan tracking number">'+ic('scan')+'</button></div></div>'
    +'<label class="fld"><span>Carrier</span><select id="f-carrier" data-f="carrier">'+opts(CARRIERS,d.carrier)+'</select></label>'
    +'<label class="fld"><span>Date closed</span><input id="f-proc" type="date" data-f="dateProcessed" value="'+esc(d.dateProcessed)+'"></label>'
@@ -1003,7 +1032,7 @@ function vList(){
   if(!S.returns.length)return emptyState();
   const f=S.flt,open=S.filtersOpen||!!(f.client||f.from||f.to);
   return'<div class="row"><h2 style="flex:1 1 auto">Returns</h2><button class="btn pri" data-act="tab" data-v="new">'+ic('plus')+'Log a return</button></div>'
-   +'<label class="fld" style="flex:none"><span>Search job, order, tracking or SKU</span><input id="q" type="search" data-flt="q" value="'+esc(f.q)+'"></label>'
+   +'<div class="fld" style="flex:none"><span>Search job, order, tracking or SKU</span><div class="with-btn"><input id="q" type="search" data-flt="q" value="'+esc(f.q)+'" aria-label="Search job, order, tracking or SKU">'+micBtn('search','job or order number')+'</div></div>'
    +'<div id="statusSeg"></div>'
    +'<div class="drawer" id="drawer" data-open="'+open+'"><div class="dr-body" id="drBody"><div class="dr-in" id="drIn"'+(open?'':' inert')+'><div class="dr-pad">'
    +'<label class="fld"><span>Client</span><select id="fc" data-flt="client">'+opts([['','All clients']].concat(S.clients.map(c=>[c.id,c.name])),f.client)+'</select></label>'
@@ -1217,6 +1246,17 @@ const mailState=r=>{const ids=photoIds(r);if(!ids.length)return'plain';if(!canSh
 
 /* ---------- events ---------- */
 Object.assign(ACT,{
+  mic:(v,b)=>{
+    if(S.rec){try{S.rec.stop()}catch(e){}return}
+    const r=new SR();r.lang='en-AU';r.interimResults=false;r.maxAlternatives=1;S.rec=r;b.classList.add('rec');
+    r.onresult=e=>{const heard=e.results[0][0].transcript,code=spokenCode(heard);if(!code)return toast('Did not catch that. Try again.');
+      if(v==='search'){S.flt.q=code;const q=$('#q');if(q)q.value=code;drawRows()}else{S.draft[v]=code;const f=$('#f-order');if(f)f.value=code}
+      toast('Heard '+code+'. Check it is right.')};
+    r.onerror=e=>toast(e.error==='not-allowed'||e.error==='service-not-allowed'?'Allow microphone access for this site, then try again.':e.error==='no-speech'?'Did not hear anything. Tap the microphone and try again.':'Voice input did not work this time. Type the number instead.');
+    r.onend=()=>{S.rec=null;if(b.isConnected)b.classList.remove('rec')};
+    try{r.start();toast('Listening… say the number')}catch(e){S.rec=null;b.classList.remove('rec')}
+  },
+  ocr:()=>{S.target='ocr';const i=$('#scanInput');i.value='';i.click()},ocrPick:v=>{setOrder(v);toast('Order number set to '+v)},
   toastAct:()=>{const f=toast.fn;toast.fn=null;$('#toast').hidden=true;if(f)f()},
   open:v=>openSheet(v),closeSheet,
   editOpen:v=>{finishClose();editReturn(v)},
@@ -1283,7 +1323,7 @@ document.addEventListener('input',e=>{
 });
 document.addEventListener('change',e=>{
   const t=e.target;
-  if(t.id==='scanInput')return onScan(t.files[0]);
+  if(t.id==='scanInput')return S.target==='ocr'?onOcr(t.files[0]):onScan(t.files[0]);
   if(t.id==='photoInput')return onPhotos([...t.files]);
   if(t.id==='csvInput')return onCsv(t.files[0]);
   if(t.id==='logoInput'){const f=t.files[0];if(!f||!S.assets)return;(async()=>{try{const c=await fileToImg(f,600);const blob=await new Promise(r=>c.toBlob(r,'image/png'));const up=await S.assets.upload(blob,{type:'image/png'});await S.db.doc('orgs/main').set({name:S.org.name||'',color:S.org.color||'',logo:up.id,subject:S.org.subject||''});toast('Logo saved.')}catch(e){fail(e,'upload the logo')}})();return}
