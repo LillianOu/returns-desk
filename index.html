@@ -1116,6 +1116,8 @@ function renderSheet(){
    +'<ol class="steps" aria-label="Status"><li class="bar2" role="presentation" style="--from:'+(wi/(STATUS.length-1))+';--to:'+(si/(STATUS.length-1))+(mvg?';animation-delay:-'+Math.round(now-mvg.t)+'ms':'')+'"></li>'
    +STATUS.map((s,i)=>'<li class="'+(i<si?'done':i===si?'cur'+(was&&was!==r.status?' moved':''):'')+'"><button data-act="sheetStatus" data-v="'+s+'"'+(i===si?' aria-current="step"':'')+(busy?' disabled':'')+' aria-label="'+(i===si?SL(s)+', current status':'Set status to '+SL(s))+'">'+SL(s)+'</button></li>').join('')+'</ol>'
    +'<dl class="kv"><div><dt>Order number</dt><dd class="mono">'+esc(r.orderNo||'—')+'</dd></div><div><dt>Tracking</dt><dd class="mono">'+esc(r.tracking||'—')+'</dd></div><div><dt>Carrier</dt><dd>'+esc(r.carrier||'—')+'</dd></div><div><dt>Closed on</dt><dd>'+fmtD(r.dateProcessed)+'</dd></div></dl>';
+  if(r.status==='inspected'&&mailState(r)==='noattach')h+='<p class="note">This device cannot attach photos to an email. Send from a phone or tablet to include the '+photoIds(r).length+' photo'+(photoIds(r).length===1?'':'s')+'.</p>';
+  if(r.status==='inspected')prepFiles(r);
   if(r.status==='waiting')h+='<div class="dec"><h3>What did the tenant decide?</h3><div class="pick"><span>The stock</span>'+seg('dec-stock','The stock',DSTOCK,S.dec.stock)+'</div><div class="pick"><span>The customer</span>'+seg('dec-cust','The customer',DCUST,S.dec.customer)+'</div></div>';
   else if(r.decision)h+='<div class="dec"><h3>Tenant decision</h3><p class="dec-t">'+esc(decText(r.decision))+'</p>'+(r.status==='action'?'<ul class="todo">'+decTodo(r.decision).map(t=>'<li>'+esc(t)+'</li>').join('')+'</ul>':'')+'</div>';
   h+='<div><h3>Items</h3>'+(n?r.lines.map(l=>{const e=+l.qtyExp||0,q=+l.qtyRecv||0,g=GRADES.find(x=>x[0]===l.grade);
@@ -1125,7 +1127,7 @@ function renderSheet(){
   if(r.notes)h+='<div><h3>Notes</h3><p style="margin:6px 0 0;white-space:pre-wrap">'+esc(r.notes)+'</p></div>';
   if(r.history&&r.history.length)h+='<div><h3>History</h3><ul class="hist" style="margin-top:6px">'+r.history.slice(-5).reverse().map(x=>'<li>'+esc(new Date(x.at).toLocaleString('en-AU'))+' · '+esc(x.what)+'</li>').join('')+'</ul></div>';
   h+='</div><footer class="sh-f"><button class="btn" data-act="editOpen" data-v="'+r.id+'">'+ic('pen')+'Edit or email</button>'
-   +(r.status==='inspected'?'<button class="btn pri" data-act="sendTenant" data-v="'+r.id+'"'+(busy?' disabled':'')+'>'+(busy?'Saving…':'Email tenant')+'</button>'
+   +(r.status==='inspected'?'<button class="btn pri" data-act="sendTenant" data-v="'+r.id+'"'+(busy?' disabled':'')+(mailState(r)==='prep'?' disabled':'')+'>'+(busy?'Saving…':({ready:'Email tenant with '+photoIds(r).length+' photo'+(photoIds(r).length===1?'':'s'),prep:'Preparing photos…'})[mailState(r)]||'Email tenant')+'</button>'
      :r.status==='waiting'?'<button class="btn pri" data-act="saveDecision" data-v="'+r.id+'"'+(busy||!S.dec.stock?' disabled':'')+'>'+(busy?'Saving…':'Save decision')+'</button>'
      :r.status==='action'?'<button class="btn pri" data-act="advance" data-v="'+r.id+'"'+(busy?' disabled':'')+'>'+(busy?'Saving…':'Mark done')+'</button>'
      :nx?'<button class="btn pri" data-act="advance" data-v="'+r.id+'"'+(busy?' disabled':'')+'>'+(busy?'Saving…':'Mark '+SL(nx).toLowerCase())+(busy?'':ic('arrow'))+'</button>':'')+'</footer>';
@@ -1191,14 +1193,27 @@ function startSheetDrag(e){
   window.addEventListener('pointermove',mv);window.addEventListener('pointerup',fin);window.addEventListener('pointercancel',fin);
 }
 
-function tenantMail(r,c){
+function tenantText(r,c,att){
   const np=(r.lines||[]).reduce((a,l)=>a+(l.photos||[]).length,0),g=k=>(GRADES.find(x=>x[0]===k)||[])[1];
   const items=(r.lines||[]).map(l=>'- '+(l.sku||l.barcode||'Item')+(l.name?' ('+l.name+')':'')+': received '+(+l.qtyRecv||0)+' of '+(+l.qtyExp||0)+[l.reason&&', reason: '+l.reason,l.grade&&', condition: '+g(l.grade)].filter(Boolean).join('')).join('\n');
   const body='Attention: '+(c.name||'')+' returns team\n\nA return has arrived at our warehouse and has been inspected. Please tell us what you would like done with it.\n\nJob: '+r.jobNo+(r.orderNo?'\nOrder: '+r.orderNo:'')+(r.tracking?'\nTracking: '+r.tracking:'')+'\nReceived: '+fmtD(r.dateReceived)
-   +'\n\nItems:\n'+(items||'- none recorded')+(r.notes?'\n\nInspection notes: '+r.notes:'')+(np?'\n\nPhotos taken: '+np+'. Reply to this email and we will send them.':'')
+   +'\n\nItems:\n'+(items||'- none recorded')+(r.notes?'\n\nInspection notes: '+r.notes:'')+(np?(att?'\n\nPhotos attached: '+np:'\n\nPhotos taken: '+np+'. Reply to this email and we will send them.'):'')
    +'\n\nPlease reply and tell us:\n1. The stock: return it to the shelf, or dispose of it?\n2. The customer: will you refund them, or should we send a replacement?\n\nRegards,\n'+(S.org.name||'The warehouse')+' Returns Department'+(S.org.email?'\n'+S.org.email:'');
-  return'mailto:'+encodeURIComponent(c.email)+'?'+(S.org.email?'cc='+encodeURIComponent(S.org.email)+'&':'')+'subject='+encodeURIComponent(subjFor(r))+'&body='+encodeURIComponent(body);
+  return body;
 }
+function tenantMail(r,c){return'mailto:'+encodeURIComponent(c.email)+'?'+(S.org.email?'cc='+encodeURIComponent(S.org.email)+'&':'')+'subject='+encodeURIComponent(subjFor(r))+'&body='+encodeURIComponent(tenantText(r,c,false))}
+const photoIds=r=>(r.lines||[]).flatMap(l=>l.photos||[]);
+const canShareFiles=()=>{try{return!!(navigator.canShare&&navigator.canShare({files:[new File(['x'],'x.jpg',{type:'image/jpeg'})]}))}catch(e){return false}};
+S.mailFiles={key:'',files:null};
+async function prepFiles(r){
+  const ids=photoIds(r),key=r.id+':'+ids.join(',');if(!ids.length||!canShareFiles()||S.mailFiles.key===key)return;
+  S.mailFiles={key,files:null};
+  try{const fs=[];let i=0;
+    for(const id of ids){const b=await(await fetch(await GH.blobUrl(id))).blob(),png=/\.png$/.test(id)||b.type==='image/png';fs.push(new File([b],r.jobNo+'-photo-'+(++i)+(png?'.png':'.jpg'),{type:png?'image/png':'image/jpeg'}))}
+    if(S.mailFiles.key===key){S.mailFiles.files=fs;if(S.sheetId===r.id)renderSheet()}}
+  catch(e){console.error(e);if(S.mailFiles.key===key){S.mailFiles={key:'',files:null};S.mailFail=r.id;if(S.sheetId===r.id)renderSheet()}}
+}
+const mailState=r=>{const ids=photoIds(r);if(!ids.length)return'plain';if(!canShareFiles()||S.mailFail===r.id)return'noattach';return S.mailFiles.key===r.id+':'+ids.join(',')&&S.mailFiles.files?'ready':'prep'};
 
 /* ---------- events ---------- */
 Object.assign(ACT,{
@@ -1208,6 +1223,12 @@ Object.assign(ACT,{
   advance:v=>{const r=S.returns.find(x=>x.id===v),nx=r&&nextStatus(r.status);if(!nx)return;if(needsSheet(r.status)){if(S.sheetId!==v)openSheet(v);return}setStatus(v,nx);if(S.sheetId===v)renderSheet()},
   sendTenant:v=>{const r=S.returns.find(x=>x.id===v);if(!r)return;const c=S.clients.find(x=>x.id===r.clientId)||{};
     if(!c.email)return toast('No email saved for this tenant. Add it in Settings, then try again.');
+    if(mailState(r)==='ready'){const files=S.mailFiles.files;
+      try{if(navigator.clipboard)navigator.clipboard.writeText(c.email).catch(()=>{})}catch(e){}
+      toast('Tenant email address copied. Choose Mail, then paste it into To.');
+      navigator.share({files,title:subjFor(r),text:subjFor(r)+'\n\n'+tenantText(r,c,true)}).then(()=>{setStatus(v,'waiting',false,null,'Emailed tenant for a decision, '+files.length+' photos attached');if(S.sheetId===v)renderSheet()})
+        .catch(e=>{if(!e||e.name!=='AbortError')toast('Could not open sharing on this device. Try again.')});
+      return}
     const a=document.createElement('a');a.href=tenantMail(r,c);document.body.appendChild(a);a.click();a.remove();
     setStatus(v,'waiting',false,null,'Emailed tenant for a decision');if(S.sheetId===v)renderSheet()},
   saveDecision:v=>{if(!S.dec.stock)return toast('Choose what happens to the stock first.');
