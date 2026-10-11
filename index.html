@@ -294,8 +294,8 @@ td{padding:9px 8px;border-bottom:1px solid var(--line);vertical-align:top}
 .sh-ht{flex:1;min-width:0;display:flex;flex-direction:column;gap:6px;align-items:flex-start}
 .sh-ht h2{font-size:22px}
 .sh-b{overflow-y:auto;padding:4px 16px 16px;display:flex;flex-direction:column;gap:18px;min-height:0;overscroll-behavior:contain}
-.sh-f{display:flex;gap:10px;padding:12px 16px;border-top:1px solid var(--line);flex:none}
-.sh-f .btn{flex:1}
+.sh-f{display:flex;flex-wrap:wrap;gap:10px;padding:12px 16px;border-top:1px solid var(--line);flex:none}
+.sh-f .btn{flex:1 1 150px}
 .steps{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(4,1fr);position:relative}
 .steps::before,.steps .bar2{content:"";position:absolute;left:12.5%;top:13px;height:4px;border-radius:2px}
 .steps::before{right:12.5%;background:var(--line)}
@@ -589,7 +589,7 @@ function vReport(){
 }
 function repData(){
   const r=S.rep,rs=S.returns.filter(x=>match(x,{client:r.client,from:r.from,to:r.to})).sort((a,b)=>String(a.dateReceived).localeCompare(b.dateReceived));
-  const rows=[];rs.forEach(x=>{const ls=x.lines&&x.lines.length?x.lines:[{}];ls.forEach(l=>rows.push([fmtD(x.dateReceived),x.jobNo,clientName(x.clientId),x.orderNo||'',l.sku||'',l.name||'',l.qtyExp??'',l.qtyRecv??'',l.reason||'',l.grade||'',l.disposition||'',x.status]))});
+  const rows=[];rs.forEach(x=>{const ls=x.lines&&x.lines.length?x.lines:[{}];ls.forEach(l=>rows.push([fmtD(x.dateReceived),x.jobNo,clientName(x.clientId),x.orderNo||'',l.sku||'',l.name||'',l.qtyExp??'',l.qtyRecv??'',l.reason||'',l.grade||'',l.disposition||'',SL(x.status)]))});
   const g=k=>rs.reduce((a,x)=>a+(x.lines||[]).filter(l=>l.grade===k).reduce((s,l)=>s+(+l.qtyRecv||0),0),0);
   const dp=k=>rs.reduce((a,x)=>a+(x.lines||[]).filter(l=>l.disposition===k).reduce((s,l)=>s+(+l.qtyRecv||0),0),0);
   return{rs,rows,units:rs.reduce((a,x)=>a+units(x),0),g:{A:g('A'),B:g('B'),C:g('C')},d:DISPO.map(k=>[k,dp(k)])};
@@ -628,12 +628,12 @@ function makeCsv(){const d=repData(),q=v=>'"'+String(v??'').replace(/"/g,'""')+'
 /* ---------- settings ---------- */
 function vSettings(){
   const o=S.org;
-  let h='<h2>Settings</h2><div class="panel"><h3>Your warehouse</h3><div class="grid"><label class="fld"><span>Company name</span><input id="orgN" value="'+esc(o.name)+'"></label><label class="fld"><span>Brand colour</span><input id="orgC" type="color" value="'+esc(/^#[0-9a-f]{6}$/i.test(o.color||'')?o.color:'#1D4E89')+'"></label><label class="fld"><span>Email subject template</span><input id="orgS" value="'+esc(o.subject||DEF_SUBJ)+'"></label></div><p class="note">The subject fills in {job}, {sku}, {qty}, {order} and {client} from each return.</p><div class="row"><button class="btn pri" data-act="saveOrg">Save branding</button>'+(S.assets?'<button class="btn" data-act="logo">'+(o.logo?'Replace logo':'Upload logo')+'</button>':'')+(o.color?'<button class="btn" data-act="resetColor">Use default colour</button>':'')+'</div><p class="note">The name, colour and logo appear in the app header and on PDF reports.</p></div>';
+  let h='<h2>Settings</h2><div class="panel"><h3>Your warehouse</h3><div class="grid"><label class="fld"><span>Company name</span><input id="orgN" value="'+esc(o.name)+'"></label><label class="fld"><span>Brand colour</span><input id="orgC" type="color" value="'+esc(/^#[0-9a-f]{6}$/i.test(o.color||'')?o.color:'#1D4E89')+'"></label><label class="fld"><span>Returns department email</span><input id="orgE" type="email" value="'+esc(o.email||'')+'"></label><label class="fld"><span>Email subject template</span><input id="orgS" value="'+esc(o.subject||DEF_SUBJ)+'"></label></div><p class="note">The subject fills in {job}, {sku}, {qty}, {order} and {client} from each return.</p><div class="row"><button class="btn pri" data-act="saveOrg">Save branding</button>'+(S.assets?'<button class="btn" data-act="logo">'+(o.logo?'Replace logo':'Upload logo')+'</button>':'')+(o.color?'<button class="btn" data-act="resetColor">Use default colour</button>':'')+'</div><p class="note">The name, colour and logo appear in the app header and on PDF reports. The returns department email is copied on every email to a tenant and shown in the sign-off.</p></div>';
   h+='<div class="panel"><h3>Clients</h3>';
   if(!S.gotClients)h+='<p class="note">Loading clients…</p>';
   else if(!S.clients.length)h+='<p class="note">No clients yet. Add each brand you handle returns for.</p>';
-  S.clients.forEach(c=>{h+='<div class="line"><div class="line-h"><strong>'+esc(c.name)+(c.code?' <span class="job">'+esc(c.code)+'</span>':'')+'</strong><span class="row"><button class="btn" data-act="editClient" data-v="'+c.id+'">Edit</button><button class="btn danger" data-act="delClient" data-v="'+c.id+'">Delete</button></span></div>'+(S.editClient===c.id?vEditClient(c):'')+'<div class="note">'+(c.email?'Reports to <span class="sel">'+esc(c.email)+'</span>':'No report email saved')+' · '+(c.skuCount?c.skuCount+' SKUs imported':'No SKU list imported')+'</div><div class="row"><button class="btn" data-act="csvPick" data-v="'+c.id+'">'+(c.skuCount?'Replace SKU list (CSV)':'Import SKU list (CSV)')+'</button></div>'+(S.imp&&S.imp.cid===c.id?vImport():'')+'</div>'});
-  h+='<div class="grid"><label class="fld"><span>Client name</span><input id="cN" placeholder="Brand name"></label><label class="fld"><span>Short code (optional)</span><input id="cC" class="mono" maxlength="8" autocapitalize="characters"></label><label class="fld"><span>Report email (optional)</span><input id="cE" type="email"></label></div><div><button class="btn pri" data-act="addClient">Add client</button></div></div>';
+  S.clients.forEach(c=>{h+='<div class="line"><div class="line-h"><strong>'+esc(c.name)+(c.code?' <span class="job">'+esc(c.code)+'</span>':'')+'</strong><span class="row"><button class="btn" data-act="editClient" data-v="'+c.id+'">Edit</button><button class="btn danger" data-act="delClient" data-v="'+c.id+'">Delete</button></span></div>'+(S.editClient===c.id?vEditClient(c):'')+'<div class="note">'+(c.email?'Reports to <span class="sel">'+esc(c.email)+'</span>':'No tenant email saved')+' · '+(c.skuCount?c.skuCount+' SKUs imported':'No SKU list imported')+'</div><div class="row"><button class="btn" data-act="csvPick" data-v="'+c.id+'">'+(c.skuCount?'Replace SKU list (CSV)':'Import SKU list (CSV)')+'</button></div>'+(S.imp&&S.imp.cid===c.id?vImport():'')+'</div>'});
+  h+='<div class="grid"><label class="fld"><span>Client name</span><input id="cN" placeholder="Brand name"></label><label class="fld"><span>Short code (optional)</span><input id="cC" class="mono" maxlength="8" autocapitalize="characters"></label><label class="fld"><span>Tenant email</span><input id="cE" type="email"></label></div><div><button class="btn pri" data-act="addClient">Add client</button></div></div>';
   if(S.returns.some(r=>r.example)||S.clients.some(c=>c.example))h+='<div class="panel"><h3>Example data</h3><p class="note">Sample returns are loaded. Remove them before you start logging real ones.</p><div><button class="btn danger" data-act="rmExamples">Remove example data</button></div></div>';
   h+=GH.panel();return h;
 }
@@ -677,7 +677,7 @@ async function rmExamples(){try{for(const r of S.returns.filter(r=>r.example))aw
 
 /* ---------- client edit and per-return email ---------- */
 const DEF_SUBJ='Return {job} | {sku} | Qty {qty}';
-function vEditClient(c){return'<div class="grid"><label class="fld"><span>Client name</span><input id="ec-n" value="'+esc(c.name)+'"></label><label class="fld"><span>Short code</span><input id="ec-c" class="mono" maxlength="8" value="'+esc(c.code||'')+'"></label><label class="fld"><span>Default report email</span><input id="ec-e" type="email" value="'+esc(c.email||'')+'"></label></div><div class="row"><button class="btn pri" data-act="saveClient" data-v="'+c.id+'">Save client</button><button class="btn" data-act="cancelClient">Cancel</button></div>'}
+function vEditClient(c){return'<div class="grid"><label class="fld"><span>Client name</span><input id="ec-n" value="'+esc(c.name)+'"></label><label class="fld"><span>Short code</span><input id="ec-c" class="mono" maxlength="8" value="'+esc(c.code||'')+'"></label><label class="fld"><span>Tenant email</span><input id="ec-e" type="email" value="'+esc(c.email||'')+'"></label></div><div class="row"><button class="btn pri" data-act="saveClient" data-v="'+c.id+'">Save client</button><button class="btn" data-act="cancelClient">Cancel</button></div>'}
 function subjFor(r){
   const sk=(r.lines||[]).map(l=>l.sku).filter(Boolean),rep={job:r.jobNo||'',sku:sk.slice(0,3).join(', ')+(sk.length>3?' +'+(sk.length-3)+' more':''),qty:units(r),order:r.orderNo||'',client:clientName(r.clientId)};
   return(S.org.subject||DEF_SUBJ).replace(/\{(job|sku|qty|order|client)\}/g,(m,k)=>rep[k]);
@@ -685,7 +685,7 @@ function subjFor(r){
 function mailPanel(r){
   const c=S.clients.find(x=>x.id===r.clientId)||{},subj=subjFor(r),np=(r.lines||[]).reduce((a,l)=>a+(l.photos||[]).length,0);
   const items=(r.lines||[]).map(l=>'- '+(l.sku||l.barcode||'Item')+(l.name?' ('+l.name+')':'')+': received '+(+l.qtyRecv||0)+' of '+(+l.qtyExp||0)+[l.reason&&', reason: '+l.reason,l.grade&&', grade '+l.grade,l.disposition&&', '+l.disposition.toLowerCase()].filter(Boolean).join('')).join('\n');
-  const body='Hi '+(c.name||'')+' team,\n\nThis return has been '+r.status+'.\n\nJob: '+r.jobNo+(r.orderNo?'\nOrder: '+r.orderNo:'')+(r.tracking?'\nTracking: '+r.tracking:'')+'\nReceived: '+fmtD(r.dateReceived)+(r.dateProcessed?'\nProcessed: '+fmtD(r.dateProcessed):'')+'\n\nItems:\n'+(items||'- none recorded')+(r.notes?'\n\nNotes: '+r.notes:'')+(np?'\n\nPhotos taken: '+np:'')+'\n\nRegards,\n'+(S.org.name||'Returns team');
+  const body='Hi '+(c.name||'')+' team,\n\nStatus: '+SL(r.status)+'.\n\nJob: '+r.jobNo+(r.orderNo?'\nOrder: '+r.orderNo:'')+(r.tracking?'\nTracking: '+r.tracking:'')+'\nReceived: '+fmtD(r.dateReceived)+(r.dateProcessed?'\nProcessed: '+fmtD(r.dateProcessed):'')+'\n\nItems:\n'+(items||'- none recorded')+(r.notes?'\n\nNotes: '+r.notes:'')+(np?'\n\nPhotos taken: '+np:'')+'\n\nRegards,\n'+(S.org.name||'Returns team');
   return'<div class="panel"><h3>Email this return to the client</h3><p class="note">This uses the saved version of the return. Save your changes first.</p><div><span class="note">To: </span>'+(c.email?'<span class="sel">'+esc(c.email)+'</span>':'<span class="note">No default email for this client. Add one under Settings, Edit.</span>')+'</div><label class="fld"><span>Subject</span><input id="rSubj" value="'+esc(subj)+'"></label><label class="fld"><span>Message</span><textarea id="rBody" rows="10">'+esc(body)+'</textarea></label><div class="row"><button class="btn" data-act="copy" data-v="rSubj">Copy subject</button><button class="btn" data-act="copy" data-v="rBody">Copy message</button>'+(c.email?'<a class="btn pri" href="mailto:'+encodeURIComponent(c.email)+'?subject='+encodeURIComponent(subj)+'&body='+encodeURIComponent(body)+'">Open in mail app</a>':'')+'</div></div>';
 }
 function twice(btn,fn){if(btn.dataset.armed){fn();return}btn.dataset.armed='1';const t=btn.textContent;btn.textContent='Tap again to confirm';setTimeout(()=>{if(btn.isConnected){btn.textContent=t;delete btn.dataset.armed}},3000)}
@@ -696,8 +696,8 @@ const ACT={
   scan:v=>{S.target=v;const i=$('#scanInput');i.value='';i.click()},photo:v=>{S.target=v;const i=$('#photoInput');i.value='';i.click()},
   save:saveReturn,del:(v,b)=>twice(b,async()=>{try{await S.db.collection('returns').doc(v).delete();toast('Return deleted.');newDraft();go('list')}catch(e){fail(e,'delete this return')}}),
   pdf:makePdf,csv:makeCsv,copyMail:async()=>{const t=$('#mailBody');try{await navigator.clipboard.writeText(t.value);toast('Email text copied.')}catch(e){t.select();toast('Press copy to copy the selected text.')}},
-  saveOrg:async()=>{try{await S.db.doc('orgs/main').set({name:$('#orgN').value.trim(),color:$('#orgC').value,logo:S.org.logo||'',subject:$('#orgS').value.trim()});toast('Branding saved.')}catch(e){fail(e,'save branding')}},
-  resetColor:async()=>{try{await S.db.doc('orgs/main').set({name:S.org.name||'',color:'',logo:S.org.logo||'',subject:S.org.subject||''})}catch(e){fail(e,'save branding')}},
+  saveOrg:async()=>{try{await S.db.doc('orgs/main').set({name:$('#orgN').value.trim(),color:$('#orgC').value,logo:S.org.logo||'',subject:$('#orgS').value.trim(),email:$('#orgE').value.trim()});toast('Branding saved.')}catch(e){fail(e,'save branding')}},
+  resetColor:async()=>{try{await S.db.doc('orgs/main').set({name:S.org.name||'',color:'',logo:S.org.logo||'',subject:S.org.subject||'',email:S.org.email||''})}catch(e){fail(e,'save branding')}},
   logo:()=>{const i=$('#logoInput');i.value='';i.click()},
   addClient:async()=>{const name=$('#cN').value.trim();if(!name)return toast('Type the client name.');if(S.clients.some(c=>c.name.toLowerCase()===name.toLowerCase()))return toast('That client already exists.');try{await S.db.collection('clients').add({name,code:$('#cC').value.trim().toUpperCase(),email:$('#cE').value.trim(),skuCount:0});toast('Added '+name)}catch(e){fail(e,'add this client')}},
   delClient:(v,b)=>{if(S.returns.some(r=>r.clientId===v))return toast('This client has returns logged, so it can\'t be deleted.');twice(b,async()=>{try{await S.db.doc('clients/'+v).delete()}catch(e){fail(e,'delete this client')}})},
@@ -719,8 +719,9 @@ const RM=()=>matchMedia('(prefers-reduced-motion: reduce)').matches;
 const P={arrow:'M5 12h14M13 6l6 6-6 6',x:'M6 6l12 12M18 6L6 18',grip:'M9 6h.01M15 6h.01M9 12h.01M15 12h.01M9 18h.01M15 18h.01',check:'M5 12.5l4.5 4.5L19 7.5',minus:'M5 12h14',plus:'M12 5v14M5 12h14',chev:'M6 9l6 6 6-6',filter:'M4 6h16M7 12h10M10 18h4',scan:'M4 8V5h3M17 5h3v3M20 16v3h-3M7 19H4v-3M8 9v6M12 9v6M16 9v6',pen:'M4 20h4L19 9l-4-4L4 16zM14 6l4 4'};
 const ic=(n,c)=>'<svg class="ic'+(c?' '+c:'')+'" viewBox="0 0 24 24" aria-hidden="true"><path d="'+P[n]+'"/></svg>';
 const cap=s=>s?s[0].toUpperCase()+s.slice(1):'';
+const SLAB={received:'Received',inspected:'Inspected',processed:'Sent to tenant',closed:'Closed'},SL=s=>SLAB[s]||cap(s);
 const nextStatus=s=>STATUS[STATUS.indexOf(s)+1]||null;
-const pill=(s,pop)=>'<span class="pill st-'+esc(s)+(pop?' pop':'')+'"><i class="dot"></i>'+esc(s)+'</span>';
+const pill=(s,pop)=>'<span class="pill st-'+esc(s)+(pop?' pop':'')+'"><i class="dot"></i>'+esc(SL(s))+'</span>';
 const say=m=>{const l=$('#live');l.textContent='';setTimeout(()=>l.textContent=m,30)};
 
 function toast(m,act){
@@ -795,7 +796,7 @@ function panelOrder(){
     S.order=(Array.isArray(o)?o:[]).filter(k=>PANELS.includes(k));PANELS.forEach(k=>{if(!S.order.includes(k))S.order.push(k)})}
   return S.order;
 }
-const STG={received:['Just in','On the dock, waiting to be checked'],inspected:['In process','Checked and graded, being actioned'],processed:['Finished','Work done, ready to report to the client'],closed:['Closed','Reported to the client, nothing left to do']};
+const STG={received:['Received','On the dock, waiting to be checked'],inspected:['Inspected','Checked and photographed, needs a decision'],processed:['Sent to tenant','Emailed to the tenant, waiting for their answer'],closed:['Closed','Decided and finished']};
 function board(all,rs){
   const sets={};STATUS.forEach(s=>sets[s]=(s==='closed'?rs:all).filter(r=>r.status===s));
   const open=all.filter(r=>r.status!=='closed').length,pl=S.period===1?'today':S.period?'last '+S.period+' days':'all time';
@@ -902,7 +903,7 @@ function vForm(){
    +'<label class="fld"><span>Client</span><select id="f-client" data-f="clientId">'+opts([['','Choose a client…']].concat(S.clients.map(c=>[c.id,c.name])),d.clientId)+'</select></label>'
    +'<label class="fld"><span>Job number</span><input id="f-job" class="mono" data-f="jobNo" value="'+esc(d.jobNo)+'" autocapitalize="characters"></label>'
    +'<label class="fld"><span>Date received</span><input id="f-date" type="date" data-f="dateReceived" value="'+esc(d.dateReceived)+'"></label>'
-   +'</div><div class="pick"><span>Status</span>'+seg('f-status','Status',STATUS.map(s=>[s,'<i class="dot st-'+s+'"></i>'+cap(s)]),d.status)+'</div><div class="grid">'
+   +'</div><div class="pick"><span>Status</span>'+seg('f-status','Status',STATUS.map(s=>[s,'<i class="dot st-'+s+'"></i>'+SL(s)]),d.status)+'</div><div class="grid">'
    +'<div class="fld"><span>Original order number</span><div class="with-btn"><input id="f-order" class="mono" data-f="orderNo" value="'+esc(d.orderNo)+'" aria-label="Original order number"><button class="btn" data-act="scan" data-v="orderNo" aria-label="Scan order number">'+ic('scan')+'</button></div></div>'
    +'<div class="fld"><span>Tracking number</span><div class="with-btn"><input id="f-track" class="mono" data-f="tracking" value="'+esc(d.tracking)+'" aria-label="Tracking number"><button class="btn" data-act="scan" data-v="tracking" aria-label="Scan tracking number">'+ic('scan')+'</button></div></div>'
    +'<label class="fld"><span>Carrier</span><select id="f-carrier" data-f="carrier">'+opts(CARRIERS,d.carrier)+'</select></label>'
@@ -1008,7 +1009,7 @@ function drawRows(){
   const el=$('#rows');if(!el)return;if(S.swiping){S.rowsDirty=true;return}
   const base=fltRows(true),n=s=>base.filter(r=>s==='open'?r.status!=='closed':r.status===s).length;
   const sg=$('#statusSeg');
-  if(sg){const o=[['','All <small>'+base.length+'</small>'],['open','Open <small>'+n('open')+'</small>']].concat(STATUS.map(s=>[s,'<i class="dot st-'+s+'"></i>'+cap(s)+' <small>'+n(s)+'</small>']));
+  if(sg){const o=[['','All <small>'+base.length+'</small>'],['open','Open <small>'+n('open')+'</small>']].concat(STATUS.map(s=>[s,'<i class="dot st-'+s+'"></i>'+SL(s)+' <small>'+n(s)+'</small>']));
     const cur=sg.querySelector('.seg');
     if(cur){cur.querySelectorAll('button').forEach((b,i)=>{b.innerHTML=o[i][1];b.setAttribute('aria-pressed',o[i][0]===S.flt.status)})}
     else sg.innerHTML=seg('fstatus','Status',o,S.flt.status);}
@@ -1018,13 +1019,13 @@ function drawRows(){
   el.innerHTML='<ul class="rows">'+rs.slice(0,300).map(r=>{
     const nx=nextStatus(r.status),was=S.lastStatus[r.id],ch=was&&was!==r.status,si=STATUS.indexOf(r.status),wi=STATUS.indexOf(was);
     return'<li class="rw'+(nx?'':' none')+(S.fresh===r.id?' fresh':'')+'" data-id="'+r.id+'">'
-     +(nx?'<div class="rw-under" aria-hidden="true"><span>'+ic('check')+'Mark '+nx+'</span></div>':'')
+     +(nx?'<div class="rw-under" aria-hidden="true"><span>'+ic('check')+(r.status==='inspected'?'Decide':'Mark '+SL(nx).toLowerCase())+'</span></div>':'')
      +'<div class="rw-card"><button class="rw-main" data-act="open" data-v="'+r.id+'" aria-label="Open '+esc(r.jobNo)+', '+esc(clientName(r.clientId))+', '+esc(r.status)+'">'
      +'<span class="job">'+esc(r.jobNo)+'</span><span class="rw-cl">'+esc(clientName(r.clientId))+'</span>'
      +'<span class="rw-meta"><span>'+fmtD(r.dateReceived)+'</span><span class="mono">'+esc(r.orderNo||'no order no.')+'</span><span>'+units(r)+' unit'+(units(r)===1?'':'s')+'</span>'
      +'<span class="trk st-'+esc(r.status)+'">'+STATUS.map((s,i)=>'<i class="'+(i<=si?'on':'')+(ch&&i<=si&&i>wi?' new':'')+'"></i>').join('')+'</span></span>'
      +pill(r.status,ch)+'</button>'
-     +(nx?'<button class="adv" data-act="advance" data-v="'+r.id+'" aria-label="Mark '+esc(r.jobNo)+' as '+nx+'" title="Mark '+nx+'">'+ic('arrow')+'</button>':'')
+     +(nx?'<button class="adv" data-act="advance" data-v="'+r.id+'" aria-label="'+(r.status==='inspected'?'Decide what happens to '+esc(r.jobNo):'Mark '+esc(r.jobNo)+' as '+SL(nx).toLowerCase())+'" title="'+(r.status==='inspected'?'Send to tenant or keep':'Mark '+SL(nx).toLowerCase())+'">'+ic('arrow')+'</button>':'')
      +'</div></li>'}).join('')+'</ul>';
   S.lastStatus={};S.returns.forEach(r=>S.lastStatus[r.id]=r.status);
   placeSegs();
@@ -1039,7 +1040,7 @@ async function setStatus(id,status,quiet){
   if((status==='processed'||status==='closed')&&!r.dateProcessed)patch.dateProcessed=today();
   S.busy[id]=true;
   try{await S.db.collection('returns').doc(id).update(patch);
-    if(!quiet)toast(r.jobNo+' marked '+status,{label:'Undo',fn:async()=>{try{await S.db.collection('returns').doc(id).update({status:prev.status,dateProcessed:prev.dateProcessed,history:prev.history,updatedAt:new Date().toISOString()});toast(r.jobNo+' back to '+prev.status)}catch(e){fail(e,'undo that change')}}})}
+    if(!quiet)toast(r.jobNo+': '+SL(status).toLowerCase(),{label:'Undo',fn:async()=>{try{await S.db.collection('returns').doc(id).update({status:prev.status,dateProcessed:prev.dateProcessed,history:prev.history,updatedAt:new Date().toISOString()});toast(r.jobNo+' back to '+SL(prev.status).toLowerCase())}catch(e){fail(e,'undo that change')}}})}
   catch(e){fail(e,'change the status')}
   delete S.busy[id];if(S.sheetId===id)renderSheet();
 }
@@ -1064,7 +1065,7 @@ function startSwipe(e,card){
     S.noClick=performance.now()+60;const fire=commit&&armed;
     card.style.transition='transform .3s cubic-bezier(.2,.9,.3,1.15)';card.style.transform='';
     setTimeout(()=>{card.style.transition='';li.classList.remove('sw','armed');S.swiping=false;if(S.rowsDirty){S.rowsDirty=false;drawRows()}},RM()?0:310);
-    if(fire)setStatus(id,nx);
+    if(fire)ACT.advance(id);
   }
   window.addEventListener('pointermove',mv);window.addEventListener('pointerup',up);window.addEventListener('pointercancel',cancel);window.addEventListener('keydown',key);
 }
@@ -1100,7 +1101,7 @@ function renderSheet(){
    +'<header class="sh-h" data-shgrab><div class="sh-ht"><span class="job big">'+esc(r.jobNo)+'</span><h2 id="sh-t">'+esc(clientName(r.clientId))+'</h2><p class="note">Received '+fmtD(r.dateReceived)+' · '+units(r)+' unit'+(units(r)===1?'':'s')+' across '+n+' item'+(n===1?'':'s')+'</p></div>'
    +'<button class="icb" data-act="closeSheet" aria-label="Close">'+ic('x')+'</button></header><div class="sh-b">'
    +'<ol class="steps" aria-label="Status"><li class="bar2" role="presentation" style="--from:'+(wi/3)+';--to:'+(si/3)+(mvg?';animation-delay:-'+Math.round(now-mvg.t)+'ms':'')+'"></li>'
-   +STATUS.map((s,i)=>'<li class="'+(i<si?'done':i===si?'cur'+(was&&was!==r.status?' moved':''):'')+'"><button data-act="sheetStatus" data-v="'+s+'"'+(i===si?' aria-current="step"':'')+(busy?' disabled':'')+' aria-label="'+(i===si?cap(s)+', current status':'Set status to '+s)+'">'+cap(s)+'</button></li>').join('')+'</ol>'
+   +STATUS.map((s,i)=>'<li class="'+(i<si?'done':i===si?'cur'+(was&&was!==r.status?' moved':''):'')+'"><button data-act="sheetStatus" data-v="'+s+'"'+(i===si?' aria-current="step"':'')+(busy?' disabled':'')+' aria-label="'+(i===si?SL(s)+', current status':'Set status to '+SL(s))+'">'+SL(s)+'</button></li>').join('')+'</ol>'
    +'<dl class="kv"><div><dt>Order number</dt><dd class="mono">'+esc(r.orderNo||'—')+'</dd></div><div><dt>Tracking</dt><dd class="mono">'+esc(r.tracking||'—')+'</dd></div><div><dt>Carrier</dt><dd>'+esc(r.carrier||'—')+'</dd></div><div><dt>Processed</dt><dd>'+fmtD(r.dateProcessed)+'</dd></div></dl>';
   h+='<div><h3>Items</h3>'+(n?r.lines.map(l=>{const e=+l.qtyExp||0,q=+l.qtyRecv||0,g=GRADES.find(x=>x[0]===l.grade);
     return'<div class="it"><div class="it-h"><b>'+esc(l.name||l.sku||l.barcode||'Item')+'</b>'+(l.sku?'<span class="mono note">'+esc(l.sku)+'</span>':'')+'<span class="q'+(q!==e?' ag w':'')+'">'+q+' of '+e+'</span></div>'
@@ -1109,7 +1110,8 @@ function renderSheet(){
   if(r.notes)h+='<div><h3>Notes</h3><p style="margin:6px 0 0;white-space:pre-wrap">'+esc(r.notes)+'</p></div>';
   if(r.history&&r.history.length)h+='<div><h3>History</h3><ul class="hist" style="margin-top:6px">'+r.history.slice(-5).reverse().map(x=>'<li>'+esc(new Date(x.at).toLocaleString('en-AU'))+' · '+esc(x.what)+'</li>').join('')+'</ul></div>';
   h+='</div><footer class="sh-f"><button class="btn" data-act="editOpen" data-v="'+r.id+'">'+ic('pen')+'Edit or email</button>'
-   +(nx?'<button class="btn pri" data-act="advance" data-v="'+r.id+'"'+(busy?' disabled':'')+'>'+(busy?'Saving…':'Mark '+nx)+(busy?'':ic('arrow'))+'</button>':'')+'</footer>';
+   +(r.status==='inspected'?'<button class="btn" data-act="keepClose" data-v="'+r.id+'"'+(busy?' disabled':'')+'>Keep and close</button><button class="btn pri" data-act="sendTenant" data-v="'+r.id+'"'+(busy?' disabled':'')+'>'+(busy?'Saving…':'Email tenant')+'</button>'
+     :nx?'<button class="btn pri" data-act="advance" data-v="'+r.id+'"'+(busy?' disabled':'')+'>'+(busy?'Saving…':'Mark '+SL(nx).toLowerCase())+(busy?'':ic('arrow'))+'</button>':'')+'</footer>';
   box.innerHTML=h;enhance(box);S.sheetStatus=r.status;
   const ns=box.querySelector('.sh-b');if(ns)ns.scrollTop=top;
   if(key){const f=box.querySelector('[data-act="'+key[0]+'"][data-v="'+key[1]+'"]:not([disabled])')||box.querySelector('[data-act="'+key[0]+'"]:not([disabled])');(f||$('#sheetP')).focus({preventScroll:true})}
@@ -1172,12 +1174,26 @@ function startSheetDrag(e){
   window.addEventListener('pointermove',mv);window.addEventListener('pointerup',fin);window.addEventListener('pointercancel',fin);
 }
 
+function tenantMail(r,c){
+  const np=(r.lines||[]).reduce((a,l)=>a+(l.photos||[]).length,0),g=k=>(GRADES.find(x=>x[0]===k)||[])[1];
+  const items=(r.lines||[]).map(l=>'- '+(l.sku||l.barcode||'Item')+(l.name?' ('+l.name+')':'')+': received '+(+l.qtyRecv||0)+' of '+(+l.qtyExp||0)+[l.reason&&', reason: '+l.reason,l.grade&&', condition: '+g(l.grade)].filter(Boolean).join('')).join('\n');
+  const body='Attention: '+(c.name||'')+' returns team\n\nA return has arrived at our warehouse and has been inspected. Please tell us what you would like done with it.\n\nJob: '+r.jobNo+(r.orderNo?'\nOrder: '+r.orderNo:'')+(r.tracking?'\nTracking: '+r.tracking:'')+'\nReceived: '+fmtD(r.dateReceived)
+   +'\n\nItems:\n'+(items||'- none recorded')+(r.notes?'\n\nInspection notes: '+r.notes:'')+(np?'\n\nPhotos taken: '+np+'. Reply to this email and we will send them.':'')
+   +'\n\nPlease reply with one of:\n1. Return the stock to the shelf\n2. Send replacement stock to the customer\n3. Other instructions\n\nRegards,\n'+(S.org.name||'The warehouse')+' Returns Department'+(S.org.email?'\n'+S.org.email:'');
+  return'mailto:'+encodeURIComponent(c.email)+'?'+(S.org.email?'cc='+encodeURIComponent(S.org.email)+'&':'')+'subject='+encodeURIComponent(subjFor(r))+'&body='+encodeURIComponent(body);
+}
+
 /* ---------- events ---------- */
 Object.assign(ACT,{
   toastAct:()=>{const f=toast.fn;toast.fn=null;$('#toast').hidden=true;if(f)f()},
   open:v=>openSheet(v),closeSheet,
   editOpen:v=>{finishClose();editReturn(v)},
-  advance:v=>{const r=S.returns.find(x=>x.id===v),nx=r&&nextStatus(r.status);if(nx){setStatus(v,nx);if(S.sheetId===v)renderSheet()}},
+  advance:v=>{const r=S.returns.find(x=>x.id===v),nx=r&&nextStatus(r.status);if(!nx)return;if(r.status==='inspected'){if(S.sheetId!==v)openSheet(v);return}setStatus(v,nx);if(S.sheetId===v)renderSheet()},
+  keepClose:v=>{setStatus(v,'closed');if(S.sheetId===v)renderSheet()},
+  sendTenant:v=>{const r=S.returns.find(x=>x.id===v);if(!r)return;const c=S.clients.find(x=>x.id===r.clientId)||{};
+    if(!c.email)return toast('No email saved for this tenant. Add it in Settings, then try again.');
+    const a=document.createElement('a');a.href=tenantMail(r,c);document.body.appendChild(a);a.click();a.remove();
+    setStatus(v,'processed');if(S.sheetId===v)renderSheet()},
   sheetStatus:v=>{setStatus(S.sheetId,v);renderSheet()},
   toList:v=>{S.flt.status=v;go('list')},
   clearFlt:()=>{S.flt.client='';S.flt.from='';S.flt.to='';['fc','ff','ft'].forEach(i=>{const e=$('#'+i);if(e)e.value=''});drawRows()},
