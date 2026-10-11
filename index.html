@@ -631,13 +631,13 @@ async function logoData(){if(!S.org.logo)return null;try{const b=await (await fe
 async function makePdf(){
   if(!window.jspdf)return toast('The PDF library did not load. Reload and try again.');
   const d=repData(),r=S.rep,c=S.clients.find(x=>x.id===r.client),doc=new window.jspdf.jsPDF({orientation:'landscape',unit:'pt',format:'a4'});
-  const col=/^#[0-9a-f]{6}$/i.test(S.org.color||'')?rgb(S.org.color):[29,78,137];let x=40;
+  const col=/^#[0-9a-f]{6}$/i.test(S.org.color||'')?rgb(S.org.color):[29,78,137];let x=40;const W=doc.internal.pageSize.getWidth();doc.setFillColor(8,14,30);doc.rect(0,0,W,78,'F');doc.setFillColor(94,235,255);doc.rect(0,78,W,3,'F');doc.setTextColor(255);
   const lg=await logoData();if(lg){const h=34,w=lg.w/lg.h*h;try{doc.addImage(lg.url,'PNG',40,28,w,h);x=40+w+12}catch(e){}}
   doc.setFont('helvetica','bold');doc.setFontSize(18);doc.text('Returns report',x,44);
   doc.setFont('helvetica','normal');doc.setFontSize(10);doc.text((S.org.name?S.org.name+'  ·  ':'')+(c?c.name:'All clients')+'  ·  '+fmtD(r.from)+' to '+fmtD(r.to),x,60);
-  doc.setFontSize(9);summary(d).split('\n').forEach((t,i)=>doc.text(t,40,86+i*13));
+  doc.setTextColor(0);doc.setFontSize(9);summary(d).split('\n').forEach((t,i)=>doc.text(t,40,102+i*13));
   const rows=c?d.rows.map(v=>v.filter((_,i)=>i!==2)):d.rows,head=c?HEAD.filter((_,i)=>i!==2):HEAD;
-  doc.autoTable({head:[head],body:rows,startY:132,margin:{left:40,right:40},styles:{fontSize:8,cellPadding:4,overflow:'linebreak'},headStyles:{fillColor:col,textColor:(col[0]*299+col[1]*587+col[2]*114)/1000>150?20:255},alternateRowStyles:{fillColor:[243,245,247]},
+  doc.autoTable({head:[head],body:rows,startY:148,margin:{left:40,right:40},styles:{fontSize:8,cellPadding:4,overflow:'linebreak'},headStyles:{fillColor:col,textColor:(col[0]*299+col[1]*587+col[2]*114)/1000>150?20:255},alternateRowStyles:{fillColor:[243,245,247]},
     didDrawPage:()=>{doc.setFontSize(8);doc.setTextColor(110);doc.text('Generated '+fmtD(today())+'  ·  Page '+doc.internal.getNumberOfPages(),40,doc.internal.pageSize.getHeight()-20);doc.setTextColor(0)}});
   saveFile(fileBase()+'.pdf',doc.output('blob'));
 }
