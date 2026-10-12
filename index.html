@@ -977,7 +977,7 @@ function qnoteText(l){return''}
 function vForm(){
   if(!S.clients.length)return'<div class="panel empty"><h2>Add a tenant first</h2><p>Every return belongs to a tenant, so the app needs at least one before you can log a return.</p><button class="btn pri" data-act="tab" data-v="settings">Go to Settings</button></div>';
   const d=S.draft;if(!d.jobNo&&!S.editId)d.jobNo=nextJob();S.formLive=true;if(!d.kind)d.kind='return';
-  const sts=d.kind==='rts'?['open','resent','shelf']:['open','shelf','discarded'];if(!sts.includes(d.status))d.status='open';
+  const sts=d.kind==='rts'?['open','resent','shelf','discarded']:['open','shelf','discarded'];if(!sts.includes(d.status))d.status='open';
   const prev=S.editId?S.returns.find(r=>r.id===S.editId):null;
   let h='<div class="row"><h2 style="flex:1 1 auto">'+(S.editId?'Edit return':'New return')+'</h2>'+(S.editId?'<button class="btn" data-act="newDraft">Start a new one</button>':'')+'</div>';
   h+='<div class="panel"><div class="pick"><span>Type</span>'+seg('f-kind','Type',KINDS,d.kind)+'</div>'
@@ -1210,18 +1210,18 @@ function renderSheet(){
    +'<button class="icb" data-act="closeSheet" aria-label="Close">'+ic('x')+'</button></header><div class="sh-b">'
    +'<dl class="kv"><div><dt>Reference</dt><dd class="mono">'+esc(r.orderNo||'—')+'</dd></div><div><dt>Tracking</dt><dd class="mono">'+esc(r.tracking||'—')+'</dd></div><div><dt>Carrier</dt><dd>'+esc(r.carrier||'—')+'</dd></div><div><dt>Closed on</dt><dd>'+fmtD(r.dateProcessed)+'</dd></div></dl>';
   if(sg==='rts'){prepFiles(r);
-    h+='<div class="dec"><h3>Waiting on the tenant</h3><p class="note">'+(r.emailedAt?'Tenant emailed '+esc(new Date(r.emailedAt).toLocaleDateString('en-AU'))+'. ':'')+'Record their answer when it arrives: resend to a corrected address, or put it back to stock.</p>'
+    h+='<div class="dec"><h3>Waiting on the tenant</h3><p class="note">'+(r.emailedAt?'Tenant emailed '+esc(new Date(r.emailedAt).toLocaleDateString('en-AU'))+'. ':'')+'Record their answer when it arrives: resend to a corrected address, put it back to stock, or discard it.</p>'
      +'<label class="fld"><span>New address or tenant instructions</span><textarea id="rts-note" placeholder=" ">'+esc(S.rtsNote)+'</textarea></label>'
      +(mailState(r)==='noattach'?'<p class="note">This device cannot attach photos to an email. Send from a phone or tablet to include them.</p>':'')+'</div>'}
-  else if(r.rts)h+='<div class="dec"><h3>Tenant answer</h3><p class="dec-t">'+(r.rts.answer==='resend'?'Resend to the customer':'Back to stock')+'</p>'+(r.rts.note?'<p style="margin:0;white-space:pre-wrap">'+esc(r.rts.note)+'</p>':'')+'</div>';
+  else if(r.rts)h+='<div class="dec"><h3>Tenant answer</h3><p class="dec-t">'+(({resend:'Resend to the customer',discard:'Discard'})[r.rts.answer]||'Back to stock')+'</p>'+(r.rts.note?'<p style="margin:0;white-space:pre-wrap">'+esc(r.rts.note)+'</p>':'')+'</div>';
   h+='<div><h3>Items</h3>'+(n?r.lines.map(l=>'<div class="it"><div class="it-h"><b>'+esc(l.name||l.sku||l.barcode||'Item')+'</b>'+(l.sku?'<span class="mono note">'+esc(l.sku)+'</span>':'')+'<span class="q">'+(+l.qtyGood||0)+' good · '+(+l.qtyDamaged||0)+' damaged</span></div>'
      +(l.reason?'<div class="tags"><span class="tag">'+esc(l.reason)+'</span></div>':'')
      +((l.photos||[]).length?'<div class="photos">'+l.photos.map((p,j)=>'<span class="ph"><img data-blob="'+esc(p)+'" alt="Photo '+(j+1)+' of '+esc(l.name||l.sku||'item')+'"></span>').join('')+'</div>':'')+'</div>').join(''):(isRts(r)?'<p class="note">'+esc(packText(r)||'Packaging not checked')+'. Contents not counted.</p>':'<p class="note">No items recorded.</p>'))+'</div>';
   if(r.notes)h+='<div><h3>Comment</h3><p style="margin:6px 0 0;white-space:pre-wrap">'+esc(r.notes)+'</p></div>';
   if(r.history&&r.history.length)h+='<div><h3>History</h3><ul class="hist" style="margin-top:6px">'+r.history.slice(-5).reverse().map(x=>'<li>'+esc(new Date(x.at).toLocaleString('en-AU'))+' · '+esc(x.what)+'</li>').join('')+'</ul></div>';
   h+='</div><footer class="sh-f"><button class="btn" data-act="editOpen" data-v="'+r.id+'">'+ic('pen')+'Edit</button>'
-   +(sg==='open'?'<button class="btn pri" data-act="advance" data-v="'+r.id+'"'+dis+'>'+(busy?'Saving…':'Mark '+SL(doneStatus(r)).toLowerCase())+'</button>'
-     :sg==='rts'?'<button class="btn" data-act="sendTenant" data-v="'+r.id+'"'+dis+(mailState(r)==='prep'?' disabled':'')+'>'+(({ready:'Email tenant with '+photoIds(r).length+' photo'+(photoIds(r).length===1?'':'s'),prep:'Preparing photos…'})[mailState(r)]||'Email tenant')+'</button><button class="btn pri" data-act="rtsStock" data-v="'+r.id+'"'+dis+'>Back to stock</button><button class="btn pri" data-act="rtsResend" data-v="'+r.id+'"'+dis+'>Resend to customer</button>'
+   +(sg==='open'?'<button class="btn'+(doneStatus(r)==='discarded'?' pri':'')+'" data-act="discard" data-v="'+r.id+'"'+dis+'>'+(busy?'Saving…':'Discard')+'</button><button class="btn'+(doneStatus(r)==='shelf'?' pri':'')+'" data-act="shelf" data-v="'+r.id+'"'+dis+'>'+(busy?'Saving…':'Back to shelf')+'</button>'
+     :sg==='rts'?'<button class="btn" data-act="sendTenant" data-v="'+r.id+'"'+dis+(mailState(r)==='prep'?' disabled':'')+'>'+(({ready:'Email tenant with '+photoIds(r).length+' photo'+(photoIds(r).length===1?'':'s'),prep:'Preparing photos…'})[mailState(r)]||'Email tenant')+'</button><button class="btn" data-act="discard" data-v="'+r.id+'"'+dis+'>Discard</button><button class="btn pri" data-act="rtsStock" data-v="'+r.id+'"'+dis+'>Back to stock</button><button class="btn pri" data-act="rtsResend" data-v="'+r.id+'"'+dis+'>Resend to customer</button>'
      :'<button class="btn" data-act="reopen" data-v="'+r.id+'"'+dis+'>Reopen</button>')+'</footer>';
   box.innerHTML=h;enhance(box);S.sheetStatus=sg;placeSegs();
   const ns=box.querySelector('.sh-b');if(ns)ns.scrollTop=top;
@@ -1344,7 +1344,7 @@ async function onCsv(file){
 const RHEAD=['Date','Job number','Tenant','Reference','SKU','Product','Good qty','Damaged qty','Comments','Status'];
 function outcome(x,l){const g=+l.qtyGood||0,b=+l.qtyDamaged||0;
   if(x.status==='open')return isRts(x)?'Return to sender, waiting on tenant'+(packText(x)?' · '+packText(x):''):'Not put away yet';
-  if(isRts(x)&&!g&&!b)return(x.status==='resent'?'Resent to customer':'Put back to stock')+(packText(x)?' · '+packText(x):'');
+  if(isRts(x)&&!g&&!b)return(({resent:'Resent to customer',discarded:'Discarded'})[x.status]||'Put back to stock')+(packText(x)?' · '+packText(x):'');
   if(x.status==='resent')return'Resent to customer';
   return[g?g+' received in and put back to shelf':'',b?b+' damaged and discarded':''].filter(Boolean).join('; ')}
 function repData(){
@@ -1442,6 +1442,9 @@ Object.assign(ACT,{
   open:v=>openSheet(v),closeSheet,
   editOpen:v=>{finishClose();editReturn(v)},
   advance:v=>{const r=S.returns.find(x=>x.id===v);if(!r||r.status!=='open')return;if(isRts(r)){if(S.sheetId!==v)openSheet(v);return}setStatus(v,doneStatus(r));if(S.sheetId===v)renderSheet()},
+  shelf:v=>{setStatus(v,'shelf');if(S.sheetId===v)renderSheet()},
+  discard:v=>{const r=S.returns.find(x=>x.id===v);if(!r)return;const t=$('#rts-note'),note=t?t.value.trim():'';
+    setStatus(v,'discarded',false,isRts(r)?{rts:{answer:'discard',note,at:new Date().toISOString(),by:S.uid||''}}:null,isRts(r)?'Tenant answer: discard':'Discarded');S.rtsNote='';if(S.sheetId===v)renderSheet()},
   reopen:v=>{setStatus(v,'open',false,null,'Reopened');if(S.sheetId===v)renderSheet()},
   rtsStock:v=>{const t=$('#rts-note'),note=t?t.value.trim():'';setStatus(v,'shelf',false,{rts:{answer:'stock',note,at:new Date().toISOString(),by:S.uid||''}},'Tenant answer: back to stock');S.rtsNote='';if(S.sheetId===v)renderSheet()},
   rtsResend:v=>{const t=$('#rts-note'),note=t?t.value.trim():'';if(!note)return toast('Type the corrected address or the tenant\'s instructions first.');
