@@ -789,7 +789,9 @@ REASONS.splice(0,REASONS.length,'Change of mind','Faulty','Wrong item sent','Dam
 const isRts=r=>r.kind==='rts';
 const stage=r=>r.status==='open'?(isRts(r)?'rts':'open'):r.status;
 const goodQ=r=>(r.lines||[]).reduce((a,l)=>a+(+l.qtyGood||0),0),badQ=r=>(r.lines||[]).reduce((a,l)=>a+(+l.qtyDamaged||0),0);
-const qtyText=r=>[goodQ(r)?goodQ(r)+' good':'',badQ(r)?badQ(r)+' damaged':''].filter(Boolean).join(' · ')||'no units';
+const PACKS=[['sealed','Unopened, good packaging'],['damaged','Packaging damaged'],['opened','Opened']];
+const packText=r=>isRts(r)&&r.pack?(PACKS.find(p=>p[0]===r.pack)||[])[1]||'':'';
+const qtyText=r=>[packText(r),goodQ(r)?goodQ(r)+' good':'',badQ(r)?badQ(r)+' damaged':''].filter(Boolean).join(' · ')||(isRts(r)?'Packaging not checked':'no units');
 const doneStatus=r=>goodQ(r)>0||!badQ(r)?'shelf':'discarded';
 function norm(r){ /* carries records saved under the earlier five-stage flow into the current model */
   if(!r.kind)r.kind='return';
@@ -798,7 +800,7 @@ function norm(r){ /* carries records saved under the earlier five-stage flow int
   return r;
 }
 function blankLine(){return{barcode:'',sku:'',name:'',qtyGood:1,qtyDamaged:0,reason:'',photos:[],hint:''}}
-function newDraft(){S.editId=null;S.draft={jobNo:'',clientId:'',kind:'return',orderNo:'',tracking:'',carrier:'',dateReceived:today(),dateProcessed:'',status:'open',notes:'',lines:[blankLine()]}}
+function newDraft(){S.editId=null;S.draft={jobNo:'',clientId:'',kind:'return',pack:'sealed',orderNo:'',tracking:'',carrier:'',dateReceived:today(),dateProcessed:'',status:'open',notes:'',lines:[blankLine()]}}
 S.rtsNote='';
 const pill=(s,pop)=>'<span class="pill st-'+esc(s)+(pop?' pop':'')+'"><i class="dot"></i>'+esc(STG[s]?STG[s][0]:SL(s))+'</span>';
 const say=m=>{const l=$('#live');l.textContent='';setTimeout(()=>l.textContent=m,30)};
@@ -988,7 +990,8 @@ function vForm(){
    +'<div class="fld"><span>Tracking number</span><div class="with-btn"><input id="f-track" class="mono" data-f="tracking" value="'+esc(d.tracking)+'" aria-label="Tracking number"><button class="btn" data-act="scan" data-v="tracking" aria-label="Scan tracking number">'+ic('scan')+'</button></div></div>'
    +'<label class="fld"><span>Carrier</span><select id="f-carrier" data-f="carrier">'+opts(CARRIERS,d.carrier)+'</select></label>'
    +'</div><div class="pick"><span>Status</span>'+seg('f-status','Status',sts.map(s=>[s,'<i class="dot st-'+s+'"></i>'+SL(s)]),d.status)+'</div></div>';
-  h+='<h3>Items</h3>';
+  if(d.kind==='rts')h+='<div class="panel"><div class="pick"><span>Package condition</span>'+seg('f-pack','Package condition',PACKS,d.pack||'')+'</div><p class="note">For an unopened parcel you can leave the items below empty. Add items only if the parcel was opened.</p></div>';
+  h+='<h3>'+(d.kind==='rts'?'Items (optional)':'Items')+'</h3>';
   d.lines.forEach((l,i)=>{
     h+='<div class="line"><div class="line-h"><strong>Item '+(i+1)+'</strong>'+(d.lines.length>1?'<button class="btn danger" data-act="rmLine" data-v="'+i+'">Remove</button>':'')+'</div>'
      +'<div class="grid"><div class="fld"><span>Barcode</span><div class="with-btn"><input id="l'+i+'-barcode" class="mono" inputmode="numeric" data-l="'+i+'" data-f="barcode" value="'+esc(l.barcode)+'" aria-label="Barcode"><button class="btn pri" data-act="scan" data-v="line:'+i+'">'+ic('scan')+'Scan</button></div></div>'
@@ -1015,7 +1018,7 @@ async function saveReturn(){
   const now=new Date().toISOString(),prev=S.editId?S.returns.find(r=>r.id===S.editId):null,by=S.uid||'';
   const hist=((prev&&prev.history)||[]).slice(-40);
   hist.push({at:now,by,what:!prev?'Logged as '+(d.kind==='rts'?'return to sender':'customer return'):prev.status!==d.status?'Status changed to '+SL(d.status):'Edited'});
-  const body={jobNo:d.jobNo.trim(),clientId:d.clientId,kind:d.kind==='rts'?'rts':'return',orderNo:(d.orderNo||'').trim(),tracking:(d.tracking||'').trim(),carrier:d.carrier||'',dateReceived:d.dateReceived||today(),dateProcessed:d.dateProcessed||'',status:d.status,notes:(d.notes||'').trim(),
+  const body={jobNo:d.jobNo.trim(),clientId:d.clientId,kind:d.kind==='rts'?'rts':'return',pack:d.kind==='rts'?(d.pack||''):'',orderNo:(d.orderNo||'').trim(),tracking:(d.tracking||'').trim(),carrier:d.carrier||'',dateReceived:d.dateReceived||today(),dateProcessed:d.dateProcessed||'',status:d.status,notes:(d.notes||'').trim(),
     lines:d.lines.filter(l=>l.barcode||l.sku||l.name||l.photos.length).map(l=>({barcode:l.barcode.trim(),sku:l.sku.trim(),name:l.name.trim(),qtyGood:+l.qtyGood||0,qtyDamaged:+l.qtyDamaged||0,reason:l.reason||'',photos:l.photos})),
     createdAt:(prev&&prev.createdAt)||now,createdBy:(prev&&prev.createdBy)||by,updatedAt:now,history:hist};
   if(prev&&prev.example)body.example=true;if(prev&&prev.rts)body.rts=prev.rts;if(prev&&prev.emailedAt)body.emailedAt=prev.emailedAt;
@@ -1213,7 +1216,7 @@ function renderSheet(){
   else if(r.rts)h+='<div class="dec"><h3>Tenant answer</h3><p class="dec-t">'+(r.rts.answer==='resend'?'Resend to the customer':'Back to stock')+'</p>'+(r.rts.note?'<p style="margin:0;white-space:pre-wrap">'+esc(r.rts.note)+'</p>':'')+'</div>';
   h+='<div><h3>Items</h3>'+(n?r.lines.map(l=>'<div class="it"><div class="it-h"><b>'+esc(l.name||l.sku||l.barcode||'Item')+'</b>'+(l.sku?'<span class="mono note">'+esc(l.sku)+'</span>':'')+'<span class="q">'+(+l.qtyGood||0)+' good · '+(+l.qtyDamaged||0)+' damaged</span></div>'
      +(l.reason?'<div class="tags"><span class="tag">'+esc(l.reason)+'</span></div>':'')
-     +((l.photos||[]).length?'<div class="photos">'+l.photos.map((p,j)=>'<span class="ph"><img data-blob="'+esc(p)+'" alt="Photo '+(j+1)+' of '+esc(l.name||l.sku||'item')+'"></span>').join('')+'</div>':'')+'</div>').join(''):'<p class="note">No items recorded.</p>')+'</div>';
+     +((l.photos||[]).length?'<div class="photos">'+l.photos.map((p,j)=>'<span class="ph"><img data-blob="'+esc(p)+'" alt="Photo '+(j+1)+' of '+esc(l.name||l.sku||'item')+'"></span>').join('')+'</div>':'')+'</div>').join(''):(isRts(r)?'<p class="note">'+esc(packText(r)||'Packaging not checked')+'. Contents not counted.</p>':'<p class="note">No items recorded.</p>'))+'</div>';
   if(r.notes)h+='<div><h3>Comment</h3><p style="margin:6px 0 0;white-space:pre-wrap">'+esc(r.notes)+'</p></div>';
   if(r.history&&r.history.length)h+='<div><h3>History</h3><ul class="hist" style="margin-top:6px">'+r.history.slice(-5).reverse().map(x=>'<li>'+esc(new Date(x.at).toLocaleString('en-AU'))+' · '+esc(x.what)+'</li>').join('')+'</ul></div>';
   h+='</div><footer class="sh-f"><button class="btn" data-act="editOpen" data-v="'+r.id+'">'+ic('pen')+'Edit</button>'
@@ -1286,7 +1289,7 @@ function tenantText(r,c,att){
   const np=photoIds(r).length;
   const items=(r.lines||[]).map(l=>'- '+(l.sku||l.barcode||'Item')+(l.name?' ('+l.name+')':'')+': '+((+l.qtyGood||0)+(+l.qtyDamaged||0))+' unit(s)'+(l.reason?', '+l.reason.toLowerCase():'')).join('\n');
   return'Attention: '+(c.name||'')+' team\n\nA parcel has come back to our warehouse as return to sender. It did not reach your customer.\n\nJob: '+r.jobNo+(r.orderNo?'\nReference: '+r.orderNo:'')+(r.tracking?'\nTracking: '+r.tracking:'')+'\nReceived: '+fmtD(r.dateReceived)
-   +'\n\nItems:\n'+(items||'- none recorded')+(r.notes?'\n\nComment: '+r.notes:'')+(np?(att?'\n\nPhotos attached: '+np:'\n\nPhotos taken: '+np+'. Reply to this email and we will send them.'):'')
+   +(r.pack?'\nPackage: '+packText(r):'')+'\n\nItems:\n'+(items||'- Not opened, contents not counted')+(r.notes?'\n\nComment: '+r.notes:'')+(np?(att?'\n\nPhotos attached: '+np:'\n\nPhotos taken: '+np+'. Reply to this email and we will send them.'):'')
    +'\n\nPlease reply with one of:\n1. A corrected address, and we will send it out again\n2. Put it back into stock\n\nRegards,\n'+(S.org.name||'The warehouse')+' Returns Department'+(S.org.email?'\n'+S.org.email:'');
 }
 function tenantMail(r,c){return'mailto:'+encodeURIComponent(c.email)+'?'+(S.org.email?'cc='+encodeURIComponent(S.org.email)+'&':'')+'subject='+encodeURIComponent(subjFor(r))+'&body='+encodeURIComponent(tenantText(r,c,false))}
@@ -1340,7 +1343,8 @@ async function onCsv(file){
 /* ---------- reports: Excel (two tabs) and PDF ---------- */
 const RHEAD=['Date','Job number','Tenant','Reference','SKU','Product','Good qty','Damaged qty','Comments','Status'];
 function outcome(x,l){const g=+l.qtyGood||0,b=+l.qtyDamaged||0;
-  if(x.status==='open')return isRts(x)?'Return to sender, waiting on tenant':'Not put away yet';
+  if(x.status==='open')return isRts(x)?'Return to sender, waiting on tenant'+(packText(x)?' · '+packText(x):''):'Not put away yet';
+  if(isRts(x)&&!g&&!b)return(x.status==='resent'?'Resent to customer':'Put back to stock')+(packText(x)?' · '+packText(x):'');
   if(x.status==='resent')return'Resent to customer';
   return[g?g+' received in and put back to shelf':'',b?b+' damaged and discarded':''].filter(Boolean).join('; ')}
 function repData(){
@@ -1459,7 +1463,8 @@ Object.assign(ACT,{
     if(k==='period'){S.period=+v;S.anim=true;return render()}
     if(k==='fstatus'){S.flt.status=v;return drawRows()}
     if(k==='f-status'){S.draft.status=v;return pressSeg(b)}
-    if(k==='f-kind'){S.draft.kind=v;return render()}
+    if(k==='f-kind'){S.draft.kind=v;if(v==='rts'&&!S.draft.pack)S.draft.pack='sealed';if(v==='rts'&&S.draft.lines.length===1&&!S.draft.lines[0].barcode&&!S.draft.lines[0].sku){S.draft.lines[0].qtyGood=0;S.draft.lines[0].qtyDamaged=0}return render()}
+    if(k==='f-pack'){S.draft.pack=v;return pressSeg(b)}
   }
 });
 document.addEventListener('click',e=>{
