@@ -762,15 +762,17 @@ function labelExtras(text){ /* tracking and carrier printed on the same label */
   if(/AUSTRALIA\s*POST|EPARCEL/i.test(T)&&!d.carrier){d.carrier='Australia Post';const c=$('#f-carrier');if(c)c.value=d.carrier;got.push('carrier')}
   return got;
 }
-function setOrder(code){S.draft.orderNo=code;const f=$('#f-order');if(f){f.value=code;f.classList.remove('hit');void f.offsetWidth;f.classList.add('hit')}const p=$('#ocrPick');if(p)p.innerHTML=''}
+const FIELD={jobNo:'#f-job',orderNo:'#f-order'};
+function fillField(t,code){S.draft[t]=code;const f=$(FIELD[t]);if(f){f.value=code;f.classList.remove('hit');void f.offsetWidth;f.classList.add('hit')}}
+function setOrder(code){const t=S.ocrTarget||'orderNo';fillField(t,code);if(t==='jobNo'&&!S.draft.orderNo)fillField('orderNo',code);document.querySelectorAll('.ocrPick').forEach(p=>p.innerHTML='')}
 async function onOcr(file){
   if(!file)return;toast('Reading the photo… this takes a few seconds');
   let text='';
   try{const c=await fileToImg(file,1800);await loadOcr();const r=await Tesseract.recognize(c,'eng');text=r.data.text}
   catch(e){console.error(e);return toast('Could not read text on this device. Type or scan the number instead.')}
   const extra=labelExtras(text),ref=findRef(text);
-  if(ref){setOrder(ref);return toast('Reference '+ref+(extra.length?' and '+extra.join(' and '):'')+' read from the label. Check it is right.')}
-  const codes=findCodes(text),p=$('#ocrPick');
+  if(ref){setOrder(ref);return toast((S.ocrTarget==='jobNo'?'Job number ':'Reference ')+ref+(extra.length?' and '+extra.join(' and '):'')+' read from the label. Check it is right.')}
+  const codes=findCodes(text),p=$('#ocrPick-'+(S.ocrTarget||'orderNo'));
   if(!codes.length)return toast('No reference or job number found. Get closer to the label and try again.');
   if(codes.length===1){setOrder(codes[0]);return toast('Read '+codes[0]+'. Check it is right.')}
   if(p)p.innerHTML='<span class="note">Found several. Tap the right one:</span>'+codes.map(c=>'<button type="button" class="btn" data-act="ocrPick" data-v="'+esc(c)+'">'+esc(c)+'</button>').join('');
@@ -979,10 +981,10 @@ function vForm(){
   h+='<div class="panel"><div class="pick"><span>Type</span>'+seg('f-kind','Type',KINDS,d.kind)+'</div>'
    +'<p class="note">'+(d.kind==='rts'?'The parcel never reached the customer. It stays open until the tenant says resend or back to stock.':'The customer sent it back. Count what is in good condition and what is damaged. No tenant approval is needed.')+'</p><div class="grid">'
    +'<label class="fld"><span>Tenant</span><select id="f-client" data-f="clientId">'+opts([['','Choose a tenant…']].concat(S.clients.map(c=>[c.id,c.name])),d.clientId)+'</select></label>'
-   +'<label class="fld"><span>Job number</span><input id="f-job" class="mono" data-f="jobNo" value="'+esc(d.jobNo)+'" autocapitalize="characters"></label>'
+   +'<div class="fld"><span>Job number</span><div class="with-btn"><input id="f-job" class="mono" data-f="jobNo" value="'+esc(d.jobNo)+'" autocapitalize="characters" aria-label="Job number"><button class="btn" data-act="ocr" data-v="jobNo" aria-label="Read the job number (REF) from a photo of the label">'+ic('text')+'</button>'+micBtn('jobNo','job number')+'</div><div class="row ocrPick" id="ocrPick-jobNo" style="padding-top:6px"></div></div>'
    +'<label class="fld"><span>Date received</span><input id="f-date" type="date" data-f="dateReceived" value="'+esc(d.dateReceived)+'"></label>'
    +'</div><div class="grid">'
-   +'<div class="fld"><span>Reference number</span><div class="with-btn"><input id="f-order" class="mono" data-f="orderNo" value="'+esc(d.orderNo)+'" aria-label="Reference number"><button class="btn" data-act="scan" data-v="orderNo" aria-label="Scan the reference barcode">'+ic('scan')+'</button><button class="btn" data-act="ocr" aria-label="Read the reference from a photo of the label">'+ic('text')+'</button>'+micBtn('orderNo','reference number')+'</div><div class="row" id="ocrPick" style="padding-top:6px"></div></div>'
+   +'<div class="fld"><span>Reference number</span><div class="with-btn"><input id="f-order" class="mono" data-f="orderNo" value="'+esc(d.orderNo)+'" aria-label="Reference number"><button class="btn" data-act="scan" data-v="orderNo" aria-label="Scan the reference barcode">'+ic('scan')+'</button><button class="btn" data-act="ocr" data-v="orderNo" aria-label="Read the reference from a photo of the label">'+ic('text')+'</button>'+micBtn('orderNo','reference number')+'</div><div class="row ocrPick" id="ocrPick-orderNo" style="padding-top:6px"></div></div>'
    +'<div class="fld"><span>Tracking number</span><div class="with-btn"><input id="f-track" class="mono" data-f="tracking" value="'+esc(d.tracking)+'" aria-label="Tracking number"><button class="btn" data-act="scan" data-v="tracking" aria-label="Scan tracking number">'+ic('scan')+'</button></div></div>'
    +'<label class="fld"><span>Carrier</span><select id="f-carrier" data-f="carrier">'+opts(CARRIERS,d.carrier)+'</select></label>'
    +'</div><div class="pick"><span>Status</span>'+seg('f-status','Status',sts.map(s=>[s,'<i class="dot st-'+s+'"></i>'+SL(s)]),d.status)+'</div></div>';
@@ -1390,13 +1392,13 @@ Object.assign(ACT,{
     if(S.rec){try{S.rec.stop()}catch(e){}return}
     const r=new SR();r.lang='en-AU';r.interimResults=false;r.maxAlternatives=1;S.rec=r;b.classList.add('rec');
     r.onresult=e=>{const heard=e.results[0][0].transcript,code=spokenCode(heard);if(!code)return toast('Did not catch that. Try again.');
-      if(v==='search'){S.flt.q=code;const q=$('#q');if(q)q.value=code;drawRows()}else{S.draft[v]=code;const f=$('#f-order');if(f)f.value=code}
+      if(v==='search'){S.flt.q=code;const q=$('#q');if(q)q.value=code;drawRows()}else{fillField(v,code);if(v==='jobNo'&&!S.draft.orderNo)fillField('orderNo',code)}
       toast('Heard '+code+'. Check it is right.')};
     r.onerror=e=>toast(e.error==='not-allowed'||e.error==='service-not-allowed'?'Allow microphone access for this site, then try again.':e.error==='no-speech'?'Did not hear anything. Tap the microphone and try again.':'Voice input did not work this time. Type the number instead.');
     r.onend=()=>{S.rec=null;if(b.isConnected)b.classList.remove('rec')};
     try{r.start();toast('Listening… say the number')}catch(e){S.rec=null;b.classList.remove('rec')}
   },
-  ocr:()=>{S.target='ocr';const i=$('#scanInput');i.value='';i.click()},ocrPick:v=>{setOrder(v);toast('Reference set to '+v)},
+  ocr:v=>{S.ocrTarget=v||'orderNo';S.target='ocr';const i=$('#scanInput');i.value='';i.click()},ocrPick:v=>{setOrder(v);toast((S.ocrTarget==='jobNo'?'Job number':'Reference')+' set to '+v)},
   scan:v=>liveScan(v),scanClose:()=>stopScan(),scanPhoto:()=>{const t=SC.target;stopScan();photoScan(t)},
   toastAct:()=>{const f=toast.fn;toast.fn=null;$('#toast').hidden=true;if(f)f()},
   open:v=>openSheet(v),closeSheet,
