@@ -456,7 +456,7 @@ table{font-size:16px} th{font-size:12.5px} .hist{font-size:15px} .tag{font-size:
 </div>
 <input type="file" id="scanInput" accept="image/*" capture="environment" hidden>
 <input type="file" id="photoInput" accept="image/*" multiple hidden>
-<input type="file" id="csvInput" accept=".csv,text/csv,text/plain" hidden>
+<input type="file" id="csvInput" accept=".csv,.xlsx,.xls,text/csv,text/plain,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel" hidden>
 <input type="file" id="logoInput" accept="image/png,image/jpeg,image/webp" hidden>
 <div id="toast" role="status" hidden></div>
 <div id="live" class="sr" aria-live="polite"></div>
@@ -655,7 +655,7 @@ function vSettings(){
   h+='<div class="panel"><h3>Tenants</h3>';
   if(!S.gotClients)h+='<p class="note">Loading clients…</p>';
   else if(!S.clients.length)h+='<p class="note">No clients yet. Add each brand you handle returns for.</p>';
-  S.clients.forEach(c=>{h+='<div class="line"><div class="line-h"><strong>'+esc(c.name)+(c.code?' <span class="job">'+esc(c.code)+'</span>':'')+'</strong><span class="row"><button class="btn" data-act="editClient" data-v="'+c.id+'">Edit</button><button class="btn danger" data-act="delClient" data-v="'+c.id+'">Delete</button></span></div>'+(S.editClient===c.id?vEditClient(c):'')+'<div class="note">'+(c.email?'Reports to <span class="sel">'+esc(c.email)+'</span>':'No tenant email saved')+' · '+(c.skuCount?c.skuCount+' SKUs imported':'No SKU list imported')+'</div><div class="row"><button class="btn" data-act="csvPick" data-v="'+c.id+'">'+(c.skuCount?'Replace SKU list (CSV)':'Import SKU list (CSV)')+'</button></div>'+(S.imp&&S.imp.cid===c.id?vImport():'')+'</div>'});
+  S.clients.forEach(c=>{h+='<div class="line"><div class="line-h"><strong>'+esc(c.name)+(c.code?' <span class="job">'+esc(c.code)+'</span>':'')+'</strong><span class="row"><button class="btn" data-act="editClient" data-v="'+c.id+'">Edit</button><button class="btn danger" data-act="delClient" data-v="'+c.id+'">Delete</button></span></div>'+(S.editClient===c.id?vEditClient(c):'')+'<div class="note">'+(c.email?'Reports to <span class="sel">'+esc(c.email)+'</span>':'No tenant email saved')+' · '+(c.skuCount?c.skuCount+' SKUs imported':'No SKU list imported')+'</div><div class="row"><button class="btn" data-act="csvPick" data-v="'+c.id+'">'+(c.skuCount?'Replace SKU list (CSV or Excel)':'Import SKU list (CSV or Excel)')+'</button></div>'+(S.imp&&S.imp.cid===c.id?vImport():'')+'</div>'});
   h+='<div class="grid"><label class="fld"><span>Tenant name</span><input id="cN" placeholder="Brand name"></label><label class="fld"><span>Short code (optional)</span><input id="cC" class="mono" maxlength="8" autocapitalize="characters"></label><label class="fld"><span>Tenant email</span><input id="cE" type="email"></label></div><div><button class="btn pri" data-act="addClient">Add tenant</button></div></div>';
   if(S.returns.some(r=>r.example)||S.clients.some(c=>c.example))h+='<div class="panel"><h3>Example data</h3><p class="note">Sample returns are loaded. Remove them before you start logging real ones.</p><div><button class="btn danger" data-act="rmExamples">Remove example data</button></div></div>';
   h+=GH.panel();return h;
@@ -1302,6 +1302,40 @@ async function prepFiles(r){
   catch(e){console.error(e);if(S.mailFiles.key===key){S.mailFiles={key:'',files:null};S.mailFail=r.id;if(S.sheetId===r.id)renderSheet()}}
 }
 const mailState=r=>{const ids=photoIds(r);if(!ids.length)return'plain';if(!canShareFiles()||S.mailFail===r.id)return'noattach';return S.mailFiles.key===r.id+':'+ids.join(',')&&S.mailFiles.files?'ready':'prep'};
+
+/* ---------- SKU matching: tolerant of leading zeros, spaces, SKU-coded barcodes and stale lists ---------- */
+const normCode=s=>{s=String(s==null?'':s).trim().toUpperCase().replace(/\s+/g,'');if(/^\d+$/.test(s))s=s.replace(/^0+/,'');return s};
+async function loadSku(cid,force){
+  if(!cid||!S.db)return{code:{},sku:{},n:0};if(S.sku[cid]&&!force)return S.sku[cid];
+  const m={code:{},sku:{},n:0,t:Date.now()};
+  try{const q=await S.db.collection('clients/'+cid+'/skus').get();q.docs.forEach(d=>{const it=(d.data()||{}).items||{};for(const k in it){const v={sku:it[k][0],name:it[k][1]};m.n++;if(!k.startsWith('sku:'))m.code[normCode(k)]=v;if(v.sku)m.sku[normCode(v.sku)]=v}});S.sku[cid]=m}catch(e){console.error(e)}
+  return m;
+}
+async function lookup(i,by){
+  const d=S.draft,l=d.lines[i];if(!l)return;const val=by==='barcode'?l.barcode:l.sku;if(!val)return setHint(i,'','');
+  const find=m=>by==='barcode'?(m.code[normCode(val)]||m.sku[normCode(val)]):(m.sku[normCode(val)]||m.code[normCode(val)]);
+  let cid=d.clientId,hit=null;
+  if(cid){let m=await loadSku(cid);hit=find(m);if(!hit&&Date.now()-(m.t||0)>20000){m=await loadSku(cid,true);hit=find(m)}}
+  else{setHint(i,'Searching every tenant\'s SKU list…','');
+    for(const c of S.clients){const m=await loadSku(c.id);const h=find(m);if(h){hit=h;cid=c.id;d.clientId=c.id;const s=$('#f-client');if(s)s.value=c.id;break}}}
+  if(hit){l.sku=hit.sku||l.sku;l.name=hit.name||l.name;const a=$('#l'+i+'-sku'),b=$('#l'+i+'-name');if(a)a.value=l.sku;if(b)b.value=l.name;
+    setHint(i,'Matched: '+(hit.name||hit.sku)+(d.clientId&&cid!==null?' ('+clientName(cid)+')':'')+'. Check it is the right product.','ok');return}
+  if(!cid)return setHint(i,'Not found in any tenant\'s SKU list. Choose the tenant, or type the SKU and name.','new');
+  const m=S.sku[cid]||{n:0};
+  setHint(i,(m.n?'Not in '+clientName(cid)+'\'s SKU list ('+m.n+' items loaded).':clientName(cid)+' has no SKU list yet. Import one in Settings.')+' Type the SKU and name once and it will be remembered.','new');
+}
+async function onCsv(file){
+  const cid=S.target;if(!file||!cid)return;let rows;
+  if(/\.xlsx?$/i.test(file.name)){
+    toast('Reading the spreadsheet…');
+    try{await loadXlsx();const wb=XLSX.read(await file.arrayBuffer(),{type:'array'}),ws=wb.Sheets[wb.SheetNames[0]];
+      rows=XLSX.utils.sheet_to_json(ws,{header:1,raw:true,defval:''}).map(r=>r.map(v=>typeof v==='number'?(Number.isInteger(v)?v.toFixed(0):String(v)):String(v))).filter(r=>r.some(x=>x.trim()))}
+    catch(e){console.error(e);return toast('Could not read that spreadsheet. Save it as CSV and try again.')}}
+  else rows=parseCsv(await file.text());
+  if(rows.length<2)return toast('That file has no data rows.');
+  const headers=rows[0].map(x=>String(x).trim()),find=re=>headers.findIndex(h=>re.test(h));
+  S.imp={cid,headers,rows:rows.slice(1),map:{barcode:find(/barcode|ean|upc|gtin/i),sku:find(/sku|item.?code|product.?code|^code$/i),name:find(/name|description|title|product$/i)}};render();
+}
 
 /* ---------- reports: Excel (two tabs) and PDF ---------- */
 const RHEAD=['Date','Job number','Tenant','Reference','SKU','Product','Good qty','Damaged qty','Comments','Status'];
