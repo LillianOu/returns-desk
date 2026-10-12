@@ -820,7 +820,7 @@ function soft(){
   if(S.tab==='new'&&S.formLive)return;
   if(S.tab==='settings'&&(S.imp||S.editClient))return;
   if(S.tab==='list'&&$('#rows')&&S.returns.length){
-    const fc=$('#fc');if(fc&&document.activeElement!==fc)fc.innerHTML=opts([['','All clients']].concat(S.clients.map(c=>[c.id,c.name])),S.flt.client);
+    const fc=$('#fc');if(fc&&document.activeElement!==fc)fc.innerHTML=opts([['','All tenants']].concat(S.clients.map(c=>[c.id,c.name])),S.flt.client);
     drawRows();return}
   render();
 }
@@ -1102,7 +1102,7 @@ function vList(){
    +'<div class="fld" style="flex:none"><span>Search job, reference, tracking or SKU</span><div class="with-btn"><input id="q" type="search" data-flt="q" value="'+esc(f.q)+'" aria-label="Search job, reference, tracking or SKU">'+micBtn('search','job or order number')+'</div></div>'
    +'<div id="statusSeg"></div>'
    +'<div class="drawer" id="drawer" data-open="'+open+'"><div class="dr-body" id="drBody"><div class="dr-in" id="drIn"'+(open?'':' inert')+'><div class="dr-pad">'
-   +'<label class="fld"><span>Client</span><select id="fc" data-flt="client">'+opts([['','All clients']].concat(S.clients.map(c=>[c.id,c.name])),f.client)+'</select></label>'
+   +'<label class="fld"><span>Tenant</span><select id="fc" data-flt="client">'+opts([['','All tenants']].concat(S.clients.map(c=>[c.id,c.name])),f.client)+'</select></label>'
    +'<label class="fld"><span>Received from</span><input id="ff" type="date" data-flt="from" value="'+esc(f.from)+'"></label>'
    +'<label class="fld"><span>Received to</span><input id="ft" type="date" data-flt="to" value="'+esc(f.to)+'"></label>'
    +'<button class="btn" data-act="clearFlt">Clear</button></div></div></div>'
@@ -1110,7 +1110,7 @@ function vList(){
    +'<p class="note" id="rowsNote"></p><div id="rows"></div>';
 }
 function fltRows(skipStatus){
-  const f=Object.assign({},S.flt),st=f.status;f.status='';
+  const q=(S.flt.q||'').trim(),f=q?{q}:Object.assign({},S.flt),st=q?'':f.status;f.status='';
   return S.returns.filter(r=>match(r,f)&&(skipStatus||!st||stage(r)===st));
 }
 function drawRows(){
@@ -1119,11 +1119,13 @@ function drawRows(){
   const sg=$('#statusSeg');
   if(sg){const o=[['','All <small>'+base.length+'</small>']].concat(STAGES.map(s=>[s,'<i class="dot st-'+s+'"></i>'+STG[s][0]+' <small>'+n(s)+'</small>']));
     const cur=sg.querySelector('.seg');
-    if(cur){cur.querySelectorAll('button').forEach((b,i)=>{b.innerHTML=o[i][1];b.setAttribute('aria-pressed',o[i][0]===S.flt.status)})}
-    else sg.innerHTML=seg('fstatus','Status',o,S.flt.status);}
+    const shown=(S.flt.q||'').trim()?'':S.flt.status;
+    if(cur){cur.querySelectorAll('button').forEach((b,i)=>{b.innerHTML=o[i][1];b.setAttribute('aria-pressed',o[i][0]===shown)})}
+    else sg.innerHTML=seg('fstatus','Status',o,shown);}
   const act=[S.flt.client,S.flt.from,S.flt.to].filter(Boolean).length,dl=$('#drLabel');if(dl)dl.textContent='Tenant and date filters'+(act?' · '+act+' on':'');
   const rs=fltRows(false),note=$('#rowsNote');
-  if(note)note.textContent=rs.length?rs.length+' return'+(rs.length===1?'':'s')+(rs.length>300?'. Showing the first 300.':''):'No returns match these filters.';
+  const qq=(S.flt.q||'').trim(),tf=!!(S.flt.client||S.flt.from||S.flt.to);
+  if(note)note.textContent=rs.length?rs.length+' return'+(rs.length===1?'':'s')+(qq?' found for "'+qq+'", across every status, tenant and date':'')+(rs.length>300?'. Showing the first 300.':''):qq?'Nothing found for "'+qq+'". Check the number, or try part of it.':'No returns match these filters.';
   el.innerHTML='<ul class="rows">'+rs.slice(0,300).map(r=>{
     const sg2=stage(r),act2=r.status==='open',was=S.lastStatus[r.id],ch=was&&was!==sg2,lab=sg2==='rts'?'Record tenant answer':'Mark '+SL(doneStatus(r)).toLowerCase();
     return'<li class="rw'+(S.fresh===r.id?' fresh':'')+'" data-id="'+r.id+'">'
@@ -1464,7 +1466,7 @@ Object.assign(ACT,{
   seg:(v,b)=>{
     const k=b.parentNode.dataset.seg;
     if(k==='period'){S.period=+v;S.anim=true;return render()}
-    if(k==='fstatus'){S.flt.status=v;return drawRows()}
+    if(k==='fstatus'){S.flt.status=v;if((S.flt.q||'').trim()){S.flt.q='';const q=$('#q');if(q)q.value=''}return drawRows()}
     if(k==='f-status'){S.draft.status=v;return pressSeg(b)}
     if(k==='f-kind'){S.draft.kind=v;if(v==='rts'&&!S.draft.pack)S.draft.pack='sealed';if(v==='rts'&&S.draft.lines.length===1&&!S.draft.lines[0].barcode&&!S.draft.lines[0].sku){S.draft.lines[0].qtyGood=0;S.draft.lines[0].qtyDamaged=0}return render()}
     if(k==='f-pack'){S.draft.pack=v;return pressSeg(b)}
