@@ -109,7 +109,7 @@ h3{font-size:12px;letter-spacing:.07em;text-transform:uppercase;color:var(--mute
 .fld{position:relative;display:flex;flex-direction:column;flex:none;min-width:0}
 .row>.fld,.dr-pad>.fld{flex:1 1 170px}
 .fld>span:first-child{position:absolute;left:13px;top:8px;z-index:1;font-size:11.5px;font-weight:600;letter-spacing:.02em;color:var(--muted);pointer-events:none;transform-origin:left top;transition:transform .2s var(--out);white-space:nowrap;max-width:calc(78% - 20px);overflow:hidden;text-overflow:ellipsis}
-.fld:has([placeholder=" "]:placeholder-shown:not(:focus))>span:first-child{transform:translateY(10px) scale(1.26);font-weight:500}
+.fld:has(input[placeholder=" "]:placeholder-shown:not(:focus))>span:first-child{transform:translateY(10px) scale(1.26);font-weight:500}
 input,select,textarea{background:var(--surface);border:1px solid var(--line);border-radius:9px;padding:10px 12px;width:100%;min-height:44px;transition:border-color .15s,box-shadow .15s}
 .fld input,.fld select,.fld textarea{padding:25px 12px 7px;min-height:56px}
 input:focus,select:focus,textarea:focus{outline:0;border-color:var(--accent);box-shadow:0 0 0 3px color-mix(in srgb,var(--accent) 22%,transparent)}
@@ -135,6 +135,9 @@ input.hit{animation:hit .9s var(--out)}
 .pill{font-size:12.5px;font-weight:600;padding:3px 10px 3px 8px;border-radius:999px;white-space:nowrap;display:inline-flex;align-items:center;gap:6px;background:color-mix(in srgb,currentColor 13%,transparent)}
 .pill.pop{animation:pop .55s var(--spring)}
 @keyframes pop{0%{transform:scale(.8);opacity:.3}60%{transform:scale(1.12)}100%{transform:scale(1)}}
+.st-open{color:var(--s-received)} .st-rts{color:var(--s-inspected)} .st-shelf{color:var(--s-closed)} .st-discarded{color:var(--bad)} .st-resent{color:var(--s-processed)}
+.stg-open{background:var(--c-received)} .stg-rts{background:var(--c-inspected)} .stg-shelf{background:var(--c-closed)} .stg-discarded{background:var(--c-inspected)} .stg-resent{background:var(--c-processed)}
+.rw-q{font-weight:600;color:var(--ink)}
 .st-waiting{color:var(--s-waiting)} .st-action{color:var(--s-action)} .st-received{color:var(--s-received)} .st-inspected{color:var(--s-inspected)} .st-processed{color:var(--s-processed)} .st-closed{color:var(--s-closed)}
 .trk{display:flex;gap:3px;width:64px;flex:none}
 .trk i{flex:1;height:5px;border-radius:3px;background:var(--line);overflow:hidden;position:relative}
@@ -375,6 +378,8 @@ select option{background:var(--solid);color:var(--ink)}
 .stg>*{position:relative}
 .stg:hover,.stg:focus-visible{translate:0 -7px;box-shadow:inset 0 1px 0 rgba(255,255,255,.4),0 30px 80px -18px var(--c)}
 .stg:active{translate:0 1px;box-shadow:inset 0 1px 0 rgba(255,255,255,.28),0 10px 30px -14px var(--c)}
+.stg-open{--c:#7FEBFF} .stg-rts{--c:#86CBFF} .stg-shelf{--c:#8DBBFF} .stg-discarded{--c:#93AEFF} .stg-resent{--c:#A893FF}
+.stg.stg-open,.stg.stg-rts,.stg.stg-shelf,.stg.stg-discarded,.stg.stg-resent{background:linear-gradient(180deg,rgba(127,235,255,.20),rgba(155,140,255,.10))}
 .stg-waiting{--c:var(--c-waiting)} .stg-action{--c:var(--c-action)} .stg-received{--c:var(--c-received)} .stg-inspected{--c:var(--c-inspected)} .stg-processed{--c:var(--c-processed)} .stg-closed{--c:var(--c-closed)}
 .stg b{background:linear-gradient(180deg,#fff 20%,var(--c));-webkit-background-clip:text;background-clip:text;color:transparent;filter:drop-shadow(0 0 22px color-mix(in srgb,var(--c) 55%,transparent));padding-right:.06em}
 .stg-n{color:var(--c);opacity:1}
@@ -386,7 +391,7 @@ select option{background:var(--solid);color:var(--ink)}
 body{font-size:17px}
 .stg{background:linear-gradient(180deg,rgba(127,235,255,.20),rgba(155,140,255,.10));border-color:rgba(127,235,255,.45);box-shadow:inset 0 1px 0 rgba(255,255,255,.3),0 22px 60px -26px #5EEBFF}
 .stg b{background:linear-gradient(180deg,#8EF0FF,#9B8CFF);-webkit-background-clip:text;background-clip:text;font-size:clamp(56px,7.2vw,96px)}
-.stg-inspected,.stg-action{border-color:#8EF0FF;box-shadow:inset 0 1px 0 rgba(255,255,255,.4),0 0 0 1px rgba(142,240,255,.5),0 24px 70px -22px #5EEBFF}
+.stg.stg-open,.stg.stg-rts{border-color:#8EF0FF;box-shadow:inset 0 1px 0 rgba(255,255,255,.4),0 0 0 1px rgba(142,240,255,.5),0 24px 70px -22px #5EEBFF}
 .stg-t{min-height:2.3em}
 .stg-n,.stg-d{display:none}
 .stg-t{font-size:clamp(18px,2.2vw,24px);color:#fff}
@@ -405,7 +410,7 @@ table{font-size:16px} th{font-size:12.5px} .hist{font-size:15px} .tag{font-size:
 .old{font-size:17px;padding-block:12px;flex-wrap:nowrap} .old>span:nth-child(2){flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap} .old .ag{flex:none}
 .banner{font-size:15.5px}
 @media (min-width:900px){.nav button{font-size:16.5px} .shell{grid-template-columns:244px minmax(0,1fr)}
-  .rw-meta>span:nth-child(1){width:100px} .rw-meta>.mono{width:130px} .rw-meta>span:nth-child(3){width:76px}}
+  .rw-meta>span:nth-child(1){width:100px} .rw-meta>.mono{width:130px} .rw-meta>span:nth-child(3){width:150px}}
 </style>
 <div class="shell" id="shell">
   <aside class="side">
@@ -476,7 +481,7 @@ const daysAgo=n=>{const d=new Date();d.setDate(d.getDate()-n);return ymd(d)};
 const fmtD=s=>{if(!s)return'—';const p=s.split('-');return p[2]+'/'+p[1]+'/'+p[0]};
 const age=s=>s?Math.max(0,Math.round((new Date(today())-new Date(s))/864e5)):0;
 const opts=(arr,val)=>arr.map(o=>{const[v,l]=Array.isArray(o)?o:[o,o||'—'];return'<option value="'+esc(v)+'"'+(v===val?' selected':'')+'>'+esc(l)+'</option>'}).join('');
-const units=r=>(r.lines||[]).reduce((a,l)=>a+(+l.qtyRecv||0),0);
+const units=r=>(r.lines||[]).reduce((a,l)=>a+(+l.qtyGood||0)+(+l.qtyDamaged||0),0);
 
 const S={db:null,assets:null,dl:null,user:null,uid:null,conn:'wait',org:{name:'',color:'',logo:''},clients:[],returns:[],
   gotClients:false,gotReturns:false,sku:{},names:{},draft:null,editId:null,formLive:false,uploading:0,tab:'dash',
@@ -498,7 +503,7 @@ async function boot(){
     const err=e=>{console.error(e);S.conn='lost';render()};
     db.doc('orgs/main').onSnapshot(s=>{S.org=Object.assign({name:'',color:'',logo:''},s.exists?s.data():{});applyBrand();if(S.tab==='settings')render()},err);
     db.collection('clients').onSnapshot(q=>{S.clients=q.docs.map(d=>Object.assign({id:d.id},d.data())).sort((a,b)=>String(a.name).localeCompare(b.name));S.gotClients=true;soft()},err);
-    db.collection('returns').orderBy('createdAt','desc').limit(1000).onSnapshot(q=>{S.returns=q.docs.map(d=>Object.assign({id:d.id},JSON.parse(JSON.stringify(d.data()))));S.returns.forEach(r=>{if(r.status==='processed')r.status='waiting'});S.gotReturns=true;soft()},err);
+    db.collection('returns').orderBy('createdAt','desc').limit(1000).onSnapshot(q=>{S.returns=q.docs.map(d=>Object.assign({id:d.id},JSON.parse(JSON.stringify(d.data()))));S.returns.forEach(norm);S.gotReturns=true;soft()},err);
   }
   render();
 }
@@ -601,7 +606,7 @@ function match(r,f){
 function vReport(){
   const r=S.rep;
   return'<h2>Reports</h2><div class="panel"><div class="row">'
-   +'<label class="fld"><span>Client</span><select id="rc" data-rep="client">'+opts([['','All clients']].concat(S.clients.map(c=>[c.id,c.name])),r.client)+'</select></label>'
+   +'<label class="fld"><span>Tenant</span><select id="rc" data-rep="client">'+opts([['','All tenants']].concat(S.clients.map(c=>[c.id,c.name])),r.client)+'</select></label>'
    +'<label class="fld"><span>Received from</span><input id="rf" type="date" data-rep="from" value="'+esc(r.from)+'"></label>'
    +'<label class="fld"><span>Received to</span><input id="rt" type="date" data-rep="to" value="'+esc(r.to)+'"></label></div></div><div id="rep"></div>';
 }
@@ -634,7 +639,7 @@ async function makePdf(){
   const col=/^#[0-9a-f]{6}$/i.test(S.org.color||'')?rgb(S.org.color):[29,78,137];let x=40;const W=doc.internal.pageSize.getWidth();doc.setFillColor(8,14,30);doc.rect(0,0,W,78,'F');doc.setFillColor(94,235,255);doc.rect(0,78,W,3,'F');doc.setTextColor(255);
   const lg=await logoData();if(lg){const h=34,w=lg.w/lg.h*h;try{doc.addImage(lg.url,'PNG',40,28,w,h);x=40+w+12}catch(e){}}
   doc.setFont('helvetica','bold');doc.setFontSize(18);doc.text('Returns report',x,44);
-  doc.setFont('helvetica','normal');doc.setFontSize(10);doc.text((S.org.name?S.org.name+'  ·  ':'')+(c?c.name:'All clients')+'  ·  '+fmtD(r.from)+' to '+fmtD(r.to),x,60);
+  doc.setFont('helvetica','normal');doc.setFontSize(10);doc.text((S.org.name?S.org.name+'  ·  ':'')+(c?c.name:'All tenants')+'  ·  '+fmtD(r.from)+' to '+fmtD(r.to),x,60);
   doc.setTextColor(0);doc.setFontSize(9);summary(d).split('\n').forEach((t,i)=>doc.text(t,40,102+i*13));
   const rows=c?d.rows.map(v=>v.filter((_,i)=>i!==2)):d.rows,head=c?HEAD.filter((_,i)=>i!==2):HEAD;
   doc.autoTable({head:[head],body:rows,startY:148,margin:{left:40,right:40},styles:{fontSize:8,cellPadding:4,overflow:'linebreak'},headStyles:{fillColor:col,textColor:(col[0]*299+col[1]*587+col[2]*114)/1000>150?20:255},alternateRowStyles:{fillColor:[243,245,247]},
@@ -647,11 +652,11 @@ function makeCsv(){const d=repData(),q=v=>'"'+String(v??'').replace(/"/g,'""')+'
 function vSettings(){
   const o=S.org;
   let h='<h2>Settings</h2><div class="panel"><h3>Your warehouse</h3><div class="grid"><label class="fld"><span>Company name</span><input id="orgN" value="'+esc(o.name)+'"></label><label class="fld"><span>Brand colour</span><input id="orgC" type="color" value="'+esc(/^#[0-9a-f]{6}$/i.test(o.color||'')?o.color:'#1D4E89')+'"></label><label class="fld"><span>Returns department email</span><input id="orgE" type="email" value="'+esc(o.email||'')+'"></label><label class="fld"><span>Email subject template</span><input id="orgS" value="'+esc(o.subject||DEF_SUBJ)+'"></label></div><p class="note">The subject fills in {job}, {sku}, {qty}, {order} and {client} from each return.</p><div class="row"><button class="btn pri" data-act="saveOrg">Save branding</button>'+(S.assets?'<button class="btn" data-act="logo">'+(o.logo?'Replace logo':'Upload logo')+'</button>':'')+(o.color?'<button class="btn" data-act="resetColor">Use default colour</button>':'')+'</div><p class="note">The name, colour and logo appear in the app header and on PDF reports. The returns department email is copied on every email to a tenant and shown in the sign-off.</p></div>';
-  h+='<div class="panel"><h3>Clients</h3>';
+  h+='<div class="panel"><h3>Tenants</h3>';
   if(!S.gotClients)h+='<p class="note">Loading clients…</p>';
   else if(!S.clients.length)h+='<p class="note">No clients yet. Add each brand you handle returns for.</p>';
   S.clients.forEach(c=>{h+='<div class="line"><div class="line-h"><strong>'+esc(c.name)+(c.code?' <span class="job">'+esc(c.code)+'</span>':'')+'</strong><span class="row"><button class="btn" data-act="editClient" data-v="'+c.id+'">Edit</button><button class="btn danger" data-act="delClient" data-v="'+c.id+'">Delete</button></span></div>'+(S.editClient===c.id?vEditClient(c):'')+'<div class="note">'+(c.email?'Reports to <span class="sel">'+esc(c.email)+'</span>':'No tenant email saved')+' · '+(c.skuCount?c.skuCount+' SKUs imported':'No SKU list imported')+'</div><div class="row"><button class="btn" data-act="csvPick" data-v="'+c.id+'">'+(c.skuCount?'Replace SKU list (CSV)':'Import SKU list (CSV)')+'</button></div>'+(S.imp&&S.imp.cid===c.id?vImport():'')+'</div>'});
-  h+='<div class="grid"><label class="fld"><span>Client name</span><input id="cN" placeholder="Brand name"></label><label class="fld"><span>Short code (optional)</span><input id="cC" class="mono" maxlength="8" autocapitalize="characters"></label><label class="fld"><span>Tenant email</span><input id="cE" type="email"></label></div><div><button class="btn pri" data-act="addClient">Add client</button></div></div>';
+  h+='<div class="grid"><label class="fld"><span>Tenant name</span><input id="cN" placeholder="Brand name"></label><label class="fld"><span>Short code (optional)</span><input id="cC" class="mono" maxlength="8" autocapitalize="characters"></label><label class="fld"><span>Tenant email</span><input id="cE" type="email"></label></div><div><button class="btn pri" data-act="addClient">Add tenant</button></div></div>';
   if(S.returns.some(r=>r.example)||S.clients.some(c=>c.example))h+='<div class="panel"><h3>Example data</h3><p class="note">Sample returns are loaded. Remove them before you start logging real ones.</p><div><button class="btn danger" data-act="rmExamples">Remove example data</button></div></div>';
   h+=GH.panel();return h;
 }
@@ -695,7 +700,7 @@ async function rmExamples(){try{for(const r of S.returns.filter(r=>r.example))aw
 
 /* ---------- client edit and per-return email ---------- */
 const DEF_SUBJ='Return {job} | {sku} | Qty {qty}';
-function vEditClient(c){return'<div class="grid"><label class="fld"><span>Client name</span><input id="ec-n" value="'+esc(c.name)+'"></label><label class="fld"><span>Short code</span><input id="ec-c" class="mono" maxlength="8" value="'+esc(c.code||'')+'"></label><label class="fld"><span>Tenant email</span><input id="ec-e" type="email" value="'+esc(c.email||'')+'"></label></div><div class="row"><button class="btn pri" data-act="saveClient" data-v="'+c.id+'">Save client</button><button class="btn" data-act="cancelClient">Cancel</button></div>'}
+function vEditClient(c){return'<div class="grid"><label class="fld"><span>Tenant name</span><input id="ec-n" value="'+esc(c.name)+'"></label><label class="fld"><span>Short code</span><input id="ec-c" class="mono" maxlength="8" value="'+esc(c.code||'')+'"></label><label class="fld"><span>Tenant email</span><input id="ec-e" type="email" value="'+esc(c.email||'')+'"></label></div><div class="row"><button class="btn pri" data-act="saveClient" data-v="'+c.id+'">Save tenant</button><button class="btn" data-act="cancelClient">Cancel</button></div>'}
 function subjFor(r){
   const sk=(r.lines||[]).map(l=>l.sku).filter(Boolean),rep={job:r.jobNo||'',sku:sk.slice(0,3).join(', ')+(sk.length>3?' +'+(sk.length-3)+' more':''),qty:units(r),order:r.orderNo||'',client:clientName(r.clientId)};
   return(S.org.subject||DEF_SUBJ).replace(/\{(job|sku|qty|order|client)\}/g,(m,k)=>rep[k]);
@@ -739,16 +744,23 @@ const ic=(n,c)=>'<svg class="ic'+(c?' '+c:'')+'" viewBox="0 0 24 24" aria-hidden
 const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
 const NUMW={zero:0,oh:0,o:0,one:1,won:1,two:2,to:2,too:2,three:3,four:4,for:4,five:5,six:6,seven:7,eight:8,ate:8,nine:9};
 function spokenCode(t){
-  return String(t||'').toLowerCase().replace(/number sign|hashtag|hash tag|hash|pound sign|pound/g,' # ').replace(/\b(order|job|number|no|is)\b/g,' ').replace(/\b(dash|hyphen|minus)\b/g,' - ').replace(/\b(slash|stroke)\b/g,' / ')
+  return String(t||'').toLowerCase().replace(/number sign|hashtag|hash tag|hash|pound sign|pound/g,' # ').replace(/\b(reference|ref|order|job|number|no|is)\b/g,' ').replace(/\b(dash|hyphen|minus)\b/g,' - ').replace(/\b(slash|stroke)\b/g,' / ')
     .split(/\s+/).filter(Boolean).map(w=>{const k=w.replace(/[.,!?]/g,'');return Object.prototype.hasOwnProperty.call(NUMW,k)?NUMW[k]:k}).join('').toUpperCase();
 }
 function loadOcr(){return loadOcr.p||(loadOcr.p=new Promise((res,rej)=>{const s=document.createElement('script');s.src='https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/tesseract.min.js';s.onload=res;s.onerror=()=>{loadOcr.p=null;rej(new Error('load'))};document.head.appendChild(s)}))}
 function findCodes(text){
   const out=[],add=c=>{c=c.replace(/[-.,;:]+$/,'');if(c.replace(/[^A-Z0-9]/gi,'').length>=3&&!out.includes(c))out.push(c)},T=String(text||'').replace(/[|]/g,' ');let m;
   const r1=/#\s?([A-Z0-9][A-Z0-9-]{2,})/gi;while((m=r1.exec(T)))add('#'+m[1].toUpperCase());
-  const r2=/\b(?:order|job|ref(?:erence)?|invoice|rma)[ \t]*(?:number|num|no|id)?\.?[ \t]*[:#-]?[ \t]*#?[ \t]*([A-Z0-9][A-Z0-9-]{2,})/gi;
+  const r2=/\b(?:reference|ref|job)[ \t]*(?:number|num|no)?\.?[ \t]*[:#-]?[ \t]*#?[ \t]*([A-Z0-9][A-Z0-9-]{2,})/gi;
   while((m=r2.exec(T))){const c=m[1].toUpperCase().replace(/[-.,;:]+$/,'');if(/\d/.test(c)&&!out.includes('#'+c))add(c)}
   return out.slice(0,6);
+}
+function findRef(text){const m=/\bREF(?:ERENCE)?(?:[ \t]*(?:NUMBER|NUM|NO))?\.?[ \t]*[:;#-]?[ \t]*(#?[ \t]?[A-Z0-9][A-Z0-9-]{2,})/i.exec(String(text||''));return m&&/\d/.test(m[1])?m[1].replace(/\s+/g,'').replace(/[-.,;:]+$/,'').toUpperCase():''}
+function labelExtras(text){ /* tracking and carrier printed on the same label */
+  const d=S.draft,T=String(text||''),m=/(?:AP\s*ARTICLE\s*ID|ARTICLE\s*ID|CON(?:SIGNMENT)?\s*NO)\.?\s*[:;]?\s*([A-Z0-9]{10,})/i.exec(T),got=[];
+  if(m&&!d.tracking){d.tracking=m[1].toUpperCase();const f=$('#f-track');if(f)f.value=d.tracking;got.push('tracking')}
+  if(/AUSTRALIA\s*POST|EPARCEL/i.test(T)&&!d.carrier){d.carrier='Australia Post';const c=$('#f-carrier');if(c)c.value=d.carrier;got.push('carrier')}
+  return got;
 }
 function setOrder(code){S.draft.orderNo=code;const f=$('#f-order');if(f){f.value=code;f.classList.remove('hit');void f.offsetWidth;f.classList.add('hit')}const p=$('#ocrPick');if(p)p.innerHTML=''}
 async function onOcr(file){
@@ -756,23 +768,37 @@ async function onOcr(file){
   let text='';
   try{const c=await fileToImg(file,1800);await loadOcr();const r=await Tesseract.recognize(c,'eng');text=r.data.text}
   catch(e){console.error(e);return toast('Could not read text on this device. Type or scan the number instead.')}
+  const extra=labelExtras(text),ref=findRef(text);
+  if(ref){setOrder(ref);return toast('Reference '+ref+(extra.length?' and '+extra.join(' and '):'')+' read from the label. Check it is right.')}
   const codes=findCodes(text),p=$('#ocrPick');
-  if(!codes.length)return toast('No order or job number found. Get closer to the label and try again.');
+  if(!codes.length)return toast('No reference or job number found. Get closer to the label and try again.');
   if(codes.length===1){setOrder(codes[0]);return toast('Read '+codes[0]+'. Check it is right.')}
   if(p)p.innerHTML='<span class="note">Found several. Tap the right one:</span>'+codes.map(c=>'<button type="button" class="btn" data-act="ocrPick" data-v="'+esc(c)+'">'+esc(c)+'</button>').join('');
   toast('Found '+codes.length+' possible numbers. Tap the right one.');
 }
 const micBtn=(target,label)=>SR?'<button type="button" class="btn mic" data-act="mic" data-v="'+target+'" aria-label="Say the '+label+'">'+ic('mic')+'</button>':'';
 const cap=s=>s?s[0].toUpperCase()+s.slice(1):'';
-STATUS.splice(0,STATUS.length,'received','inspected','waiting','action','closed');
-const SLAB={received:'Received',inspected:'Inspected',waiting:'Waiting on tenant',action:'To action',closed:'Closed'},SL=s=>SLAB[s]||cap(s);
-const DSTOCK=[['shelf','Back to shelf'],['dispose','Dispose']],DCUST=[['','Nothing more'],['refund','Tenant refunds'],['replace','Send replacement']];
-const decText=d=>!d?'':[(DSTOCK.find(x=>x[0]===d.stock)||[])[1],d.customer&&(DCUST.find(x=>x[0]===d.customer)||[])[1]].filter(Boolean).join(' · ');
-const decTodo=d=>!d?[]:[d.stock==='shelf'?'Receive the stock back into inventory and put it on the shelf':'Dispose of the stock',d.customer==='replace'?'Send the customer a replacement':d.customer==='refund'?'No shipment needed: the tenant is refunding the customer':''].filter(Boolean);
-const needsSheet=s=>s==='inspected'||s==='waiting';
-S.dec={stock:'',customer:''};
-const nextStatus=s=>STATUS[STATUS.indexOf(s)+1]||null;
-const pill=(s,pop)=>'<span class="pill st-'+esc(s)+(pop?' pop':'')+'"><i class="dot"></i>'+esc(SL(s))+'</span>';
+STATUS.splice(0,STATUS.length,'open','shelf','discarded','resent');
+const SLAB={open:'Open',shelf:'Back to shelf',discarded:'Discarded',resent:'Resent to customer'},SL=s=>SLAB[s]||cap(s);
+const STAGES=['open','rts','shelf','discarded','resent'];
+const STG={open:['Open','Customer returns logged, not put away yet'],rts:['RTS waiting','Return to sender, waiting on the tenant'],shelf:['Back to shelf','Received back into stock'],discarded:['Discarded','Damaged, recorded for write-off'],resent:['Resent','Sent out again to the customer']};
+const KINDS=[['return','Customer return'],['rts','Return to sender (RTS)']];
+REASONS.splice(0,REASONS.length,'Change of mind','Faulty','Wrong item sent','Damaged in transit','Item not collected','Wrong or incomplete address','Refused delivery','Received with unclear reason','Other');
+const isRts=r=>r.kind==='rts';
+const stage=r=>r.status==='open'?(isRts(r)?'rts':'open'):r.status;
+const goodQ=r=>(r.lines||[]).reduce((a,l)=>a+(+l.qtyGood||0),0),badQ=r=>(r.lines||[]).reduce((a,l)=>a+(+l.qtyDamaged||0),0);
+const qtyText=r=>[goodQ(r)?goodQ(r)+' good':'',badQ(r)?badQ(r)+' damaged':''].filter(Boolean).join(' · ')||'no units';
+const doneStatus=r=>goodQ(r)>0||!badQ(r)?'shelf':'discarded';
+function norm(r){ /* carries records saved under the earlier five-stage flow into the current model */
+  if(!r.kind)r.kind='return';
+  (r.lines||[]).forEach(l=>{if(l.qtyGood===undefined&&l.qtyDamaged===undefined){const q=+l.qtyRecv||0,bad=l.grade==='C'||l.disposition==='Dispose';l.qtyGood=bad?0:q;l.qtyDamaged=bad?q:0}});
+  if(!STATUS.includes(r.status))r.status=r.status==='closed'?(r.decision&&r.decision.stock==='dispose'?'discarded':doneStatus(r)):'open';
+  return r;
+}
+function blankLine(){return{barcode:'',sku:'',name:'',qtyGood:1,qtyDamaged:0,reason:'',photos:[],hint:''}}
+function newDraft(){S.editId=null;S.draft={jobNo:'',clientId:'',kind:'return',orderNo:'',tracking:'',carrier:'',dateReceived:today(),dateProcessed:'',status:'open',notes:'',lines:[blankLine()]}}
+S.rtsNote='';
+const pill=(s,pop)=>'<span class="pill st-'+esc(s)+(pop?' pop':'')+'"><i class="dot"></i>'+esc(STG[s]?STG[s][0]:SL(s))+'</span>';
 const say=m=>{const l=$('#live');l.textContent='';setTimeout(()=>l.textContent=m,30)};
 
 function toast(m,act){
@@ -799,7 +825,7 @@ function placeNav(){
   i.style.width=b.offsetWidth+'px';i.style.height=b.offsetHeight+'px';i.style.transform='translate('+b.offsetLeft+'px,'+b.offsetTop+'px)';
 }
 function updateBadge(){
-  const n=S.returns.filter(r=>r.status!=='closed').length,b=$('#navBadge');if(!b)return;
+  const n=S.returns.filter(r=>r.status==='open').length,b=$('#navBadge');if(!b)return;
   b.hidden=!n;b.textContent=n>99?'99+':n;b.setAttribute('aria-label',n+' open returns');
 }
 function bump(el){if(!el)return;el.classList.remove('bump');void el.offsetWidth;el.classList.add('bump')}
@@ -841,46 +867,45 @@ function pressSeg(b){b.parentNode.querySelectorAll('button').forEach(x=>x.setAtt
 
 /* ---------- dashboard ---------- */
 const PANELS=['oldest','clients','reasons','grades','trend'];
-const PNAME={oldest:'Oldest open returns',clients:'Returns by client',reasons:'Return reasons',grades:'Condition grades',trend:'Received per day'};
+const PNAME={oldest:'Oldest open',clients:'Returns by tenant',reasons:'Reasons',grades:'Good vs damaged units',trend:'Received per day'};
 function panelOrder(){
   if(!S.order){let o=[];try{o=JSON.parse(localStorage.getItem('rd-order')||'[]')}catch(e){}
     S.order=(Array.isArray(o)?o:[]).filter(k=>PANELS.includes(k));PANELS.forEach(k=>{if(!S.order.includes(k))S.order.push(k)})}
   return S.order;
 }
-const STG={received:['Received','On the dock, waiting to be checked'],inspected:['Inspected','Checked and photographed, tenant not emailed yet'],waiting:['Waiting on tenant','Emailed, waiting for their decision'],action:['To action','Tenant has decided, work still to do'],closed:['Closed','Done']};
 function board(all,rs){
-  const sets={};STATUS.forEach(s=>sets[s]=(s==='closed'?rs:all).filter(r=>r.status===s));
-  const open=all.filter(r=>r.status!=='closed').length,pl=S.period===1?'today':S.period?'last '+S.period+' days':'all time';
-  let h='<div class="hero"><p class="hero-k">Right now'+(S.dashClient?' · '+esc(clientName(S.dashClient)):'')+'</p><h2 class="hero-h"><b data-count="'+open+'">'+open+'</b>return'+(open===1?'':'s')+' on the floor</h2><p class="hero-s">'+sets.inspected.length+' to email · '+sets.action.length+' to action · '+sets.closed.length+' closed '+pl+'</p></div>';
-  h+='<div class="stgs">'+STATUS.map((s,i)=>{const a=sets[s],old=a.length?Math.max(...a.map(r=>age(r.dateReceived))):0;
+  const sets={};STAGES.forEach(s=>sets[s]=(s==='open'||s==='rts'?all:rs).filter(r=>stage(r)===s));
+  const open=sets.open.length+sets.rts.length,pl=S.period===1?'today':S.period?'last '+S.period+' days':'all time';
+  let h='<div class="hero"><p class="hero-k">Right now'+(S.dashClient?' · '+esc(clientName(S.dashClient)):'')+'</p><h2 class="hero-h"><b data-count="'+open+'">'+open+'</b>open return'+(open===1?'':'s')+'</h2><p class="hero-s">'+sets.open.length+' to put away · '+sets.rts.length+' RTS waiting on tenants</p></div>';
+  h+='<div class="stgs">'+STAGES.map((s,i)=>{const a=sets[s],live=s==='open'||s==='rts',old=a.length?Math.max(...a.map(r=>age(r.dateReceived))):0;
     return'<button class="stg stg-'+s+'" style="--i:'+i+'" data-act="toList" data-v="'+s+'" aria-label="'+STG[s][0]+': '+a.length+'. '+STG[s][1]+'. Show these returns.">'
-     +'<span class="stg-n">Stage '+(i+1)+' of '+STATUS.length+'</span><span class="stg-t">'+STG[s][0]+'</span><b data-count="'+a.length+'">'+a.length+'</b><span class="stg-d">'+STG[s][1]+'</span>'
+     +'<span class="stg-t">'+STG[s][0]+'</span><b data-count="'+a.length+'">'+a.length+'</b><span class="stg-d">'+STG[s][1]+'</span>'
      +'<span class="pk" aria-hidden="true">'+a.slice(0,10).map((r,j)=>'<i style="--j:'+j+'" title="'+esc(r.jobNo)+'"></i>').join('')+(a.length>10?'<em>+'+(a.length-10)+'</em>':'')+'</span>'
-     +'<span class="stg-f">'+(s==='closed'?'closed '+pl:a.length?'oldest '+old+' days':'all clear')+'</span></button>'}).join('')+'</div>';
-  const tot=STATUS.reduce((x,s)=>x+sets[s].length,0);
-  if(tot)h+='<div class="mix" role="img" aria-label="Share by stage: '+STATUS.map(s=>STG[s][0]+' '+sets[s].length).join(', ')+'">'+STATUS.map(s=>sets[s].length?'<i class="stg-'+s+'" style="flex-grow:'+sets[s].length+'"></i>':'').join('')+'</div>';
+     +'<span class="stg-f">'+(live?(a.length?'oldest '+old+' days':'all clear'):pl)+'</span></button>'}).join('')+'</div>';
+  const tot=STAGES.reduce((x,s)=>x+sets[s].length,0);
+  if(tot)h+='<div class="mix" role="img" aria-label="Share by status: '+STAGES.map(s=>STG[s][0]+' '+sets[s].length).join(', ')+'">'+STAGES.map(s=>sets[s].length?'<i class="stg-'+s+'" style="flex-grow:'+sets[s].length+'"></i>':'').join('')+'</div>';
   return h;
 }
 function vDash(){
   const from=S.period?daysAgo(S.period-1):'';
   const all=S.returns.filter(r=>!S.dashClient||r.clientId===S.dashClient);
   const rs=all.filter(r=>!from||r.dateReceived>=from);
-  const open=all.filter(r=>r.status!=='closed');
+  const open=all.filter(r=>r.status==='open');
   let h='<div class="row"><h3 style="flex:1 1 200px">Dashboard</h3>'+seg('period','Period',[[1,'Today'],[7,'7 days'],[30,'30 days'],[0,'All time']],S.period)+'</div>';
   if(S.returns.some(r=>r.example))h+='<div class="banner">Example data. Remove it in Settings before logging real returns.</div>';
   h+=board(all,rs);
   if(!S.returns.length)return h+emptyState();
-  h+='<div class="row"><label class="fld" style="max-width:320px"><span>Client</span><select id="dashClient" data-bind="dashClient">'+opts([['','All clients']].concat(S.clients.map(c=>[c.id,c.name])),S.dashClient)+'</select></label></div>';
+  h+='<div class="row"><label class="fld" style="max-width:320px"><span>Tenant</span><select id="dashClient" data-bind="dashClient">'+opts([['','All tenants']].concat(S.clients.map(c=>[c.id,c.name])),S.dashClient)+'</select></label></div>';
   const tally=(key)=>{const m={};rs.forEach(r=>key(r).forEach(k=>{if(k)m[k]=(m[k]||0)+1}));return Object.entries(m).sort((a,b)=>b[1]-a[1])};
-  const bars=(rows)=>{if(!rows.length)return'<p class="note">No data in this period.</p>';const mx=rows[0][1];return'<div class="bars">'+rows.slice(0,7).map(r=>'<div class="bar"><span class="nm">'+esc(r[0])+'</span><span class="tr"><span class="fl" data-w="'+Math.round(r[1]/mx*100)+'"></span></span><span class="n">'+r[1]+'</span></div>').join('')+'</div>'};
+  const bars=(rows)=>{rows=rows.filter(r=>r[1]);if(!rows.length)return'<p class="note">No data in this period.</p>';const mx=Math.max(...rows.map(r=>r[1]));return'<div class="bars">'+rows.slice(0,7).map(r=>'<div class="bar"><span class="nm">'+esc(r[0])+'</span><span class="tr"><span class="fl" data-w="'+Math.round(r[1]/mx*100)+'"></span></span><span class="n">'+r[1]+'</span></div>').join('')+'</div>'};
   const old=open.slice().sort((a,b)=>String(a.dateReceived).localeCompare(b.dateReceived)).slice(0,5);
   const days=[];for(let i=13;i>=0;i--)days.push(daysAgo(i));
   const per=days.map(d=>all.filter(r=>r.dateReceived===d).length),mx=Math.max(1,...per);
   const body={
-    oldest:old.length?'<div>'+old.map(r=>{const a=age(r.dateReceived);return'<button class="old" data-id="'+r.id+'" data-act="open" data-v="'+r.id+'"><span class="job">'+esc(r.jobNo)+'</span><span>'+esc(clientName(r.clientId))+'</span>'+pill(r.status)+'<span class="ag '+(a>7?'b':a>3?'w':'')+'">'+a+' d</span></button>'}).join('')+'</div>':'<p class="note">Nothing open. Every return is closed.</p>',
+    oldest:old.length?'<div>'+old.map(r=>{const a=age(r.dateReceived);return'<button class="old" data-id="'+r.id+'" data-act="open" data-v="'+r.id+'"><span class="job">'+esc(r.jobNo)+'</span><span>'+esc(clientName(r.clientId))+'</span>'+pill(stage(r))+'<span class="ag '+(a>7?'b':a>3?'w':'')+'">'+a+' d</span></button>'}).join('')+'</div>':'<p class="note">Nothing open.</p>',
     clients:bars(tally(r=>[clientName(r.clientId)])),
     reasons:bars(tally(r=>(r.lines||[]).map(l=>l.reason))),
-    grades:bars(tally(r=>(r.lines||[]).map(l=>(GRADES.find(g=>g[0]===l.grade)||[])[1]))),
+    grades:bars([['Good',rs.reduce((a,r)=>a+goodQ(r),0)],['Damaged',rs.reduce((a,r)=>a+badQ(r),0)]]),
     trend:'<div class="trend" role="img" aria-label="Returns per day for the last 14 days, peak '+Math.max(...per)+'">'+per.map((n,i)=>'<i class="'+(n?'':'zero')+'" data-h="'+(n?Math.max(4,Math.round(n/mx*100)):0)+'" title="'+fmtD(days[i])+': '+n+'"></i>').join('')+'</div><div class="axis"><span>'+fmtD(days[0])+'</span><span>peak '+Math.max(...per)+' in a day</span><span>'+fmtD(days[13])+'</span></div>'
   };
   const sub={trend:', 14 days'};
@@ -944,42 +969,69 @@ function qty(i,f,id,label,val){
    +'<input id="'+id+'" class="qv" inputmode="numeric" autocomplete="off" role="spinbutton" aria-labelledby="'+id+'-l" aria-valuemin="0" aria-valuenow="'+esc(+val||0)+'" data-l="'+i+'" data-f="'+f+'" value="'+esc(val)+'">'
    +'<button type="button" class="qb" data-step="1" aria-label="Increase '+label.toLowerCase()+'">'+ic('plus')+'</button></div></div>';
 }
-function qnoteText(l){const e=+l.qtyExp||0,r=+l.qtyRecv||0;return r<e?'Short by '+(e-r):r>e?'Over by '+(r-e):''}
+function qnoteText(l){return''}
 function vForm(){
-  if(!S.clients.length)return'<div class="panel empty"><h2>Add a client first</h2><p>Every return belongs to a client, so the app needs at least one brand before you can log a return.</p><button class="btn pri" data-act="tab" data-v="settings">Go to Settings</button></div>';
-  const d=S.draft;if(!d.jobNo&&!S.editId)d.jobNo=nextJob();S.formLive=true;
+  if(!S.clients.length)return'<div class="panel empty"><h2>Add a tenant first</h2><p>Every return belongs to a tenant, so the app needs at least one before you can log a return.</p><button class="btn pri" data-act="tab" data-v="settings">Go to Settings</button></div>';
+  const d=S.draft;if(!d.jobNo&&!S.editId)d.jobNo=nextJob();S.formLive=true;if(!d.kind)d.kind='return';
+  const sts=d.kind==='rts'?['open','resent','shelf']:['open','shelf','discarded'];if(!sts.includes(d.status))d.status='open';
   const prev=S.editId?S.returns.find(r=>r.id===S.editId):null;
   let h='<div class="row"><h2 style="flex:1 1 auto">'+(S.editId?'Edit return':'New return')+'</h2>'+(S.editId?'<button class="btn" data-act="newDraft">Start a new one</button>':'')+'</div>';
-  h+='<div class="panel"><div class="grid">'
-   +'<label class="fld"><span>Client</span><select id="f-client" data-f="clientId">'+opts([['','Choose a client…']].concat(S.clients.map(c=>[c.id,c.name])),d.clientId)+'</select></label>'
+  h+='<div class="panel"><div class="pick"><span>Type</span>'+seg('f-kind','Type',KINDS,d.kind)+'</div>'
+   +'<p class="note">'+(d.kind==='rts'?'The parcel never reached the customer. It stays open until the tenant says resend or back to stock.':'The customer sent it back. Count what is in good condition and what is damaged. No tenant approval is needed.')+'</p><div class="grid">'
+   +'<label class="fld"><span>Tenant</span><select id="f-client" data-f="clientId">'+opts([['','Choose a tenant…']].concat(S.clients.map(c=>[c.id,c.name])),d.clientId)+'</select></label>'
    +'<label class="fld"><span>Job number</span><input id="f-job" class="mono" data-f="jobNo" value="'+esc(d.jobNo)+'" autocapitalize="characters"></label>'
    +'<label class="fld"><span>Date received</span><input id="f-date" type="date" data-f="dateReceived" value="'+esc(d.dateReceived)+'"></label>'
-   +'</div><div class="pick"><span>Status</span>'+seg('f-status','Status',STATUS.map(s=>[s,'<i class="dot st-'+s+'"></i>'+SL(s)]),d.status)+'</div><div class="grid">'
-   +'<div class="fld"><span>Original order number</span><div class="with-btn"><input id="f-order" class="mono" data-f="orderNo" value="'+esc(d.orderNo)+'" aria-label="Original order number"><button class="btn" data-act="scan" data-v="orderNo" aria-label="Scan order number">'+ic('scan')+'</button><button class="btn" data-act="ocr" aria-label="Read the order number from a photo of the label">'+ic('text')+'</button>'+micBtn('orderNo','order number')+'</div><div class="row" id="ocrPick" style="padding-top:6px"></div></div>'
+   +'</div><div class="grid">'
+   +'<div class="fld"><span>Reference number</span><div class="with-btn"><input id="f-order" class="mono" data-f="orderNo" value="'+esc(d.orderNo)+'" aria-label="Reference number"><button class="btn" data-act="scan" data-v="orderNo" aria-label="Scan the reference barcode">'+ic('scan')+'</button><button class="btn" data-act="ocr" aria-label="Read the reference from a photo of the label">'+ic('text')+'</button>'+micBtn('orderNo','reference number')+'</div><div class="row" id="ocrPick" style="padding-top:6px"></div></div>'
    +'<div class="fld"><span>Tracking number</span><div class="with-btn"><input id="f-track" class="mono" data-f="tracking" value="'+esc(d.tracking)+'" aria-label="Tracking number"><button class="btn" data-act="scan" data-v="tracking" aria-label="Scan tracking number">'+ic('scan')+'</button></div></div>'
    +'<label class="fld"><span>Carrier</span><select id="f-carrier" data-f="carrier">'+opts(CARRIERS,d.carrier)+'</select></label>'
-   +'<label class="fld"><span>Date closed</span><input id="f-proc" type="date" data-f="dateProcessed" value="'+esc(d.dateProcessed)+'"></label>'
-   +'</div></div>';
-  h+='<h3>Items in this return</h3>';
+   +'</div><div class="pick"><span>Status</span>'+seg('f-status','Status',sts.map(s=>[s,'<i class="dot st-'+s+'"></i>'+SL(s)]),d.status)+'</div></div>';
+  h+='<h3>Items</h3>';
   d.lines.forEach((l,i)=>{
     h+='<div class="line"><div class="line-h"><strong>Item '+(i+1)+'</strong>'+(d.lines.length>1?'<button class="btn danger" data-act="rmLine" data-v="'+i+'">Remove</button>':'')+'</div>'
      +'<div class="grid"><div class="fld"><span>Barcode</span><div class="with-btn"><input id="l'+i+'-barcode" class="mono" inputmode="numeric" data-l="'+i+'" data-f="barcode" value="'+esc(l.barcode)+'" aria-label="Barcode"><button class="btn pri" data-act="scan" data-v="line:'+i+'">'+ic('scan')+'Scan</button></div></div>'
      +'<label class="fld"><span>SKU</span><input id="l'+i+'-sku" class="mono" data-l="'+i+'" data-f="sku" value="'+esc(l.sku)+'" autocapitalize="characters"></label>'
      +'<label class="fld"><span>Product name</span><input id="l'+i+'-name" data-l="'+i+'" data-f="name" value="'+esc(l.name)+'"></label></div>'
      +'<div class="hint '+(l.hintCls||'')+'" id="l'+i+'-hint">'+esc(l.hint||'')+'</div>'
-     +'<div class="qrow">'+qty(i,'qtyExp','l'+i+'-qe','Qty expected',l.qtyExp)+qty(i,'qtyRecv','l'+i+'-qr','Qty received',l.qtyRecv)+'<span class="qnote" id="l'+i+'-qn" role="status">'+qnoteText(l)+'</span></div>'
-     +'<div class="qrow"><div class="pick"><span>Condition grade</span>'+seg('grade:'+i,'Condition grade',GRADES.map(g=>[g[0],esc(g[1])]),l.grade)+'</div>'
-     +'<div class="pick"><span>Disposition</span>'+seg('dispo:'+i,'Disposition',DISPO.map(x=>[x,esc(x)]),l.disposition)+'</div></div>'
-     +'<div class="grid"><label class="fld"><span>Return reason</span><select id="l'+i+'-reason" data-l="'+i+'" data-f="reason">'+opts([['','Choose…']].concat(REASONS),l.reason)+'</select></label></div>'
+     +'<div class="qrow">'+qty(i,'qtyGood','l'+i+'-qg','Good condition',l.qtyGood)+qty(i,'qtyDamaged','l'+i+'-qd','Damaged',l.qtyDamaged)+'</div>'
+     +'<div class="grid"><label class="fld"><span>Reason</span><select id="l'+i+'-reason" data-l="'+i+'" data-f="reason">'+opts([['','Choose…']].concat(REASONS),l.reason)+'</select></label></div>'
      +'<div class="photos">'+l.photos.map((p,j)=>'<span class="ph"><img data-blob="'+esc(p)+'" alt="Photo '+(j+1)+' of item '+(i+1)+'"><button data-act="rmPhoto" data-v="'+i+':'+j+'" aria-label="Remove photo">×</button></span>').join('')
      +(S.assets?'<button class="btn" data-act="photo" data-v="'+i+'">Add photo</button>':'<span class="note">Sign in to add photos.</span>')+'</div></div>';
   });
   h+='<div><button class="btn" data-act="addLine">'+ic('plus')+'Add another item</button></div>';
-  h+='<div class="panel"><label class="fld"><span>Notes</span><textarea id="f-notes" data-f="notes">'+esc(d.notes)+'</textarea></label><p class="note">To dictate, tap the microphone on your phone keyboard while this box is selected.</p></div>';
+  h+='<div class="panel"><label class="fld"><span>Comment</span><textarea id="f-notes" data-f="notes">'+esc(d.notes)+'</textarea></label></div>';
   h+='<div class="savebar"><button class="btn pri big" data-act="save" id="saveBtn">'+(S.editId?'Save changes':'Save return')+'</button>'+(S.editId?'<button class="btn danger" data-act="del" data-v="'+S.editId+'">Delete return</button>':'')+'</div>';
-  if(prev)h+=mailPanel(prev);
   if(prev&&prev.history&&prev.history.length)h+='<div class="panel"><h3>History</h3><ul class="hist">'+prev.history.map(x=>'<li>'+esc(new Date(x.at).toLocaleString('en-AU'))+' · '+esc(x.what)+(x.by?' · '+esc(S.names[x.by]||'team member'):'')+'</li>').join('')+'</ul></div>';
   return h;
+}
+async function saveReturn(){
+  const d=S.draft,db=S.db;if(!db)return toast('Not connected, so this can\'t be saved yet.');
+  if(!d.clientId)return toast('Choose a tenant first.');
+  if(!d.jobNo.trim())return toast('Add a job number.');
+  if(S.returns.some(r=>r.jobNo===d.jobNo.trim()&&r.id!==S.editId))return toast('Job number '+d.jobNo+' is already used. Change it.');
+  if(S.uploading)return toast('Photos are still uploading. Try again in a moment.');
+  const now=new Date().toISOString(),prev=S.editId?S.returns.find(r=>r.id===S.editId):null,by=S.uid||'';
+  const hist=((prev&&prev.history)||[]).slice(-40);
+  hist.push({at:now,by,what:!prev?'Logged as '+(d.kind==='rts'?'return to sender':'customer return'):prev.status!==d.status?'Status changed to '+SL(d.status):'Edited'});
+  const body={jobNo:d.jobNo.trim(),clientId:d.clientId,kind:d.kind==='rts'?'rts':'return',orderNo:(d.orderNo||'').trim(),tracking:(d.tracking||'').trim(),carrier:d.carrier||'',dateReceived:d.dateReceived||today(),dateProcessed:d.dateProcessed||'',status:d.status,notes:(d.notes||'').trim(),
+    lines:d.lines.filter(l=>l.barcode||l.sku||l.name||l.photos.length).map(l=>({barcode:l.barcode.trim(),sku:l.sku.trim(),name:l.name.trim(),qtyGood:+l.qtyGood||0,qtyDamaged:+l.qtyDamaged||0,reason:l.reason||'',photos:l.photos})),
+    createdAt:(prev&&prev.createdAt)||now,createdBy:(prev&&prev.createdBy)||by,updatedAt:now,history:hist};
+  if(prev&&prev.example)body.example=true;if(prev&&prev.rts)body.rts=prev.rts;if(prev&&prev.emailedAt)body.emailedAt=prev.emailedAt;
+  if(body.status==='open')body.dateProcessed='';else if(!body.dateProcessed)body.dateProcessed=today();
+  const btn=$('#saveBtn');if(btn)btn.disabled=true;
+  try{const ref=S.editId?db.collection('returns').doc(S.editId):db.collection('returns').doc();await ref.set(body);learn(body);afterSave(body,ref.id)}
+  catch(e){if(btn)btn.disabled=false;fail(e,'save this return')}
+}
+function mailPanel(){return''}
+async function examples(){
+  const db=S.db;if(!db)return toast('Not connected yet.');toast('Loading example data…');
+  const prods=[['9300000000011','EXB-TEE-M','Sample Tee, Medium'],['9300000000028','EXB-MUG-01','Sample Mug'],['9300000000035','EXB-CAP-BK','Sample Cap, Black'],['9300000000042','EXB-BAG-L','Sample Tote, Large']];
+  const plan=[[0,'return','open',1,0,0],[0,'return','open',2,1,2],[1,'rts','open',1,0,4],[1,'return','shelf',2,0,0],[2,'return','discarded',0,1,1],[3,'rts','open',1,0,5],[4,'return','shelf',1,1,7],[5,'rts','resent',1,0,5],[6,'return','shelf',3,0,0],[8,'return','discarded',0,2,3],[10,'rts','shelf',1,0,4],[12,'return','shelf',1,0,2]];
+  try{await db.doc('clients/example').set({name:'Example Brand (sample)',code:'EXB',email:'',example:true});
+    for(let i=0;i<plan.length;i++){const[ago,kind,status,g,b,ri]=plan[i],p=prods[i%4],date=daysAgo(ago),now=new Date(Date.now()-ago*864e5-i*1000).toISOString();
+      await db.collection('returns').doc('example'+i).set({example:true,jobNo:'SAMPLE-'+String(i+1).padStart(3,'0'),clientId:'example',kind,orderNo:'#EX'+(1040+i),tracking:'',carrier:CARRIERS[1+i%3],dateReceived:date,dateProcessed:status==='open'?'':date,status,notes:'Example record',
+        lines:[{barcode:p[0],sku:p[1],name:p[2],qtyGood:g,qtyDamaged:b,reason:REASONS[ri],photos:[]}],createdAt:now,createdBy:'',updatedAt:now,history:[{at:now,by:'',what:'Example record'}]})}
+    toast('Example data loaded.');S.anim=true}catch(e){fail(e,'load example data')}
 }
 
 /* ---------- pattern 02: elastic quantity control ---------- */
@@ -1042,7 +1094,7 @@ function vList(){
   if(!S.returns.length)return emptyState();
   const f=S.flt,open=S.filtersOpen||!!(f.client||f.from||f.to);
   return'<div class="row"><h2 style="flex:1 1 auto">Returns</h2><button class="btn pri" data-act="tab" data-v="new">'+ic('plus')+'Log a return</button></div>'
-   +'<div class="fld" style="flex:none"><span>Search job, order, tracking or SKU</span><div class="with-btn"><input id="q" type="search" data-flt="q" value="'+esc(f.q)+'" aria-label="Search job, order, tracking or SKU">'+micBtn('search','job or order number')+'</div></div>'
+   +'<div class="fld" style="flex:none"><span>Search job, reference, tracking or SKU</span><div class="with-btn"><input id="q" type="search" data-flt="q" value="'+esc(f.q)+'" aria-label="Search job, reference, tracking or SKU">'+micBtn('search','job or order number')+'</div></div>'
    +'<div id="statusSeg"></div>'
    +'<div class="drawer" id="drawer" data-open="'+open+'"><div class="dr-body" id="drBody"><div class="dr-in" id="drIn"'+(open?'':' inert')+'><div class="dr-pad">'
    +'<label class="fld"><span>Client</span><select id="fc" data-flt="client">'+opts([['','All clients']].concat(S.clients.map(c=>[c.id,c.name])),f.client)+'</select></label>'
@@ -1054,31 +1106,30 @@ function vList(){
 }
 function fltRows(skipStatus){
   const f=Object.assign({},S.flt),st=f.status;f.status='';
-  return S.returns.filter(r=>match(r,f)&&(skipStatus||!st||(st==='open'?r.status!=='closed':r.status===st)));
+  return S.returns.filter(r=>match(r,f)&&(skipStatus||!st||stage(r)===st));
 }
 function drawRows(){
   const el=$('#rows');if(!el)return;if(S.swiping){S.rowsDirty=true;return}
-  const base=fltRows(true),n=s=>base.filter(r=>s==='open'?r.status!=='closed':r.status===s).length;
+  const base=fltRows(true),n=s=>base.filter(r=>stage(r)===s).length;
   const sg=$('#statusSeg');
-  if(sg){const o=[['','All <small>'+base.length+'</small>'],['open','Open <small>'+n('open')+'</small>']].concat(STATUS.map(s=>[s,'<i class="dot st-'+s+'"></i>'+SL(s)+' <small>'+n(s)+'</small>']));
+  if(sg){const o=[['','All <small>'+base.length+'</small>']].concat(STAGES.map(s=>[s,'<i class="dot st-'+s+'"></i>'+STG[s][0]+' <small>'+n(s)+'</small>']));
     const cur=sg.querySelector('.seg');
     if(cur){cur.querySelectorAll('button').forEach((b,i)=>{b.innerHTML=o[i][1];b.setAttribute('aria-pressed',o[i][0]===S.flt.status)})}
     else sg.innerHTML=seg('fstatus','Status',o,S.flt.status);}
-  const act=[S.flt.client,S.flt.from,S.flt.to].filter(Boolean).length,dl=$('#drLabel');if(dl)dl.textContent='Client and date filters'+(act?' · '+act+' on':'');
+  const act=[S.flt.client,S.flt.from,S.flt.to].filter(Boolean).length,dl=$('#drLabel');if(dl)dl.textContent='Tenant and date filters'+(act?' · '+act+' on':'');
   const rs=fltRows(false),note=$('#rowsNote');
-  if(note)note.textContent=rs.length?rs.length+' return'+(rs.length===1?'':'s')+''+(rs.length>300?' Showing the first 300.':''):'No returns match these filters.';
+  if(note)note.textContent=rs.length?rs.length+' return'+(rs.length===1?'':'s')+(rs.length>300?'. Showing the first 300.':''):'No returns match these filters.';
   el.innerHTML='<ul class="rows">'+rs.slice(0,300).map(r=>{
-    const nx=nextStatus(r.status),was=S.lastStatus[r.id],ch=was&&was!==r.status,si=STATUS.indexOf(r.status),wi=STATUS.indexOf(was);
-    return'<li class="rw'+(nx?'':' none')+(S.fresh===r.id?' fresh':'')+'" data-id="'+r.id+'">'
-     +(nx?'<div class="rw-under" aria-hidden="true"><span>'+ic('check')+(r.status==='inspected'?'Email tenant':r.status==='waiting'?'Record decision':'Mark '+SL(nx).toLowerCase())+'</span></div>':'')
-     +'<div class="rw-card"><button class="rw-main" data-act="open" data-v="'+r.id+'" aria-label="Open '+esc(r.jobNo)+', '+esc(clientName(r.clientId))+', '+esc(r.status)+'">'
+    const sg2=stage(r),act2=r.status==='open',was=S.lastStatus[r.id],ch=was&&was!==sg2,lab=sg2==='rts'?'Record tenant answer':'Mark '+SL(doneStatus(r)).toLowerCase();
+    return'<li class="rw'+(S.fresh===r.id?' fresh':'')+'" data-id="'+r.id+'">'
+     +(act2?'<div class="rw-under" aria-hidden="true"><span>'+ic('check')+lab+'</span></div>':'')
+     +'<div class="rw-card"><button class="rw-main" data-act="open" data-v="'+r.id+'" aria-label="Open '+esc(r.jobNo)+', '+esc(clientName(r.clientId))+', '+esc(STG[sg2][0])+'">'
      +'<span class="job">'+esc(r.jobNo)+'</span><span class="rw-cl">'+esc(clientName(r.clientId))+'</span>'
-     +'<span class="rw-meta"><span>'+fmtD(r.dateReceived)+'</span><span class="mono">'+esc(r.orderNo||'no order no.')+'</span><span>'+units(r)+' unit'+(units(r)===1?'':'s')+'</span>'+(r.decision?'<span class="tag">'+esc(decText(r.decision))+'</span>':'')
-     +'<span class="trk st-'+esc(r.status)+'">'+STATUS.map((s,i)=>'<i class="'+(i<=si?'on':'')+(ch&&i<=si&&i>wi?' new':'')+'"></i>').join('')+'</span></span>'
-     +pill(r.status,ch)+'</button>'
-     +(nx?'<button class="adv" data-act="advance" data-v="'+r.id+'" aria-label="'+(needsSheet(r.status)?'Open '+esc(r.jobNo)+' for the next step':'Mark '+esc(r.jobNo)+' as '+SL(nx).toLowerCase())+'" title="'+(r.status==='inspected'?'Email tenant':r.status==='waiting'?'Record tenant decision':'Mark '+SL(nx).toLowerCase())+'">'+ic('arrow')+'</button>':'')
+     +'<span class="rw-meta"><span>'+fmtD(r.dateReceived)+'</span><span class="mono">'+esc(r.orderNo||'no reference')+'</span><span class="rw-q">'+esc(qtyText(r))+'</span>'+'</span>'
+     +pill(sg2,ch)+'</button>'
+     +(act2?'<button class="adv" data-act="advance" data-v="'+r.id+'" aria-label="'+lab+' for '+esc(r.jobNo)+'" title="'+lab+'">'+ic('arrow')+'</button>':'')
      +'</div></li>'}).join('')+'</ul>';
-  S.lastStatus={};S.returns.forEach(r=>S.lastStatus[r.id]=r.status);
+  S.lastStatus={};S.returns.forEach(r=>S.lastStatus[r.id]=stage(r));
   placeSegs();
 }
 
@@ -1086,13 +1137,13 @@ function drawRows(){
 async function setStatus(id,status,quiet,extra,what){
   const r=S.returns.find(x=>x.id===id);if(!r||(r.status===status&&!extra)||S.busy[id])return;
   if(!S.db)return toast('Not connected, so this can\'t be saved yet.');
-  const prev={status:r.status,dateProcessed:r.dateProcessed||'',history:r.history||[],decision:r.decision||null},now=new Date().toISOString();
+  const prev={status:r.status,dateProcessed:r.dateProcessed||'',history:r.history||[],rts:r.rts||null},now=new Date().toISOString();
   const patch={status,updatedAt:now,history:prev.history.slice(-40).concat([{at:now,by:S.uid||'',what:what||'Status changed to '+SL(status)}])};
   if(extra)Object.assign(patch,extra);
-  if(status==='closed'&&!r.dateProcessed)patch.dateProcessed=today();
+  if(status!=='open'&&!r.dateProcessed)patch.dateProcessed=today();if(status==='open')patch.dateProcessed='';
   S.busy[id]=true;
   try{await S.db.collection('returns').doc(id).update(patch);
-    if(!quiet)toast(r.jobNo+': '+SL(status).toLowerCase(),{label:'Undo',fn:async()=>{try{await S.db.collection('returns').doc(id).update({status:prev.status,dateProcessed:prev.dateProcessed,history:prev.history,decision:prev.decision,updatedAt:new Date().toISOString()});toast(r.jobNo+' back to '+SL(prev.status).toLowerCase())}catch(e){fail(e,'undo that change')}}})}
+    if(!quiet)toast(r.jobNo+': '+(what||SL(status)).toLowerCase(),{label:'Undo',fn:async()=>{try{await S.db.collection('returns').doc(id).update({status:prev.status,dateProcessed:prev.dateProcessed,history:prev.history,rts:prev.rts,updatedAt:new Date().toISOString()});toast(r.jobNo+' back to '+SL(prev.status).toLowerCase())}catch(e){fail(e,'undo that change')}}})}
   catch(e){fail(e,'change the status')}
   delete S.busy[id];if(S.sheetId===id)renderSheet();
 }
@@ -1100,7 +1151,7 @@ async function setStatus(id,status,quiet,extra,what){
 /* ---------- pattern 03: swipe a row to the next stage ---------- */
 function startSwipe(e,card){
   if(e.button||e.target.closest('.adv'))return;
-  const li=card.parentNode,id=li.dataset.id,r=S.returns.find(x=>x.id===id),nx=r&&nextStatus(r.status);if(!nx)return;
+  const li=card.parentNode,id=li.dataset.id,r=S.returns.find(x=>x.id===id),nx=r&&r.status==='open';if(!nx)return;
   const x0=e.clientX,y0=e.clientY,th=Math.min(150,card.offsetWidth*.34);let on=false,armed=false,ended=false;
   const mv=ev=>{
     const mx=ev.clientX-x0,my=ev.clientY-y0;
@@ -1148,29 +1199,26 @@ function renderSheet(){
   const r=S.returns.find(x=>x.id===S.sheetId),box=$('#sheetIn');
   if(!r){if(S.gotReturns){finishClose();toast('That return is no longer available.')}return}
   const sc=box.querySelector('.sh-b'),top=sc?sc.scrollTop:0,ae=document.activeElement,key=ae&&box.contains(ae)&&ae.dataset.act?[ae.dataset.act,ae.dataset.v]:null;
-  const si=STATUS.indexOf(r.status),was=S.sheetStatus,now=performance.now();if(was&&was!==r.status)S.sheetMove={wi:STATUS.indexOf(was),t:now};const mvg=S.sheetMove&&now-S.sheetMove.t<500?S.sheetMove:null,wi=mvg?mvg.wi:si,nx=nextStatus(r.status),busy=!!S.busy[r.id],n=(r.lines||[]).length;
+  const sg=stage(r),busy=!!S.busy[r.id],n=(r.lines||[]).length,dis=busy?' disabled':'',ta=$('#rts-note');if(ta)S.rtsNote=ta.value;
   let h='<div class="sh-grab" data-shgrab aria-hidden="true"><i></i></div>'
-   +'<header class="sh-h" data-shgrab><div class="sh-ht"><span class="job big">'+esc(r.jobNo)+'</span><h2 id="sh-t">'+esc(clientName(r.clientId))+'</h2><p class="note">Received '+fmtD(r.dateReceived)+' · '+units(r)+' unit'+(units(r)===1?'':'s')+' across '+n+' item'+(n===1?'':'s')+'</p></div>'
+   +'<header class="sh-h" data-shgrab><div class="sh-ht"><span class="job big">'+esc(r.jobNo)+'</span><h2 id="sh-t">'+esc(clientName(r.clientId))+'</h2><p class="note">'+(isRts(r)?'Return to sender':'Customer return')+' · received '+fmtD(r.dateReceived)+' · '+esc(qtyText(r))+'</p>'+pill(sg,S.sheetStatus&&S.sheetStatus!==sg)+'</div>'
    +'<button class="icb" data-act="closeSheet" aria-label="Close">'+ic('x')+'</button></header><div class="sh-b">'
-   +'<ol class="steps" aria-label="Status"><li class="bar2" role="presentation" style="--from:'+(wi/(STATUS.length-1))+';--to:'+(si/(STATUS.length-1))+(mvg?';animation-delay:-'+Math.round(now-mvg.t)+'ms':'')+'"></li>'
-   +STATUS.map((s,i)=>'<li class="'+(i<si?'done':i===si?'cur'+(was&&was!==r.status?' moved':''):'')+'"><button data-act="sheetStatus" data-v="'+s+'"'+(i===si?' aria-current="step"':'')+(busy?' disabled':'')+' aria-label="'+(i===si?SL(s)+', current status':'Set status to '+SL(s))+'">'+SL(s)+'</button></li>').join('')+'</ol>'
-   +'<dl class="kv"><div><dt>Order number</dt><dd class="mono">'+esc(r.orderNo||'—')+'</dd></div><div><dt>Tracking</dt><dd class="mono">'+esc(r.tracking||'—')+'</dd></div><div><dt>Carrier</dt><dd>'+esc(r.carrier||'—')+'</dd></div><div><dt>Closed on</dt><dd>'+fmtD(r.dateProcessed)+'</dd></div></dl>';
-  if(r.status==='inspected'&&mailState(r)==='noattach')h+='<p class="note">This device cannot attach photos to an email. Send from a phone or tablet to include the '+photoIds(r).length+' photo'+(photoIds(r).length===1?'':'s')+'.</p>';
-  if(r.status==='inspected')prepFiles(r);
-  if(r.status==='waiting')h+='<div class="dec"><h3>What did the tenant decide?</h3><div class="pick"><span>The stock</span>'+seg('dec-stock','The stock',DSTOCK,S.dec.stock)+'</div><div class="pick"><span>The customer</span>'+seg('dec-cust','The customer',DCUST,S.dec.customer)+'</div></div>';
-  else if(r.decision)h+='<div class="dec"><h3>Tenant decision</h3><p class="dec-t">'+esc(decText(r.decision))+'</p>'+(r.status==='action'?'<ul class="todo">'+decTodo(r.decision).map(t=>'<li>'+esc(t)+'</li>').join('')+'</ul>':'')+'</div>';
-  h+='<div><h3>Items</h3>'+(n?r.lines.map(l=>{const e=+l.qtyExp||0,q=+l.qtyRecv||0,g=GRADES.find(x=>x[0]===l.grade);
-    return'<div class="it"><div class="it-h"><b>'+esc(l.name||l.sku||l.barcode||'Item')+'</b>'+(l.sku?'<span class="mono note">'+esc(l.sku)+'</span>':'')+'<span class="q'+(q!==e?' ag w':'')+'">'+q+' of '+e+'</span></div>'
-     +'<div class="tags">'+[l.reason,g&&g[1],l.disposition].filter(Boolean).map(t=>'<span class="tag">'+esc(t)+'</span>').join('')+(!(l.reason||g||l.disposition)?'<span class="note">Not graded yet</span>':'')+'</div>'
-     +((l.photos||[]).length?'<div class="photos">'+l.photos.map((p,j)=>'<span class="ph"><img data-blob="'+esc(p)+'" alt="Photo '+(j+1)+' of '+esc(l.name||l.sku||'item')+'"></span>').join('')+'</div>':'')+'</div>'}).join(''):'<p class="note">No items recorded.</p>')+'</div>';
-  if(r.notes)h+='<div><h3>Notes</h3><p style="margin:6px 0 0;white-space:pre-wrap">'+esc(r.notes)+'</p></div>';
+   +'<dl class="kv"><div><dt>Reference</dt><dd class="mono">'+esc(r.orderNo||'—')+'</dd></div><div><dt>Tracking</dt><dd class="mono">'+esc(r.tracking||'—')+'</dd></div><div><dt>Carrier</dt><dd>'+esc(r.carrier||'—')+'</dd></div><div><dt>Closed on</dt><dd>'+fmtD(r.dateProcessed)+'</dd></div></dl>';
+  if(sg==='rts'){prepFiles(r);
+    h+='<div class="dec"><h3>Waiting on the tenant</h3><p class="note">'+(r.emailedAt?'Tenant emailed '+esc(new Date(r.emailedAt).toLocaleDateString('en-AU'))+'. ':'')+'Record their answer when it arrives: resend to a corrected address, or put it back to stock.</p>'
+     +'<label class="fld"><span>New address or tenant instructions</span><textarea id="rts-note" placeholder=" ">'+esc(S.rtsNote)+'</textarea></label>'
+     +(mailState(r)==='noattach'?'<p class="note">This device cannot attach photos to an email. Send from a phone or tablet to include them.</p>':'')+'</div>'}
+  else if(r.rts)h+='<div class="dec"><h3>Tenant answer</h3><p class="dec-t">'+(r.rts.answer==='resend'?'Resend to the customer':'Back to stock')+'</p>'+(r.rts.note?'<p style="margin:0;white-space:pre-wrap">'+esc(r.rts.note)+'</p>':'')+'</div>';
+  h+='<div><h3>Items</h3>'+(n?r.lines.map(l=>'<div class="it"><div class="it-h"><b>'+esc(l.name||l.sku||l.barcode||'Item')+'</b>'+(l.sku?'<span class="mono note">'+esc(l.sku)+'</span>':'')+'<span class="q">'+(+l.qtyGood||0)+' good · '+(+l.qtyDamaged||0)+' damaged</span></div>'
+     +(l.reason?'<div class="tags"><span class="tag">'+esc(l.reason)+'</span></div>':'')
+     +((l.photos||[]).length?'<div class="photos">'+l.photos.map((p,j)=>'<span class="ph"><img data-blob="'+esc(p)+'" alt="Photo '+(j+1)+' of '+esc(l.name||l.sku||'item')+'"></span>').join('')+'</div>':'')+'</div>').join(''):'<p class="note">No items recorded.</p>')+'</div>';
+  if(r.notes)h+='<div><h3>Comment</h3><p style="margin:6px 0 0;white-space:pre-wrap">'+esc(r.notes)+'</p></div>';
   if(r.history&&r.history.length)h+='<div><h3>History</h3><ul class="hist" style="margin-top:6px">'+r.history.slice(-5).reverse().map(x=>'<li>'+esc(new Date(x.at).toLocaleString('en-AU'))+' · '+esc(x.what)+'</li>').join('')+'</ul></div>';
-  h+='</div><footer class="sh-f"><button class="btn" data-act="editOpen" data-v="'+r.id+'">'+ic('pen')+'Edit or email</button>'
-   +(r.status==='inspected'?'<button class="btn pri" data-act="sendTenant" data-v="'+r.id+'"'+(busy?' disabled':'')+(mailState(r)==='prep'?' disabled':'')+'>'+(busy?'Saving…':({ready:'Email tenant with '+photoIds(r).length+' photo'+(photoIds(r).length===1?'':'s'),prep:'Preparing photos…'})[mailState(r)]||'Email tenant')+'</button>'
-     :r.status==='waiting'?'<button class="btn pri" data-act="saveDecision" data-v="'+r.id+'"'+(busy||!S.dec.stock?' disabled':'')+'>'+(busy?'Saving…':'Save decision')+'</button>'
-     :r.status==='action'?'<button class="btn pri" data-act="advance" data-v="'+r.id+'"'+(busy?' disabled':'')+'>'+(busy?'Saving…':'Mark done')+'</button>'
-     :nx?'<button class="btn pri" data-act="advance" data-v="'+r.id+'"'+(busy?' disabled':'')+'>'+(busy?'Saving…':'Mark '+SL(nx).toLowerCase())+(busy?'':ic('arrow'))+'</button>':'')+'</footer>';
-  box.innerHTML=h;enhance(box);S.sheetStatus=r.status;placeSegs();
+  h+='</div><footer class="sh-f"><button class="btn" data-act="editOpen" data-v="'+r.id+'">'+ic('pen')+'Edit</button>'
+   +(sg==='open'?'<button class="btn pri" data-act="advance" data-v="'+r.id+'"'+dis+'>'+(busy?'Saving…':'Mark '+SL(doneStatus(r)).toLowerCase())+'</button>'
+     :sg==='rts'?'<button class="btn" data-act="sendTenant" data-v="'+r.id+'"'+dis+(mailState(r)==='prep'?' disabled':'')+'>'+(({ready:'Email tenant with '+photoIds(r).length+' photo'+(photoIds(r).length===1?'':'s'),prep:'Preparing photos…'})[mailState(r)]||'Email tenant')+'</button><button class="btn pri" data-act="rtsStock" data-v="'+r.id+'"'+dis+'>Back to stock</button><button class="btn pri" data-act="rtsResend" data-v="'+r.id+'"'+dis+'>Resend to customer</button>'
+     :'<button class="btn" data-act="reopen" data-v="'+r.id+'"'+dis+'>Reopen</button>')+'</footer>';
+  box.innerHTML=h;enhance(box);S.sheetStatus=sg;placeSegs();
   const ns=box.querySelector('.sh-b');if(ns)ns.scrollTop=top;
   if(key){const f=box.querySelector('[data-act="'+key[0]+'"][data-v="'+key[1]+'"]:not([disabled])')||box.querySelector('[data-act="'+key[0]+'"]:not([disabled])');(f||$('#sheetP')).focus({preventScroll:true})}
 }
@@ -1185,7 +1233,7 @@ function morphFrames(from,to){
 function openSheet(id){
   if(S.sheetId||S.closing)return;
   const sh=$('#sheet'),p=$('#sheetP'),bg=sh.querySelector('.sheet-bg'),from=srcRect(id);
-  S.dec={stock:'',customer:''};S.sheetId=id;S.sheetStatus=null;S.sheetMove=null;S.sheetFocus=document.activeElement;
+  S.rtsNote='';S.dec={stock:'',customer:''};S.sheetId=id;S.sheetStatus=null;S.sheetMove=null;S.sheetFocus=document.activeElement;
   renderSheet();if(!S.sheetId)return;
   sh.hidden=false;document.documentElement.classList.add('lock');$('#shell').inert=true;p.style.transform='';bg.style.opacity='';
   if(!RM()){
@@ -1233,12 +1281,11 @@ function startSheetDrag(e){
 }
 
 function tenantText(r,c,att){
-  const np=(r.lines||[]).reduce((a,l)=>a+(l.photos||[]).length,0),g=k=>(GRADES.find(x=>x[0]===k)||[])[1];
-  const items=(r.lines||[]).map(l=>'- '+(l.sku||l.barcode||'Item')+(l.name?' ('+l.name+')':'')+': received '+(+l.qtyRecv||0)+' of '+(+l.qtyExp||0)+[l.reason&&', reason: '+l.reason,l.grade&&', condition: '+g(l.grade)].filter(Boolean).join('')).join('\n');
-  const body='Attention: '+(c.name||'')+' returns team\n\nA return has arrived at our warehouse and has been inspected. Please tell us what you would like done with it.\n\nJob: '+r.jobNo+(r.orderNo?'\nOrder: '+r.orderNo:'')+(r.tracking?'\nTracking: '+r.tracking:'')+'\nReceived: '+fmtD(r.dateReceived)
-   +'\n\nItems:\n'+(items||'- none recorded')+(r.notes?'\n\nInspection notes: '+r.notes:'')+(np?(att?'\n\nPhotos attached: '+np:'\n\nPhotos taken: '+np+'. Reply to this email and we will send them.'):'')
-   +'\n\nPlease reply and tell us:\n1. The stock: return it to the shelf, or dispose of it?\n2. The customer: will you refund them, or should we send a replacement?\n\nRegards,\n'+(S.org.name||'The warehouse')+' Returns Department'+(S.org.email?'\n'+S.org.email:'');
-  return body;
+  const np=photoIds(r).length;
+  const items=(r.lines||[]).map(l=>'- '+(l.sku||l.barcode||'Item')+(l.name?' ('+l.name+')':'')+': '+((+l.qtyGood||0)+(+l.qtyDamaged||0))+' unit(s)'+(l.reason?', '+l.reason.toLowerCase():'')).join('\n');
+  return'Attention: '+(c.name||'')+' team\n\nA parcel has come back to our warehouse as return to sender. It did not reach your customer.\n\nJob: '+r.jobNo+(r.orderNo?'\nReference: '+r.orderNo:'')+(r.tracking?'\nTracking: '+r.tracking:'')+'\nReceived: '+fmtD(r.dateReceived)
+   +'\n\nItems:\n'+(items||'- none recorded')+(r.notes?'\n\nComment: '+r.notes:'')+(np?(att?'\n\nPhotos attached: '+np:'\n\nPhotos taken: '+np+'. Reply to this email and we will send them.'):'')
+   +'\n\nPlease reply with one of:\n1. A corrected address, and we will send it out again\n2. Put it back into stock\n\nRegards,\n'+(S.org.name||'The warehouse')+' Returns Department'+(S.org.email?'\n'+S.org.email:'');
 }
 function tenantMail(r,c){return'mailto:'+encodeURIComponent(c.email)+'?'+(S.org.email?'cc='+encodeURIComponent(S.org.email)+'&':'')+'subject='+encodeURIComponent(subjFor(r))+'&body='+encodeURIComponent(tenantText(r,c,false))}
 const photoIds=r=>(r.lines||[]).flatMap(l=>l.photos||[]);
@@ -1253,6 +1300,54 @@ async function prepFiles(r){
   catch(e){console.error(e);if(S.mailFiles.key===key){S.mailFiles={key:'',files:null};S.mailFail=r.id;if(S.sheetId===r.id)renderSheet()}}
 }
 const mailState=r=>{const ids=photoIds(r);if(!ids.length)return'plain';if(!canShareFiles()||S.mailFail===r.id)return'noattach';return S.mailFiles.key===r.id+':'+ids.join(',')&&S.mailFiles.files?'ready':'prep'};
+
+/* ---------- reports: Excel (two tabs) and PDF ---------- */
+const RHEAD=['Date','Job number','Tenant','Reference','SKU','Product','Good qty','Damaged qty','Comments','Status'];
+function outcome(x,l){const g=+l.qtyGood||0,b=+l.qtyDamaged||0;
+  if(x.status==='open')return isRts(x)?'Return to sender, waiting on tenant':'Not put away yet';
+  if(x.status==='resent')return'Resent to customer';
+  return[g?g+' received in and put back to shelf':'',b?b+' damaged and discarded':''].filter(Boolean).join('; ')}
+function repData(){
+  const r=S.rep,rs=S.returns.filter(x=>match(x,{client:r.client,from:r.from,to:r.to})).sort((a,b)=>String(a.dateReceived).localeCompare(b.dateReceived));
+  const mk=list=>{const o=[];list.forEach(x=>{const ls=x.lines&&x.lines.length?x.lines:[{}];ls.forEach(l=>o.push([fmtD(x.dateReceived),x.jobNo,clientName(x.clientId),x.orderNo||'',l.sku||'',l.name||'',+l.qtyGood||0,+l.qtyDamaged||0,[outcome(x,l),l.reason,x.notes,x.rts&&x.rts.note].filter(Boolean).join(' · '),SL(x.status)]))});return o};
+  const ret=rs.filter(x=>!isRts(x)),rts=rs.filter(isRts);
+  return{rs,ret,rts,rowsRet:mk(ret),rowsRts:mk(rts),good:rs.reduce((a,x)=>a+goodQ(x),0),bad:rs.reduce((a,x)=>a+badQ(x),0)};
+}
+function repTable(rows){return'<div class="tbl"><table><thead><tr>'+RHEAD.map(x=>'<th>'+x+'</th>').join('')+'</tr></thead><tbody>'+rows.slice(0,150).map(x=>'<tr>'+x.map((v,i)=>'<td'+(i===1||i===3||i===4?' class="mono"':'')+'>'+esc(v)+'</td>').join('')+'</tr>').join('')+'</tbody></table></div>'+(rows.length>150?'<p class="note">Preview shows 150 of '+rows.length+' lines. The downloads contain all of them.</p>':'')}
+function drawReport(){
+  const el=$('#rep');if(!el)return;const d=repData(),r=S.rep,c=S.clients.find(x=>x.id===r.client);
+  if(!d.rs.length){el.innerHTML='<div class="panel"><p class="note">No returns were received in this date range'+(c?' for '+esc(c.name):'')+'.</p></div>';return}
+  let h='<div class="panel"><h3>Summary, '+fmtD(r.from)+' to '+fmtD(r.to)+'</h3><div class="tiles"><div class="tile"><span class="lab">Customer returns</span><b>'+d.ret.length+'</b></div><div class="tile"><span class="lab">Return to sender</span><b>'+d.rts.length+'</b></div><div class="tile"><span class="lab">Good units</span><b>'+d.good+'</b></div><div class="tile"><span class="lab">Damaged units</span><b>'+d.bad+'</b></div></div>'
+   +'<div class="row">'+(S.dl?'<button class="btn pri big" data-act="xlsx">Download Excel</button><button class="btn" data-act="pdf">Download PDF</button>':'<p class="note">Downloads are not available in this view.</p>')+'</div><p class="note">The Excel file has two tabs: Returns and Return to sender.</p></div>';
+  h+='<div class="panel"><h3>Returns</h3>'+(d.rowsRet.length?repTable(d.rowsRet):'<p class="note">None in this period.</p>')+'</div>';
+  h+='<div class="panel"><h3>Return to sender</h3>'+(d.rowsRts.length?repTable(d.rowsRts):'<p class="note">None in this period.</p>')+'</div>';
+  el.innerHTML=h;
+}
+function loadXlsx(){return loadXlsx.p||(loadXlsx.p=new Promise((res,rej)=>{if(window.XLSX)return res();const s=document.createElement('script');s.src='https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';s.onload=res;s.onerror=()=>{loadXlsx.p=null;rej(new Error('load'))};document.head.appendChild(s)}))}
+async function makeXlsx(){
+  toast('Building the Excel file…');
+  try{await loadXlsx()}catch(e){return toast('The Excel builder did not load. Check the connection and try again.')}
+  const d=repData(),wb=XLSX.utils.book_new(),sheet=rows=>{const ws=XLSX.utils.aoa_to_sheet([RHEAD].concat(rows));ws['!cols']=[10,18,22,16,16,30,9,12,40,18].map(w=>({wch:w}));ws['!autofilter']={ref:'A1:J'+(rows.length+1)};return ws};
+  XLSX.utils.book_append_sheet(wb,sheet(d.rowsRet),'Returns');XLSX.utils.book_append_sheet(wb,sheet(d.rowsRts),'Return to sender');
+  const out=XLSX.write(wb,{bookType:'xlsx',type:'array'});
+  saveFile(fileBase()+'.xlsx',new Blob([out],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'}));
+}
+async function makePdf(){
+  if(!window.jspdf)return toast('The PDF library did not load. Reload and try again.');
+  const d=repData(),r=S.rep,c=S.clients.find(x=>x.id===r.client),doc=new window.jspdf.jsPDF({orientation:'landscape',unit:'pt',format:'a4'});
+  const col=/^#[0-9a-f]{6}$/i.test(S.org.color||'')?rgb(S.org.color):[8,14,30],W=doc.internal.pageSize.getWidth();let x=40;
+  doc.setFillColor(8,14,30);doc.rect(0,0,W,78,'F');doc.setFillColor(94,235,255);doc.rect(0,78,W,3,'F');
+  const lg=await logoData();if(lg){const h=34,w=lg.w/lg.h*h;try{doc.addImage(lg.url,'PNG',40,24,w,h);x=40+w+14}catch(e){}}
+  doc.setTextColor(255);doc.setFont('helvetica','bold');doc.setFontSize(18);doc.text('Returns report',x,42);
+  doc.setFont('helvetica','normal');doc.setFontSize(10);doc.text((S.org.name?S.org.name+'  ·  ':'')+(c?c.name:'All tenants')+'  ·  '+fmtD(r.from)+' to '+fmtD(r.to),x,60);
+  doc.setTextColor(0);doc.setFontSize(10);doc.text('Customer returns: '+d.ret.length+'     Return to sender: '+d.rts.length+'     Good units: '+d.good+'     Damaged units: '+d.bad,40,104);
+  const foot=()=>{doc.setFontSize(8);doc.setTextColor(110);doc.text('Generated '+fmtD(today())+'  ·  Page '+doc.internal.getNumberOfPages(),40,doc.internal.pageSize.getHeight()-20);doc.setTextColor(0)};
+  const table=(title,rows,y)=>{doc.setFont('helvetica','bold');doc.setFontSize(12);doc.text(title,40,y);doc.setFont('helvetica','normal');
+    doc.autoTable({head:[RHEAD],body:rows.length?rows:[['None in this period','','','','','','','','','']],startY:y+8,margin:{left:40,right:40},styles:{fontSize:8,cellPadding:4,overflow:'linebreak'},headStyles:{fillColor:col,textColor:(col[0]*299+col[1]*587+col[2]*114)/1000>150?20:255},alternateRowStyles:{fillColor:[243,245,247]},didDrawPage:foot});return doc.lastAutoTable.finalY};
+  let y=table('Returns',d.rowsRet,128);if(y>doc.internal.pageSize.getHeight()-120){doc.addPage();y=20}
+  table('Return to sender',d.rowsRts,y+30);
+  saveFile(fileBase()+'.pdf',doc.output('blob'));
+}
 
 /* ---------- live camera scanner (barcodes and QR codes) ---------- */
 const SC={stream:null,reader:null,timer:null,target:null};
@@ -1301,26 +1396,26 @@ Object.assign(ACT,{
     r.onend=()=>{S.rec=null;if(b.isConnected)b.classList.remove('rec')};
     try{r.start();toast('Listening… say the number')}catch(e){S.rec=null;b.classList.remove('rec')}
   },
-  ocr:()=>{S.target='ocr';const i=$('#scanInput');i.value='';i.click()},ocrPick:v=>{setOrder(v);toast('Order number set to '+v)},
+  ocr:()=>{S.target='ocr';const i=$('#scanInput');i.value='';i.click()},ocrPick:v=>{setOrder(v);toast('Reference set to '+v)},
   scan:v=>liveScan(v),scanClose:()=>stopScan(),scanPhoto:()=>{const t=SC.target;stopScan();photoScan(t)},
   toastAct:()=>{const f=toast.fn;toast.fn=null;$('#toast').hidden=true;if(f)f()},
   open:v=>openSheet(v),closeSheet,
   editOpen:v=>{finishClose();editReturn(v)},
-  advance:v=>{const r=S.returns.find(x=>x.id===v),nx=r&&nextStatus(r.status);if(!nx)return;if(needsSheet(r.status)){if(S.sheetId!==v)openSheet(v);return}setStatus(v,nx);if(S.sheetId===v)renderSheet()},
+  advance:v=>{const r=S.returns.find(x=>x.id===v);if(!r||r.status!=='open')return;if(isRts(r)){if(S.sheetId!==v)openSheet(v);return}setStatus(v,doneStatus(r));if(S.sheetId===v)renderSheet()},
+  reopen:v=>{setStatus(v,'open',false,null,'Reopened');if(S.sheetId===v)renderSheet()},
+  rtsStock:v=>{const t=$('#rts-note'),note=t?t.value.trim():'';setStatus(v,'shelf',false,{rts:{answer:'stock',note,at:new Date().toISOString(),by:S.uid||''}},'Tenant answer: back to stock');S.rtsNote='';if(S.sheetId===v)renderSheet()},
+  rtsResend:v=>{const t=$('#rts-note'),note=t?t.value.trim():'';if(!note)return toast('Type the corrected address or the tenant\'s instructions first.');
+    setStatus(v,'resent',false,{rts:{answer:'resend',note,at:new Date().toISOString(),by:S.uid||''}},'Tenant answer: resend to customer');S.rtsNote='';if(S.sheetId===v)renderSheet()},
   sendTenant:v=>{const r=S.returns.find(x=>x.id===v);if(!r)return;const c=S.clients.find(x=>x.id===r.clientId)||{};
     if(!c.email)return toast('No email saved for this tenant. Add it in Settings, then try again.');
+    const mark=w=>{setStatus(v,'open',true,{emailedAt:new Date().toISOString()},w);if(S.sheetId===v)renderSheet()};
     if(mailState(r)==='ready'){const files=S.mailFiles.files;
       try{if(navigator.clipboard)navigator.clipboard.writeText(c.email).catch(()=>{})}catch(e){}
       toast('Tenant email address copied. Choose Mail, then paste it into To.');
-      navigator.share({files,title:subjFor(r),text:subjFor(r)+'\n\n'+tenantText(r,c,true)}).then(()=>{setStatus(v,'waiting',false,null,'Emailed tenant for a decision, '+files.length+' photos attached');if(S.sheetId===v)renderSheet()})
-        .catch(e=>{if(!e||e.name!=='AbortError')toast('Could not open sharing on this device. Try again.')});
+      navigator.share({files,title:subjFor(r),text:subjFor(r)+'\n\n'+tenantText(r,c,true)}).then(()=>mark('Emailed tenant about RTS, '+files.length+' photos attached')).catch(e=>{if(!e||e.name!=='AbortError')toast('Could not open sharing on this device. Try again.')});
       return}
-    const a=document.createElement('a');a.href=tenantMail(r,c);document.body.appendChild(a);a.click();a.remove();
-    setStatus(v,'waiting',false,null,'Emailed tenant for a decision');if(S.sheetId===v)renderSheet()},
-  saveDecision:v=>{if(!S.dec.stock)return toast('Choose what happens to the stock first.');
-    const d={stock:S.dec.stock,customer:S.dec.customer,at:new Date().toISOString(),by:S.uid||''};
-    setStatus(v,'action',false,{decision:d},'Tenant decision: '+decText(d));if(S.sheetId===v)renderSheet()},
-  sheetStatus:v=>{setStatus(S.sheetId,v);renderSheet()},
+    const a=document.createElement('a');a.href=tenantMail(r,c);document.body.appendChild(a);a.click();a.remove();mark('Emailed tenant about RTS')},
+  xlsx:()=>makeXlsx(),
   toList:v=>{S.flt.status=v;go('list')},
   clearFlt:()=>{S.flt.client='';S.flt.from='';S.flt.to='';['fc','ff','ft'].forEach(i=>{const e=$('#'+i);if(e)e.value=''});drawRows()},
   seg:(v,b)=>{
@@ -1328,11 +1423,7 @@ Object.assign(ACT,{
     if(k==='period'){S.period=+v;S.anim=true;return render()}
     if(k==='fstatus'){S.flt.status=v;return drawRows()}
     if(k==='f-status'){S.draft.status=v;return pressSeg(b)}
-    if(k==='dec-stock'){S.dec.stock=v;return renderSheet()}
-    if(k==='dec-cust'){S.dec.customer=v;return renderSheet()}
-    const[f,i]=k.split(':'),l=S.draft.lines[+i];if(!l)return;const key=f==='grade'?'grade':'disposition';
-    if(l[key]===v){l[key]='';b.dataset.on='0'}else{l[key]=v;delete b.dataset.on}
-    pressSeg(b);delete b.dataset.on;
+    if(k==='f-kind'){S.draft.kind=v;return render()}
   }
 });
 document.addEventListener('click',e=>{
