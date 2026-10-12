@@ -323,6 +323,8 @@ td{padding:9px 8px;border-bottom:1px solid var(--line);vertical-align:top}
 .steps button[disabled]{cursor:default}
 .dec{display:flex;flex-direction:column;gap:12px;padding:14px;border-radius:14px;background:var(--sunk)}
 .dec-t{margin:0;font:600 20px var(--display)} .todo{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:6px}
+.loc-big{font-size:22px;font-weight:700;color:var(--accent)}
+select option:disabled{color:#7b8794}
 .kv{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin:0}
 .kv div{min-width:0} .kv dt{font-size:11.5px;font-weight:600;color:var(--muted);letter-spacing:.02em} .kv dd{margin:2px 0 0;overflow-wrap:anywhere}
 .it{display:flex;flex-direction:column;gap:6px;padding:12px 0;border-top:1px solid var(--line)}
@@ -990,7 +992,8 @@ function vForm(){
    +'<div class="fld"><span>Tracking number</span><div class="with-btn"><input id="f-track" class="mono" data-f="tracking" value="'+esc(d.tracking)+'" aria-label="Tracking number"><button class="btn" data-act="scan" data-v="tracking" aria-label="Scan tracking number">'+ic('scan')+'</button></div></div>'
    +'<label class="fld"><span>Carrier</span><select id="f-carrier" data-f="carrier">'+opts(CARRIERS,d.carrier)+'</select></label>'
    +'</div><div class="pick"><span>Status</span>'+seg('f-status','Status',sts.map(s=>[s,'<i class="dot st-'+s+'"></i>'+SL(s)]),d.status)+'</div></div>';
-  if(d.kind==='rts')h+='<div class="panel"><div class="pick"><span>Package condition</span>'+seg('f-pack','Package condition',PACKS,d.pack||'')+'</div><p class="note">For an unopened parcel you can leave the items below empty. Add items only if the parcel was opened.</p></div>';
+  if(d.kind==='rts'){if(!d.location&&!S.editId)d.location=firstFreeLoc();}
+  if(d.kind==='rts')h+='<div class="panel"><div class="grid"><label class="fld"><span>Storage location</span><select id="f-loc" class="mono" data-f="location">'+locOpts(d.location,S.editId)+'</select></label></div><p class="note">Up to '+S.store.cap+' waiting parcels per location. Full locations are greyed out. The next free one is picked for you.</p><div class="pick"><span>Package condition</span>'+seg('f-pack','Package condition',PACKS,d.pack||'')+'</div><p class="note">For an unopened parcel you can leave the items below empty. Add items only if the parcel was opened.</p></div>';
   h+='<h3>'+(d.kind==='rts'?'Items (optional)':'Items')+'</h3>';
   d.lines.forEach((l,i)=>{
     h+='<div class="line"><div class="line-h"><strong>Item '+(i+1)+'</strong>'+(d.lines.length>1?'<button class="btn danger" data-act="rmLine" data-v="'+i+'">Remove</button>':'')+'</div>'
@@ -1015,10 +1018,11 @@ async function saveReturn(){
   if(!d.jobNo.trim())return toast('Add a job number.');
   if(S.returns.some(r=>r.jobNo===d.jobNo.trim()&&r.id!==S.editId))return toast('Job number '+d.jobNo+' is already used. Change it.');
   if(S.uploading)return toast('Photos are still uploading. Try again in a moment.');
+  if(d.kind==='rts'&&d.status==='open'&&d.location&&locUsed(d.location,S.editId)>=S.store.cap)return toast('Location '+d.location+' is full. Choose another location.');
   const now=new Date().toISOString(),prev=S.editId?S.returns.find(r=>r.id===S.editId):null,by=S.uid||'';
   const hist=((prev&&prev.history)||[]).slice(-40);
   hist.push({at:now,by,what:!prev?'Logged as '+(d.kind==='rts'?'return to sender':'customer return'):prev.status!==d.status?'Status changed to '+SL(d.status):'Edited'});
-  const body={jobNo:d.jobNo.trim(),clientId:d.clientId,kind:d.kind==='rts'?'rts':'return',pack:d.kind==='rts'?(d.pack||''):'',orderNo:(d.orderNo||'').trim(),tracking:(d.tracking||'').trim(),carrier:d.carrier||'',dateReceived:d.dateReceived||today(),dateProcessed:d.dateProcessed||'',status:d.status,notes:(d.notes||'').trim(),
+  const body={jobNo:d.jobNo.trim(),clientId:d.clientId,kind:d.kind==='rts'?'rts':'return',pack:d.kind==='rts'?(d.pack||''):'',location:d.kind==='rts'?(d.location||''):'',orderNo:(d.orderNo||'').trim(),tracking:(d.tracking||'').trim(),carrier:d.carrier||'',dateReceived:d.dateReceived||today(),dateProcessed:d.dateProcessed||'',status:d.status,notes:(d.notes||'').trim(),
     lines:d.lines.filter(l=>l.barcode||l.sku||l.name||l.photos.length).map(l=>({barcode:l.barcode.trim(),sku:l.sku.trim(),name:l.name.trim(),qtyGood:+l.qtyGood||0,qtyDamaged:+l.qtyDamaged||0,reason:l.reason||'',photos:l.photos})),
     createdAt:(prev&&prev.createdAt)||now,createdBy:(prev&&prev.createdBy)||by,updatedAt:now,history:hist};
   if(prev&&prev.example)body.example=true;if(prev&&prev.rts)body.rts=prev.rts;if(prev&&prev.emailedAt)body.emailedAt=prev.emailedAt;
@@ -1132,7 +1136,7 @@ function drawRows(){
      +(act2?'<div class="rw-under" aria-hidden="true"><span>'+ic('check')+lab+'</span></div>':'')
      +'<div class="rw-card"><button class="rw-main" data-act="open" data-v="'+r.id+'" aria-label="Open '+esc(r.jobNo)+', '+esc(clientName(r.clientId))+', '+esc(STG[sg2][0])+'">'
      +'<span class="job">'+esc(r.jobNo)+'</span><span class="rw-cl">'+esc(clientName(r.clientId))+'</span>'
-     +'<span class="rw-meta"><span>'+fmtD(r.dateReceived)+'</span><span class="mono">'+esc(r.orderNo||'no reference')+'</span><span class="rw-q">'+esc(qtyText(r))+'</span>'+'</span>'
+     +'<span class="rw-meta"><span>'+fmtD(r.dateReceived)+'</span><span class="mono">'+esc(r.orderNo||'no reference')+'</span><span class="rw-q">'+esc(qtyText(r))+'</span>'+(isRts(r)&&r.location?'<span class="tag mono">Loc '+esc(r.location)+'</span>':'')+'</span>'
      +pill(sg2,ch)+'</button>'
      +(act2?'<button class="adv" data-act="advance" data-v="'+r.id+'" aria-label="'+lab+' for '+esc(r.jobNo)+'" title="'+lab+'">'+ic('arrow')+'</button>':'')
      +'</div></li>'}).join('')+'</ul>';
@@ -1210,7 +1214,7 @@ function renderSheet(){
   let h='<div class="sh-grab" data-shgrab aria-hidden="true"><i></i></div>'
    +'<header class="sh-h" data-shgrab><div class="sh-ht"><span class="job big">'+esc(r.jobNo)+'</span><h2 id="sh-t">'+esc(clientName(r.clientId))+'</h2><p class="note">'+(isRts(r)?'Return to sender':'Customer return')+' · received '+fmtD(r.dateReceived)+' · '+esc(qtyText(r))+'</p>'+pill(sg,S.sheetStatus&&S.sheetStatus!==sg)+'</div>'
    +'<button class="icb" data-act="closeSheet" aria-label="Close">'+ic('x')+'</button></header><div class="sh-b">'
-   +'<dl class="kv"><div><dt>Reference</dt><dd class="mono">'+esc(r.orderNo||'—')+'</dd></div><div><dt>Tracking</dt><dd class="mono">'+esc(r.tracking||'—')+'</dd></div><div><dt>Carrier</dt><dd>'+esc(r.carrier||'—')+'</dd></div><div><dt>Closed on</dt><dd>'+fmtD(r.dateProcessed)+'</dd></div></dl>';
+   +'<dl class="kv">'+(isRts(r)?'<div><dt>Storage location</dt><dd class="mono loc-big">'+esc(r.location||'—')+'</dd></div>':'')+'<div><dt>Reference</dt><dd class="mono">'+esc(r.orderNo||'—')+'</dd></div><div><dt>Tracking</dt><dd class="mono">'+esc(r.tracking||'—')+'</dd></div><div><dt>Carrier</dt><dd>'+esc(r.carrier||'—')+'</dd></div><div><dt>Closed on</dt><dd>'+fmtD(r.dateProcessed)+'</dd></div></dl>';
   if(sg==='rts'){prepFiles(r);
     h+='<div class="dec"><h3>Waiting on the tenant</h3><p class="note">'+(r.emailedAt?'Tenant emailed '+esc(new Date(r.emailedAt).toLocaleDateString('en-AU'))+'. ':'')+'Record their answer when it arrives: resend to a corrected address, put it back to stock, or discard it.</p>'
      +'<label class="fld"><span>New address or tenant instructions</span><textarea id="rts-note" placeholder=" ">'+esc(S.rtsNote)+'</textarea></label>'
@@ -1343,7 +1347,7 @@ async function onCsv(file){
 }
 
 /* ---------- reports: Excel (two tabs) and PDF ---------- */
-const RHEAD=['Date','Job number','Tenant','Reference','SKU','Product','Good qty','Damaged qty','Comments','Status'];
+const RHEAD=['Date','Job number','Tenant','Reference','Location','SKU','Product','Good qty','Damaged qty','Comments','Status'];
 function outcome(x,l){const g=+l.qtyGood||0,b=+l.qtyDamaged||0;
   if(x.status==='open')return isRts(x)?'Return to sender, waiting on tenant'+(packText(x)?' · '+packText(x):''):'Not put away yet';
   if(isRts(x)&&!g&&!b)return(({resent:'Resent to customer',discarded:'Discarded'})[x.status]||'Put back to stock')+(packText(x)?' · '+packText(x):'');
@@ -1351,11 +1355,11 @@ function outcome(x,l){const g=+l.qtyGood||0,b=+l.qtyDamaged||0;
   return[g?g+' received in and put back to shelf':'',b?b+' damaged and discarded':''].filter(Boolean).join('; ')}
 function repData(){
   const r=S.rep,rs=S.returns.filter(x=>match(x,{client:r.client,from:r.from,to:r.to})).sort((a,b)=>String(a.dateReceived).localeCompare(b.dateReceived));
-  const mk=list=>{const o=[];list.forEach(x=>{const ls=x.lines&&x.lines.length?x.lines:[{}];ls.forEach(l=>o.push([fmtD(x.dateReceived),x.jobNo,clientName(x.clientId),x.orderNo||'',l.sku||'',l.name||'',+l.qtyGood||0,+l.qtyDamaged||0,[outcome(x,l),l.reason,x.notes,x.rts&&x.rts.note].filter(Boolean).join(' · '),SL(x.status)]))});return o};
+  const mk=list=>{const o=[];list.forEach(x=>{const ls=x.lines&&x.lines.length?x.lines:[{}];ls.forEach(l=>o.push([fmtD(x.dateReceived),x.jobNo,clientName(x.clientId),x.orderNo||'',x.location||'',l.sku||'',l.name||'',+l.qtyGood||0,+l.qtyDamaged||0,[outcome(x,l),l.reason,x.notes,x.rts&&x.rts.note].filter(Boolean).join(' · '),SL(x.status)]))});return o};
   const ret=rs.filter(x=>!isRts(x)),rts=rs.filter(isRts);
   return{rs,ret,rts,rowsRet:mk(ret),rowsRts:mk(rts),good:rs.reduce((a,x)=>a+goodQ(x),0),bad:rs.reduce((a,x)=>a+badQ(x),0)};
 }
-function repTable(rows){return'<div class="tbl"><table><thead><tr>'+RHEAD.map(x=>'<th>'+x+'</th>').join('')+'</tr></thead><tbody>'+rows.slice(0,150).map(x=>'<tr>'+x.map((v,i)=>'<td'+(i===1||i===3||i===4?' class="mono"':'')+'>'+esc(v)+'</td>').join('')+'</tr>').join('')+'</tbody></table></div>'+(rows.length>150?'<p class="note">Preview shows 150 of '+rows.length+' lines. The downloads contain all of them.</p>':'')}
+function repTable(rows){return'<div class="tbl"><table><thead><tr>'+RHEAD.map(x=>'<th>'+x+'</th>').join('')+'</tr></thead><tbody>'+rows.slice(0,150).map(x=>'<tr>'+x.map((v,i)=>'<td'+(i===1||i===3||i===4||i===5?' class="mono"':'')+'>'+esc(v)+'</td>').join('')+'</tr>').join('')+'</tbody></table></div>'+(rows.length>150?'<p class="note">Preview shows 150 of '+rows.length+' lines. The downloads contain all of them.</p>':'')}
 function drawReport(){
   const el=$('#rep');if(!el)return;const d=repData(),r=S.rep,c=S.clients.find(x=>x.id===r.client);
   if(!d.rs.length){el.innerHTML='<div class="panel"><p class="note">No returns were received in this date range'+(c?' for '+esc(c.name):'')+'.</p></div>';return}
@@ -1369,7 +1373,7 @@ function loadXlsx(){return loadXlsx.p||(loadXlsx.p=new Promise((res,rej)=>{if(wi
 async function makeXlsx(){
   toast('Building the Excel file…');
   try{await loadXlsx()}catch(e){return toast('The Excel builder did not load. Check the connection and try again.')}
-  const d=repData(),wb=XLSX.utils.book_new(),sheet=rows=>{const ws=XLSX.utils.aoa_to_sheet([RHEAD].concat(rows));ws['!cols']=[10,18,22,16,16,30,9,12,40,18].map(w=>({wch:w}));ws['!autofilter']={ref:'A1:J'+(rows.length+1)};return ws};
+  const d=repData(),wb=XLSX.utils.book_new(),sheet=rows=>{const ws=XLSX.utils.aoa_to_sheet([RHEAD].concat(rows));ws['!cols']=[10,18,22,16,10,16,30,9,12,40,18].map(w=>({wch:w}));ws['!autofilter']={ref:'A1:K'+(rows.length+1)};return ws};
   XLSX.utils.book_append_sheet(wb,sheet(d.rowsRet),'Returns');XLSX.utils.book_append_sheet(wb,sheet(d.rowsRts),'Return to sender');
   const out=XLSX.write(wb,{bookType:'xlsx',type:'array'});
   saveFile(fileBase()+'.xlsx',new Blob([out],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'}));
@@ -1385,7 +1389,7 @@ async function makePdf(){
   doc.setTextColor(0);doc.setFontSize(10);doc.text('Customer returns: '+d.ret.length+'     Return to sender: '+d.rts.length+'     Good units: '+d.good+'     Damaged units: '+d.bad,40,104);
   const foot=()=>{doc.setFontSize(8);doc.setTextColor(110);doc.text('Generated '+fmtD(today())+'  ·  Page '+doc.internal.getNumberOfPages(),40,doc.internal.pageSize.getHeight()-20);doc.setTextColor(0)};
   const table=(title,rows,y)=>{doc.setFont('helvetica','bold');doc.setFontSize(12);doc.text(title,40,y);doc.setFont('helvetica','normal');
-    doc.autoTable({head:[RHEAD],body:rows.length?rows:[['None in this period','','','','','','','','','']],startY:y+8,margin:{left:40,right:40},styles:{fontSize:8,cellPadding:4,overflow:'linebreak'},headStyles:{fillColor:col,textColor:(col[0]*299+col[1]*587+col[2]*114)/1000>150?20:255},alternateRowStyles:{fillColor:[243,245,247]},didDrawPage:foot});return doc.lastAutoTable.finalY};
+    doc.autoTable({head:[RHEAD],body:rows.length?rows:[['None in this period','','','','','','','','','','']],startY:y+8,margin:{left:40,right:40},styles:{fontSize:8,cellPadding:4,overflow:'linebreak'},headStyles:{fillColor:col,textColor:(col[0]*299+col[1]*587+col[2]*114)/1000>150?20:255},alternateRowStyles:{fillColor:[243,245,247]},didDrawPage:foot});return doc.lastAutoTable.finalY};
   let y=table('Returns',d.rowsRet,128);if(y>doc.internal.pageSize.getHeight()-120){doc.addPage();y=20}
   table('Return to sender',d.rowsRts,y+30);
   saveFile(fileBase()+'.pdf',doc.output('blob'));
@@ -1519,6 +1523,36 @@ document.addEventListener('change',e=>{
 });
 let rsT;window.addEventListener('resize',()=>{clearTimeout(rsT);rsT=setTimeout(()=>{placeNav();placeSegs()},80)});
 if(document.fonts&&document.fonts.ready)document.fonts.ready.then(()=>{placeNav();placeSegs()});
+/* ---------- RTS storage locations (trays 001, 002 …, each holding a limited number of waiting parcels) ---------- */
+S.store={count:50,cap:10};
+const locCode=i=>String(i).padStart(3,'0');
+const locUsed=(code,exclude)=>S.returns.filter(r=>isRts(r)&&r.status==='open'&&r.location===code&&r.id!==exclude).length;
+function firstFreeLoc(exclude){for(let i=1;i<=S.store.count;i++){const c=locCode(i);if(locUsed(c,exclude)<S.store.cap)return c}return''}
+function locOpts(cur,exclude){
+  let h='<option value="">Choose a location…</option>';
+  for(let i=1;i<=S.store.count;i++){const c=locCode(i),u=locUsed(c,exclude),full=u>=S.store.cap;
+    h+='<option value="'+c+'"'+(c===cur?' selected':'')+(full&&c!==cur?' disabled':'')+'>'+c+'  ·  '+u+'/'+S.store.cap+(full?'  ·  full':'')+'</option>'}
+  return h;
+}
+function match(r,f){
+  if(f.client&&r.clientId!==f.client)return false;if(f.status&&r.status!==f.status)return false;
+  if(f.from&&r.dateReceived<f.from)return false;if(f.to&&r.dateReceived>f.to)return false;
+  if(f.q){const q=f.q.toLowerCase(),hay=[r.jobNo,r.orderNo,r.tracking,r.notes,r.location?'loc '+r.location:''].concat((r.lines||[]).flatMap(l=>[l.sku,l.barcode,l.name])).join(' ').toLowerCase();if(!hay.includes(q))return false}
+  return true;
+}
+const _vSettings=vSettings;
+vSettings=function(){
+  const busy=[];for(let i=1;i<=S.store.count;i++){const c=locCode(i),u=locUsed(c);if(u)busy.push([c,u])}
+  return _vSettings()+'<div class="panel"><h3>Storage locations for return to sender</h3><p class="note">Parcels waiting on a tenant are stored in numbered locations. A location counts as full when it holds the maximum number of waiting parcels. Once a parcel is resent, put back to stock or discarded, its space frees up.</p>'
+   +'<div class="grid"><label class="fld"><span>Number of locations</span><input id="st-count" type="number" min="1" max="999" inputmode="numeric" value="'+S.store.count+'"></label><label class="fld"><span>Maximum parcels per location</span><input id="st-cap" type="number" min="1" max="999" inputmode="numeric" value="'+S.store.cap+'"></label></div>'
+   +'<div><button class="btn pri" data-act="saveStore">Save storage settings</button></div>'
+   +'<h3>In use now</h3>'+(busy.length?'<div class="tags">'+busy.map(b=>'<span class="tag">'+b[0]+' · '+b[1]+'/'+S.store.cap+'</span>').join('')+'</div>':'<p class="note">All locations are empty.</p>')+'</div>';
+};
+ACT.saveStore=async()=>{const c=Math.max(1,Math.min(999,parseInt($('#st-count').value,10)||0)),p=Math.max(1,Math.min(999,parseInt($('#st-cap').value,10)||0));
+  if(!c||!p)return toast('Enter a number of locations and a maximum per location.');
+  try{await S.db.doc('orgs/storage').set({count:c,cap:p});toast('Storage settings saved.')}catch(e){fail(e,'save the storage settings')}};
+const _boot=boot;
+boot=async function(){await _boot();if(S.db)S.db.doc('orgs/storage').onSnapshot(s=>{const d=s.exists?s.data():{};S.store={count:+d.count||50,cap:+d.cap||10};soft()},()=>{})};
 /* =====================================================================
    GitHub storage. The app is a static page; every record is kept as JSON
    in a private GitHub repository and read and written through the GitHub API
