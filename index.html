@@ -346,6 +346,14 @@ select option:disabled{color:#7b8794}
 .fld input[type=date]::-webkit-date-and-time-value{text-align:left;margin:0}
 .fld input[type=date]::-webkit-datetime-edit{padding:0}
 .fld{min-width:0;max-width:100%}
+
+/* phone: Save bar is a solid full-width bar docked on top of the bottom menu, never floating over the form */
+@media (max-width:899px){
+ .savebar{position:fixed;left:0;right:0;bottom:var(--navh,74px);z-index:6;margin:0;padding:10px 16px;background:linear-gradient(var(--surface),var(--surface)),var(--bg);border-top:1px solid var(--line);backdrop-filter:none;box-shadow:0 -8px 24px rgba(0,0,0,.35)}
+ .savebar .btn{flex:1;justify-content:center}
+ .savebar-space{height:96px}
+}
+.fld:has(input[type=date]){overflow:hidden}
 </style>
 
 <style>
@@ -1030,7 +1038,7 @@ function vForm(){
   });
   h+='<div><button class="btn" data-act="addLine">'+ic('plus')+'Add another item</button></div>';
   h+='<div class="panel"><label class="fld"><span>Comment</span><textarea id="f-notes" data-f="notes">'+esc(d.notes)+'</textarea></label></div>';
-  h+='<div class="savebar"><button class="btn pri big" data-act="save" id="saveBtn">'+(S.editId?'Save changes':'Save return')+'</button>'+(S.editId?'<button class="btn danger" data-act="del" data-v="'+S.editId+'">Delete return</button>':'')+'</div>';
+  h+='<div class="savebar"><button class="btn pri big" data-act="save" id="saveBtn">'+(S.editId?'Save changes':'Save return')+'</button>'+(S.editId?'<button class="btn danger" data-act="del" data-v="'+S.editId+'">Delete return</button>':'')+'</div><div class="savebar-space"></div>';
   if(prev&&prev.history&&prev.history.length)h+='<div class="panel"><h3>History</h3><ul class="hist">'+prev.history.map(x=>'<li>'+esc(new Date(x.at).toLocaleString('en-AU'))+' · '+esc(x.what)+(x.by?' · '+esc(S.names[x.by]||'team member'):'')+'</li>').join('')+'</ul></div>';
   return h;
 }
@@ -1691,6 +1699,9 @@ GH.panel=()=>{const c=GH.cfg();return'<div class="panel"><h3>This device</h3><p 
 GH.onAuth(()=>{if($('#gate').hidden)showGate('GitHub stopped accepting the access key on this device. Paste a current key to carry on.')});
 
 if(GH.cfg())boot();else{render();showGate()}
+
+/* keep the Save bar sitting exactly on top of the bottom menu on every phone */
+(function(){const set=()=>{const n=document.getElementById('tabs');if(n&&getComputedStyle(n).position==='fixed')document.documentElement.style.setProperty('--navh',n.offsetHeight+'px')};addEventListener('resize',set);addEventListener('load',set);setTimeout(set,300);setTimeout(set,1500)})();
 </script>
 </body>
 </html>
