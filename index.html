@@ -757,7 +757,20 @@ function findCodes(text){
   while((m=r2.exec(T))){const c=m[1].toUpperCase().replace(/[-.,;:]+$/,'');if(/\d/.test(c)&&!out.includes('#'+c))add(c)}
   return out.slice(0,6);
 }
-function findRef(text){const m=/\bREF(?:ERENCE)?(?:[ \t]*(?:NUMBER|NUM|NO))?\.?[ \t]*[:;#-]?[ \t]*(#?[ \t]?[A-Z0-9][A-Z0-9-]{2,})/i.exec(String(text||''));return m&&/\d/.test(m[1])?m[1].replace(/\s+/g,'').replace(/[-.,;:]+$/,'').toUpperCase():''}
+/* job number triggers: REF, REFERENCE, JOB, or a # in front */
+function jobCands(text){
+  const T=String(text||'').replace(/[＃♯]/g,'#').replace(/[|]/g,' '),out=[],add=c=>{c=String(c).replace(/\s+/g,'').replace(/[-.,;:]+$/,'').toUpperCase();if(/\d/.test(c)&&c.replace(/[^A-Z0-9]/g,'').length>=3&&!out.includes(c))out.push(c)};let m;
+  const lab=/\b(?:REF(?:ERENCE)?|JOB)(?:[ \t]*(?:NUMBER|NUM|NO))?\.?[ \t]*[:;#-]?[ \t]*#?[ \t]?([A-Z0-9][A-Z0-9-]{2,})/gi;while((m=lab.exec(T)))add(m[1]);
+  const hash=/#[ \t]{0,2}([A-Z0-9][A-Z0-9-]{2,})/g;while((m=hash.exec(T)))add(m[1]);
+  return out.slice(0,6);
+}
+const asJob=c=>c?(c.startsWith('#')?c:'#'+c):'';
+function findRef(text){const c=jobCands(text);return c.length?asJob(c[0]):''}
+function ocrPrep(c){ /* greyscale and boost contrast so the # and digits read cleanly */
+  try{const x=c.getContext('2d'),d=x.getImageData(0,0,c.width,c.height),a=d.data;let lo=255,hi=0;
+    for(let i=0;i<a.length;i+=4){const g=a[i]*.299+a[i+1]*.587+a[i+2]*.114;a[i]=g;if(g<lo)lo=g;if(g>hi)hi=g}
+    const k=255/Math.max(1,hi-lo);for(let i=0;i<a.length;i+=4){const g=Math.min(255,Math.max(0,(a[i]-lo)*k));a[i]=a[i+1]=a[i+2]=g}
+    x.putImageData(d,0,0)}catch(e){}return c}
 function labelExtras(text){ /* tracking and carrier printed on the same label */
   const d=S.draft,T=String(text||''),m=/(?:AP\s*ARTICLE\s*ID|ARTICLE\s*ID|CON(?:SIGNMENT)?\s*NO)\.?\s*[:;]?\s*([A-Z0-9]{10,})/i.exec(T),got=[];
   if(m&&!d.tracking){d.tracking=m[1].toUpperCase();const f=$('#f-track');if(f)f.value=d.tracking;got.push('tracking')}
@@ -770,10 +783,13 @@ function setOrder(code){const t=S.ocrTarget||'orderNo';fillField(t,code);if(t===
 async function onOcr(file){
   if(!file)return;toast('Reading the photo… this takes a few seconds');
   let text='';
-  try{const c=await fileToImg(file,1800);await loadOcr();const r=await Tesseract.recognize(c,'eng');text=r.data.text}
+  try{const c=await fileToImg(file,2200);await loadOcr();const r=await Tesseract.recognize(ocrPrep(c),'eng');text=r.data.text;
+    if(!jobCands(text).length){const r2=await Tesseract.recognize(await fileToImg(file,1600),'eng');text+='\n'+r2.data.text}}
   catch(e){console.error(e);return toast('Could not read text on this device. Type or scan the number instead.')}
-  const extra=labelExtras(text),ref=findRef(text);
-  if(ref){setOrder(ref);return toast((S.ocrTarget==='jobNo'?'Job number ':'Reference ')+ref+(extra.length?' and '+extra.join(' and '):'')+' read from the label. Check it is right.')}
+  const extra=labelExtras(text),cands=jobCands(text).map(asJob),ref=cands[0],p0=$('#ocrPick-'+(S.ocrTarget||'orderNo'));
+  if(ref){setOrder(ref);
+    if(cands.length>1&&p0)p0.innerHTML='<span class="note">Not right? Tap the correct one:</span>'+cands.slice(1).map(c=>'<button type="button" class="btn" data-act="ocrPick" data-v="'+esc(c)+'">'+esc(c)+'</button>').join('');
+    return toast((S.ocrTarget==='jobNo'?'Job number ':'Reference ')+ref+(extra.length?' and '+extra.join(' and '):'')+' read from the label. Check it is right.')}
   const codes=findCodes(text),p=$('#ocrPick-'+(S.ocrTarget||'orderNo'));
   if(!codes.length)return toast('No reference or job number found. Get closer to the label and try again.');
   if(codes.length===1){setOrder(codes[0]);return toast('Read '+codes[0]+'. Check it is right.')}
@@ -791,7 +807,7 @@ REASONS.splice(0,REASONS.length,'Change of mind','Faulty','Wrong item sent','Dam
 const isRts=r=>r.kind==='rts';
 const stage=r=>r.status==='open'?(isRts(r)?'rts':'open'):r.status;
 const goodQ=r=>(r.lines||[]).reduce((a,l)=>a+(+l.qtyGood||0),0),badQ=r=>(r.lines||[]).reduce((a,l)=>a+(+l.qtyDamaged||0),0);
-const PACKS=[['sealed','Unopened, good packaging'],['damaged','Packaging damaged'],['opened','Opened']];
+const PACKS=[['sealed','New box, unopened'],['damaged','Packaging damaged'],['opened','Opened']];
 const packText=r=>isRts(r)&&r.pack?(PACKS.find(p=>p[0]===r.pack)||[])[1]||'':'';
 const qtyText=r=>[packText(r),goodQ(r)?goodQ(r)+' good':'',badQ(r)?badQ(r)+' damaged':''].filter(Boolean).join(' · ')||(isRts(r)?'Packaging not checked':'no units');
 const doneStatus=r=>goodQ(r)>0||!badQ(r)?'shelf':'discarded';
@@ -1348,14 +1364,16 @@ async function onCsv(file){
 
 /* ---------- reports: Excel (two tabs) and PDF ---------- */
 const RHEAD=['Date','Job number','Tenant','Reference','Location','SKU','Product','Good qty','Damaged qty','Comments','Status'];
+const sealedBox=x=>isRts(x)&&x.pack==='sealed'&&!goodQ(x)&&!badQ(x);
 function outcome(x,l){const g=+l.qtyGood||0,b=+l.qtyDamaged||0;
+  if(sealedBox(x))return({open:'New box, unopened · ready to resend',resent:'New box, unopened · resent to customer',discarded:'New box, unopened · discarded',shelf:'New box, unopened · back to stock'})[x.status]||'New box, unopened';
   if(x.status==='open')return isRts(x)?'Return to sender, waiting on tenant'+(packText(x)?' · '+packText(x):''):'Not put away yet';
   if(isRts(x)&&!g&&!b)return(({resent:'Resent to customer',discarded:'Discarded'})[x.status]||'Put back to stock')+(packText(x)?' · '+packText(x):'');
   if(x.status==='resent')return'Resent to customer';
   return[g?g+' received in and put back to shelf':'',b?b+' damaged and discarded':''].filter(Boolean).join('; ')}
 function repData(){
   const r=S.rep,rs=S.returns.filter(x=>match(x,{client:r.client,from:r.from,to:r.to})).sort((a,b)=>String(a.dateReceived).localeCompare(b.dateReceived));
-  const mk=list=>{const o=[];list.forEach(x=>{const ls=x.lines&&x.lines.length?x.lines:[{}];ls.forEach(l=>o.push([fmtD(x.dateReceived),x.jobNo,clientName(x.clientId),x.orderNo||'',x.location||'',l.sku||'',l.name||'',+l.qtyGood||0,+l.qtyDamaged||0,[outcome(x,l),l.reason,x.notes,x.rts&&x.rts.note].filter(Boolean).join(' · '),SL(x.status)]))});return o};
+  const mk=list=>{const o=[];list.forEach(x=>{const ls=x.lines&&x.lines.length?x.lines:[{}];ls.forEach(l=>o.push([fmtD(x.dateReceived),x.jobNo,clientName(x.clientId),x.orderNo||'',x.location||'',l.sku||'',l.name||'',sealedBox(x)?'':+l.qtyGood||0,sealedBox(x)?'':+l.qtyDamaged||0,[outcome(x,l),l.reason,x.notes,x.rts&&x.rts.note].filter(Boolean).join(' · '),SL(x.status)]))});return o};
   const ret=rs.filter(x=>!isRts(x)),rts=rs.filter(isRts);
   return{rs,ret,rts,rowsRet:mk(ret),rowsRts:mk(rts),good:rs.reduce((a,x)=>a+goodQ(x),0),bad:rs.reduce((a,x)=>a+badQ(x),0)};
 }
