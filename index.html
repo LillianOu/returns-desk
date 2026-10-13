@@ -803,7 +803,7 @@ async function onOcr(file){
   const extra=labelExtras(text),cands=jobCands(text).map(asJob),ref=cands[0],p0=$('#ocrPick-'+(S.ocrTarget||'orderNo'));
   if(ref){setOrder(ref);
     if(cands.length>1&&p0)p0.innerHTML='<span class="note">Not right? Tap the correct one:</span>'+cands.slice(1).map(c=>'<button type="button" class="btn" data-act="ocrPick" data-v="'+esc(c)+'">'+esc(c)+'</button>').join('');
-    return toast((S.ocrTarget==='jobNo'?'Job number ':'Reference ')+ref+(extra.length?' and '+extra.join(' and '):'')+' read from the label. Check it is right.')}
+    return toast((S.ocrTarget==='jobNo'?'Reference number ':'Order number ')+ref+(extra.length?' and '+extra.join(' and '):'')+' read from the label. Check it is right.')}
   const codes=findCodes(text),p=$('#ocrPick-'+(S.ocrTarget||'orderNo'));
   if(!codes.length)return toast('No reference or job number found. Get closer to the label and try again.');
   if(codes.length===1){setOrder(codes[0]);return toast('Read '+codes[0]+'. Check it is right.')}
@@ -1008,17 +1008,17 @@ function qty(i,f,id,label,val){
 function qnoteText(l){return''}
 function vForm(){
   if(!S.clients.length)return'<div class="panel empty"><h2>Add a tenant first</h2><p>Every return belongs to a tenant, so the app needs at least one before you can log a return.</p><button class="btn pri" data-act="tab" data-v="settings">Go to Settings</button></div>';
-  const d=S.draft;if(!d.jobNo&&!S.editId)d.jobNo=nextJob();S.formLive=true;if(!d.kind)d.kind='return';
+  const d=S.draft;S.formLive=true;if(!d.kind)d.kind='return';
   const sts=d.kind==='rts'?['open','resent','shelf','discarded']:['open','shelf','discarded'];if(!sts.includes(d.status))d.status='open';
   const prev=S.editId?S.returns.find(r=>r.id===S.editId):null;
   let h='<div class="row"><h2 style="flex:1 1 auto">'+(S.editId?'Edit return':'New return')+'</h2>'+(S.editId?'<button class="btn" data-act="newDraft">Start a new one</button>':'')+'</div>';
   h+='<div class="panel"><div class="pick"><span>Type</span>'+seg('f-kind','Type',KINDS,d.kind)+'</div>'
    +'<p class="note">'+(d.kind==='rts'?'The parcel never reached the customer. It stays open until the tenant says resend or back to stock.':'The customer sent it back. Count what is in good condition and what is damaged. No tenant approval is needed.')+'</p><div class="grid">'
    +'<label class="fld"><span>Tenant</span><select id="f-client" data-f="clientId">'+opts([['','Choose a tenant…']].concat(S.clients.map(c=>[c.id,c.name])),d.clientId)+'</select></label>'
-   +'<div class="fld"><span>Job number</span><div class="with-btn"><input id="f-job" class="mono" data-f="jobNo" value="'+esc(d.jobNo)+'" autocapitalize="characters" aria-label="Job number"><button class="btn" data-act="ocr" data-v="jobNo" aria-label="Read the job number (REF) from a photo of the label">'+ic('text')+'</button>'+micBtn('jobNo','job number')+'</div><div class="row ocrPick" id="ocrPick-jobNo" style="padding-top:6px"></div></div>'
+   +'<div class="fld"><span>Reference number</span><div class="with-btn"><input id="f-job" class="mono" data-f="jobNo" value="'+esc(d.jobNo)+'" autocapitalize="characters" aria-label="Reference number"><button class="btn" data-act="ocr" data-v="jobNo" aria-label="Read the reference number (REF or #) from a photo of the label">'+ic('text')+'</button>'+micBtn('jobNo','reference number')+'</div><div class="row ocrPick" id="ocrPick-jobNo" style="padding-top:6px"></div></div>'
    +'<label class="fld"><span>Date received</span><input id="f-date" type="date" data-f="dateReceived" value="'+esc(d.dateReceived)+'"></label>'
    +'</div><div class="grid">'
-   +'<div class="fld"><span>Reference number</span><div class="with-btn"><input id="f-order" class="mono" data-f="orderNo" value="'+esc(d.orderNo)+'" aria-label="Reference number"><button class="btn" data-act="scan" data-v="orderNo" aria-label="Scan the reference barcode">'+ic('scan')+'</button><button class="btn" data-act="ocr" data-v="orderNo" aria-label="Read the reference from a photo of the label">'+ic('text')+'</button>'+micBtn('orderNo','reference number')+'</div><div class="row ocrPick" id="ocrPick-orderNo" style="padding-top:6px"></div></div>'
+   +'<div class="fld"><span>Order number</span><div class="with-btn"><input id="f-order" class="mono" data-f="orderNo" value="'+esc(d.orderNo)+'" aria-label="Order number"><button class="btn" data-act="scan" data-v="orderNo" aria-label="Scan the order barcode">'+ic('scan')+'</button><button class="btn" data-act="ocr" data-v="orderNo" aria-label="Read the order number from a photo of the label">'+ic('text')+'</button>'+micBtn('orderNo','order number')+'</div><div class="row ocrPick" id="ocrPick-orderNo" style="padding-top:6px"></div></div>'
    +'<div class="fld"><span>Tracking number</span><div class="with-btn"><input id="f-track" class="mono" data-f="tracking" value="'+esc(d.tracking)+'" aria-label="Tracking number"><button class="btn" data-act="scan" data-v="tracking" aria-label="Scan tracking number">'+ic('scan')+'</button></div></div>'
    +'<label class="fld"><span>Carrier</span><select id="f-carrier" data-f="carrier">'+opts(CARRIERS,d.carrier)+'</select></label>'
    +'</div><div class="pick"><span>Status</span>'+seg('f-status','Status',sts.map(s=>[s,'<i class="dot st-'+s+'"></i>'+SL(s)]),d.status)+'</div></div>';
@@ -1045,8 +1045,8 @@ function vForm(){
 async function saveReturn(){
   const d=S.draft,db=S.db;if(!db)return toast('Not connected, so this can\'t be saved yet.');
   if(!d.clientId)return toast('Choose a tenant first.');
-  if(!d.jobNo.trim())return toast('Add a job number.');
-  if(S.returns.some(r=>r.jobNo===d.jobNo.trim()&&r.id!==S.editId))return toast('Job number '+d.jobNo+' is already used. Change it.');
+  if(!d.jobNo.trim())return toast('Add the reference number.');
+  if(S.returns.some(r=>r.jobNo===d.jobNo.trim()&&r.id!==S.editId))return toast('Reference number '+d.jobNo+' is already used. Change it.');
   if(S.uploading)return toast('Photos are still uploading. Try again in a moment.');
   if(d.kind==='rts'&&d.status==='open'&&d.location&&locUsed(d.location,S.editId)>=S.store.cap)return toast('Location '+d.location+' is full. Choose another location.');
   const now=new Date().toISOString(),prev=S.editId?S.returns.find(r=>r.id===S.editId):null,by=S.uid||'';
@@ -1133,7 +1133,7 @@ function vList(){
   if(!S.returns.length)return emptyState();
   const f=S.flt,open=S.filtersOpen||!!(f.client||f.from||f.to);
   return'<div class="row"><h2 style="flex:1 1 auto">Returns</h2><button class="btn pri" data-act="tab" data-v="new">'+ic('plus')+'Log a return</button></div>'
-   +'<div class="fld" style="flex:none"><span>Search job, reference, tracking or SKU</span><div class="with-btn"><input id="q" type="search" data-flt="q" value="'+esc(f.q)+'" aria-label="Search job, reference, tracking or SKU">'+micBtn('search','job or order number')+'</div></div>'
+   +'<div class="fld" style="flex:none"><span>Search reference, order, tracking or SKU</span><div class="with-btn"><input id="q" type="search" data-flt="q" value="'+esc(f.q)+'" aria-label="Search reference, order, tracking or SKU">'+micBtn('search','job or order number')+'</div></div>'
    +'<div id="statusSeg"></div>'
    +'<div class="drawer" id="drawer" data-open="'+open+'"><div class="dr-body" id="drBody"><div class="dr-in" id="drIn"'+(open?'':' inert')+'><div class="dr-pad">'
    +'<label class="fld"><span>Tenant</span><select id="fc" data-flt="client">'+opts([['','All tenants']].concat(S.clients.map(c=>[c.id,c.name])),f.client)+'</select></label>'
@@ -1377,7 +1377,7 @@ async function onCsv(file){
 }
 
 /* ---------- reports: Excel (two tabs) and PDF ---------- */
-const RHEAD=['Date','Job number','Tenant','Reference','Location','SKU','Product','Good qty','Damaged qty','Comments','Status'];
+const RHEAD=['Date','Reference number','Tenant','Order number','Location','SKU','Product','Good qty','Damaged qty','Comments','Status'];
 const sealedBox=x=>isRts(x)&&x.pack==='sealed'&&!goodQ(x)&&!badQ(x);
 function outcome(x,l){const g=+l.qtyGood||0,b=+l.qtyDamaged||0;
   if(sealedBox(x))return({open:'New box, unopened · ready to resend',resent:'New box, unopened · resent to customer',discarded:'New box, unopened · discarded',shelf:'New box, unopened · back to stock'})[x.status]||'New box, unopened';
@@ -1474,7 +1474,7 @@ Object.assign(ACT,{
     r.onend=()=>{S.rec=null;if(b.isConnected)b.classList.remove('rec')};
     try{r.start();toast('Listening… say the number')}catch(e){S.rec=null;b.classList.remove('rec')}
   },
-  ocr:v=>{S.ocrTarget=v||'orderNo';S.target='ocr';const i=$('#scanInput');i.value='';i.click()},ocrPick:v=>{setOrder(v);toast((S.ocrTarget==='jobNo'?'Job number':'Reference')+' set to '+v)},
+  ocr:v=>{S.ocrTarget=v||'orderNo';S.target='ocr';const i=$('#scanInput');i.value='';i.click()},ocrPick:v=>{setOrder(v);toast((S.ocrTarget==='jobNo'?'Reference number':'Order number')+' set to '+v)},
   scan:v=>liveScan(v),scanClose:()=>stopScan(),scanPhoto:()=>{const t=SC.target;stopScan();photoScan(t)},
   toastAct:()=>{const f=toast.fn;toast.fn=null;$('#toast').hidden=true;if(f)f()},
   open:v=>openSheet(v),closeSheet,
