@@ -340,6 +340,12 @@ select option:disabled{color:#7b8794}
 @media (prefers-reduced-motion: reduce){
   *,*::before,*::after{animation-duration:.01ms!important;animation-delay:0s!important;transition-duration:.01ms!important}
 }
+
+/* iPhone date fields: keep inside the card and left-aligned like other fields */
+.fld input[type=date]{-webkit-appearance:none;appearance:none;display:block;width:100%;min-width:0;max-width:100%;box-sizing:border-box;text-align:left}
+.fld input[type=date]::-webkit-date-and-time-value{text-align:left;margin:0}
+.fld input[type=date]::-webkit-datetime-edit{padding:0}
+.fld{min-width:0;max-width:100%}
 </style>
 
 <style>
