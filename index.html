@@ -1477,7 +1477,7 @@ Object.assign(ACT,{
     r.onend=()=>{S.rec=null;if(b.isConnected)b.classList.remove('rec')};
     try{r.start();toast('Listening… say the number')}catch(e){S.rec=null;b.classList.remove('rec')}
   },
-  noRef:()=>{const n=S.returns.reduce((m,r)=>{const x=/^\*(\d+)$/.exec(String(r.jobNo||''));return x?Math.max(m,+x[1]):m},0)+1,code='*'+String(n).padStart(4,'0');
+  noRef:()=>{const n=S.returns.reduce((m,r)=>{const x=/^\*(\d+)$/.exec(String(r.jobNo||''));return x?Math.max(m,+x[1]):m},0)+1,code='*'+String(n).padStart(6,'0');
     fillField('jobNo',code);if(!/No reference provided/.test(S.draft.notes||'')){S.draft.notes='No reference provided. Customer name: '+(S.draft.notes?' · '+S.draft.notes:'');}
     const t=$('#f-notes');if(t){t.value=S.draft.notes;t.focus();const k=S.draft.notes.indexOf('Customer name: ')+15;try{t.setSelectionRange(k,k)}catch(e){}t.scrollIntoView({block:'center',behavior:'smooth'})}
     toast('Reference '+code+' added. Type the customer name in the comment.')},
