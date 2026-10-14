@@ -356,6 +356,15 @@ select option:disabled{color:#7b8794}
 .fld:has(input[type=date]){overflow:hidden}
 
 .noref{margin-top:8px;width:100%;justify-content:center;border-style:dashed}
+
+.store{margin:10px 0}
+.loc-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(78px,1fr));gap:8px;margin-top:10px}
+.loc-tile{display:flex;flex-direction:column;align-items:center;gap:2px;padding:10px 6px;border-radius:12px;border:1px solid var(--line);background:var(--surface);color:inherit;font:inherit;cursor:pointer}
+.loc-tile b{font-size:1.15rem}.loc-tile span{font-size:.8rem;opacity:.75}
+.loc-tile.full{border-color:#f0a0b0}.loc-tile.on{outline:2px solid #5eebff;outline-offset:1px}
+.loc-list{margin-top:12px;display:grid;gap:6px}
+.loc-row{display:grid;grid-template-columns:auto 1fr;gap:2px 12px;text-align:left;padding:10px 12px;border-radius:10px;border:1px solid var(--line);background:var(--surface);color:inherit;font:inherit;cursor:pointer}
+.loc-row .note{grid-column:1/-1;margin:0}
 </style>
 
 <style>
@@ -1136,6 +1145,7 @@ function vList(){
   const f=S.flt,open=S.filtersOpen||!!(f.client||f.from||f.to);
   return'<div class="row"><h2 style="flex:1 1 auto">Returns</h2><button class="btn pri" data-act="tab" data-v="new">'+ic('plus')+'Log a return</button></div>'
    +'<div class="fld" style="flex:none"><span>Search reference, order, tracking or SKU</span><div class="with-btn"><input id="q" type="search" data-flt="q" value="'+esc(f.q)+'" aria-label="Search reference, order, tracking or SKU">'+micBtn('search','job or order number')+'</div></div>'
+   +'<div id="storeBox"></div>'
    +'<div id="statusSeg"></div>'
    +'<div class="drawer" id="drawer" data-open="'+open+'"><div class="dr-body" id="drBody"><div class="dr-in" id="drIn"'+(open?'':' inert')+'><div class="dr-pad">'
    +'<label class="fld"><span>Tenant</span><select id="fc" data-flt="client">'+opts([['','All tenants']].concat(S.clients.map(c=>[c.id,c.name])),f.client)+'</select></label>'
@@ -1720,6 +1730,21 @@ function vReport(){
    +'<label class="fld"><span>Show</span><select id="rs" data-rep="show">'+opts([['','All returns'],['damaged','Damaged only']],r.show||'')+'</select></label></div></div><div id="rep"></div>';
 }
 function fileBase(){const r=S.rep,c=S.clients.find(x=>x.id===r.client);return(r.show==='damaged'?'damaged-':'returns-')+(c?(c.code||c.name):'all').toLowerCase().replace(/[^a-z0-9]+/g,'-')+'-'+r.from+'-to-'+r.to}
+
+/* RTS storage check: tap a location to see the parcels waiting in it */
+function storeHtml(){
+  const waiting=S.returns.filter(r=>isRts(r)&&r.status==='open'&&r.location),by={};
+  waiting.forEach(r=>{(by[r.location]=by[r.location]||[]).push(r)});
+  const codes=Object.keys(by).sort(),sel=S.storeSel&&by[S.storeSel]?S.storeSel:'';
+  let h='<div class="panel store"><div class="row"><h3 style="flex:1 1 auto;margin:0">RTS storage</h3><span class="note">'+waiting.length+' parcel'+(waiting.length===1?'':'s')+' in '+codes.length+' location'+(codes.length===1?'':'s')+'</span></div>';
+  if(!codes.length)return h+'<p class="note">No RTS parcels in storage.</p></div>';
+  h+='<div class="loc-grid">'+codes.map(c=>{const n=by[c].length,full=n>=S.store.cap;return'<button type="button" class="loc-tile'+(c===sel?' on':'')+(full?' full':'')+'" data-act="storeLoc" data-v="'+c+'" aria-pressed="'+(c===sel)+'"><b class="mono">'+c+'</b><span>'+n+' / '+S.store.cap+'</span></button>'}).join('')+'</div>';
+  if(sel)h+='<div class="loc-list"><p class="note">Location '+sel+' holds:</p>'+by[sel].sort((a,b)=>String(a.dateReceived).localeCompare(b.dateReceived)).map(r=>'<button type="button" class="loc-row" data-act="open" data-v="'+r.id+'"><span class="mono">'+esc(r.jobNo)+'</span><span>'+esc(clientName(r.clientId))+'</span><span class="note">'+fmtD(r.dateReceived)+(packText(r)?' · '+esc(packText(r)):'')+'</span></button>').join('')+'</div>';
+  return h+'</div>';
+}
+function drawStore(){const el=$('#storeBox');if(el)el.innerHTML=storeHtml()}
+ACT.storeLoc=v=>{S.storeSel=S.storeSel===v?'':v;drawStore()};
+const _drawRows=drawRows;drawRows=function(){_drawRows.apply(this,arguments);drawStore()};
 </script>
 </body>
 </html>
