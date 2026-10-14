@@ -1386,15 +1386,16 @@ function outcome(x,l){const g=+l.qtyGood||0,b=+l.qtyDamaged||0;
   if(x.status==='resent')return'Resent to customer';
   return[g?g+' received in and put back to shelf':'',b?b+' damaged and discarded':''].filter(Boolean).join('; ')}
 function repData(){
-  const r=S.rep,rs=S.returns.filter(x=>match(x,{client:r.client,from:r.from,to:r.to})).sort((a,b)=>String(a.dateReceived).localeCompare(b.dateReceived));
-  const mk=list=>{const o=[];list.forEach(x=>{const ls=x.lines&&x.lines.length?x.lines:[{}];ls.forEach(l=>o.push([fmtD(x.dateReceived),x.jobNo,clientName(x.clientId),x.orderNo||'',x.location||'',l.sku||'',l.name||'',sealedBox(x)?'':+l.qtyGood||0,sealedBox(x)?'':+l.qtyDamaged||0,[outcome(x,l),l.reason,x.notes,x.rts&&x.rts.note].filter(Boolean).join(' · '),SL(x.status)]))});return o};
+  const r=S.rep,dmg=r.show==='damaged',isDmg=x=>badQ(x)>0||(isRts(x)&&x.pack==='damaged');
+  const rs=S.returns.filter(x=>match(x,{client:r.client,from:r.from,to:r.to})&&(!dmg||isDmg(x))).sort((a,b)=>String(a.dateReceived).localeCompare(b.dateReceived));
+  const mk=list=>{const o=[];list.forEach(x=>{let ls=x.lines&&x.lines.length?x.lines:[{}];if(dmg&&badQ(x)>0)ls=ls.filter(l=>(+l.qtyDamaged||0)>0);ls.forEach(l=>o.push([fmtD(x.dateReceived),x.jobNo,clientName(x.clientId),x.orderNo||'',x.location||'',l.sku||'',l.name||'',sealedBox(x)?'':+l.qtyGood||0,sealedBox(x)?'':+l.qtyDamaged||0,[outcome(x,l),l.reason,x.notes,x.rts&&x.rts.note].filter(Boolean).join(' · '),SL(x.status)]))});return o};
   const ret=rs.filter(x=>!isRts(x)),rts=rs.filter(isRts);
   return{rs,ret,rts,rowsRet:mk(ret),rowsRts:mk(rts),good:rs.reduce((a,x)=>a+goodQ(x),0),bad:rs.reduce((a,x)=>a+badQ(x),0)};
 }
 function repTable(rows){return'<div class="tbl"><table><thead><tr>'+RHEAD.map(x=>'<th>'+x+'</th>').join('')+'</tr></thead><tbody>'+rows.slice(0,150).map(x=>'<tr>'+x.map((v,i)=>'<td'+(i===1||i===3||i===4||i===5?' class="mono"':'')+'>'+esc(v)+'</td>').join('')+'</tr>').join('')+'</tbody></table></div>'+(rows.length>150?'<p class="note">Preview shows 150 of '+rows.length+' lines. The downloads contain all of them.</p>':'')}
 function drawReport(){
   const el=$('#rep');if(!el)return;const d=repData(),r=S.rep,c=S.clients.find(x=>x.id===r.client);
-  if(!d.rs.length){el.innerHTML='<div class="panel"><p class="note">No returns were received in this date range'+(c?' for '+esc(c.name):'')+'.</p></div>';return}
+  if(!d.rs.length){el.innerHTML='<div class="panel"><p class="note">'+(r.show==='damaged'?'No damaged items':'No returns were received')+' in this date range'+(c?' for '+esc(c.name):'')+'.</p></div>';return}
   let h='<div class="panel"><h3>Summary, '+fmtD(r.from)+' to '+fmtD(r.to)+'</h3><div class="tiles"><div class="tile"><span class="lab">Customer returns</span><b>'+d.ret.length+'</b></div><div class="tile"><span class="lab">Return to sender</span><b>'+d.rts.length+'</b></div><div class="tile"><span class="lab">Good units</span><b>'+d.good+'</b></div><div class="tile"><span class="lab">Damaged units</span><b>'+d.bad+'</b></div></div>'
    +'<div class="row">'+(S.dl?'<button class="btn pri big" data-act="xlsx">Download Excel</button><button class="btn" data-act="pdf">Download PDF</button>':'<p class="note">Downloads are not available in this view.</p>')+'</div><p class="note">The Excel file has two tabs: Returns and Return to sender.</p></div>';
   h+='<div class="panel"><h3>Returns</h3>'+(d.rowsRet.length?repTable(d.rowsRet):'<p class="note">None in this period.</p>')+'</div>';
@@ -1416,7 +1417,7 @@ async function makePdf(){
   const col=/^#[0-9a-f]{6}$/i.test(S.org.color||'')?rgb(S.org.color):[8,14,30],W=doc.internal.pageSize.getWidth();let x=40;
   doc.setFillColor(8,14,30);doc.rect(0,0,W,78,'F');doc.setFillColor(94,235,255);doc.rect(0,78,W,3,'F');
   const lg=await logoData();if(lg){const h=34,w=lg.w/lg.h*h;try{doc.addImage(lg.url,'PNG',40,24,w,h);x=40+w+14}catch(e){}}
-  doc.setTextColor(255);doc.setFont('helvetica','bold');doc.setFontSize(18);doc.text('Returns report',x,42);
+  doc.setTextColor(255);doc.setFont('helvetica','bold');doc.setFontSize(18);doc.text(S.rep.show==='damaged'?'Damaged items report':'Returns report',x,42);
   doc.setFont('helvetica','normal');doc.setFontSize(10);doc.text((S.org.name?S.org.name+'  ·  ':'')+(c?c.name:'All tenants')+'  ·  '+fmtD(r.from)+' to '+fmtD(r.to),x,60);
   doc.setTextColor(0);doc.setFontSize(10);doc.text('Customer returns: '+d.ret.length+'     Return to sender: '+d.rts.length+'     Good units: '+d.good+'     Damaged units: '+d.bad,40,104);
   const foot=()=>{doc.setFontSize(8);doc.setTextColor(110);doc.text('Generated '+fmtD(today())+'  ·  Page '+doc.internal.getNumberOfPages(),40,doc.internal.pageSize.getHeight()-20);doc.setTextColor(0)};
@@ -1702,6 +1703,17 @@ if(GH.cfg())boot();else{render();showGate()}
 
 /* keep the Save bar sitting exactly on top of the bottom menu on every phone */
 (function(){const set=()=>{const n=document.getElementById('tabs');if(n&&getComputedStyle(n).position==='fixed')document.documentElement.style.setProperty('--navh',n.offsetHeight+'px')};addEventListener('resize',set);addEventListener('load',set);setTimeout(set,300);setTimeout(set,1500)})();
+
+/* reports: tenant, dates, and a Show filter (all returns or damaged only) */
+function vReport(){
+  const r=S.rep;
+  return'<h2>Reports</h2><div class="panel"><div class="row">'
+   +'<label class="fld"><span>Tenant</span><select id="rc" data-rep="client">'+opts([['','All tenants']].concat(S.clients.map(c=>[c.id,c.name])),r.client)+'</select></label>'
+   +'<label class="fld"><span>Received from</span><input id="rf" type="date" data-rep="from" value="'+esc(r.from)+'"></label>'
+   +'<label class="fld"><span>Received to</span><input id="rt" type="date" data-rep="to" value="'+esc(r.to)+'"></label>'
+   +'<label class="fld"><span>Show</span><select id="rs" data-rep="show">'+opts([['','All returns'],['damaged','Damaged only']],r.show||'')+'</select></label></div></div><div id="rep"></div>';
+}
+function fileBase(){const r=S.rep,c=S.clients.find(x=>x.id===r.client);return(r.show==='damaged'?'damaged-':'returns-')+(c?(c.code||c.name):'all').toLowerCase().replace(/[^a-z0-9]+/g,'-')+'-'+r.from+'-to-'+r.to}
 </script>
 </body>
 </html>
