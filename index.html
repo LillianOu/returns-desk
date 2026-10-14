@@ -354,6 +354,8 @@ select option:disabled{color:#7b8794}
  .savebar-space{height:96px}
 }
 .fld:has(input[type=date]){overflow:hidden}
+
+.noref{margin-top:8px;width:100%;justify-content:center;border-style:dashed}
 </style>
 
 <style>
@@ -1015,7 +1017,7 @@ function vForm(){
   h+='<div class="panel"><div class="pick"><span>Type</span>'+seg('f-kind','Type',KINDS,d.kind)+'</div>'
    +'<p class="note">'+(d.kind==='rts'?'The parcel never reached the customer. It stays open until the tenant says resend or back to stock.':'The customer sent it back. Count what is in good condition and what is damaged. No tenant approval is needed.')+'</p><div class="grid">'
    +'<label class="fld"><span>Tenant</span><select id="f-client" data-f="clientId">'+opts([['','Choose a tenant…']].concat(S.clients.map(c=>[c.id,c.name])),d.clientId)+'</select></label>'
-   +'<div class="fld"><span>Reference number</span><div class="with-btn"><input id="f-job" class="mono" data-f="jobNo" value="'+esc(d.jobNo)+'" autocapitalize="characters" aria-label="Reference number"><button class="btn" data-act="ocr" data-v="jobNo" aria-label="Read the reference number (REF or #) from a photo of the label">'+ic('text')+'</button>'+micBtn('jobNo','reference number')+'</div><div class="row ocrPick" id="ocrPick-jobNo" style="padding-top:6px"></div></div>'
+   +'<div class="fld"><span>Reference number</span><div class="with-btn"><input id="f-job" class="mono" data-f="jobNo" value="'+esc(d.jobNo)+'" autocapitalize="characters" aria-label="Reference number"><button class="btn" data-act="ocr" data-v="jobNo" aria-label="Read the reference number (REF or #) from a photo of the label">'+ic('text')+'</button>'+micBtn('jobNo','reference number')+'</div><div class="row ocrPick" id="ocrPick-jobNo" style="padding-top:6px"></div>'+(d.kind!=='rts'?'<button type="button" class="btn noref" data-act="noRef">No reference provided</button>':'')+'</div>'
    +'<label class="fld"><span>Date received</span><input id="f-date" type="date" data-f="dateReceived" value="'+esc(d.dateReceived)+'"></label>'
    +'</div><div class="grid">'
    +'<div class="fld"><span>Order number</span><div class="with-btn"><input id="f-order" class="mono" data-f="orderNo" value="'+esc(d.orderNo)+'" aria-label="Order number"><button class="btn" data-act="scan" data-v="orderNo" aria-label="Scan the order barcode">'+ic('scan')+'</button><button class="btn" data-act="ocr" data-v="orderNo" aria-label="Read the order number from a photo of the label">'+ic('text')+'</button>'+micBtn('orderNo','order number')+'</div><div class="row ocrPick" id="ocrPick-orderNo" style="padding-top:6px"></div></div>'
@@ -1475,6 +1477,10 @@ Object.assign(ACT,{
     r.onend=()=>{S.rec=null;if(b.isConnected)b.classList.remove('rec')};
     try{r.start();toast('Listening… say the number')}catch(e){S.rec=null;b.classList.remove('rec')}
   },
+  noRef:()=>{const n=S.returns.reduce((m,r)=>{const x=/^\*(\d+)$/.exec(String(r.jobNo||''));return x?Math.max(m,+x[1]):m},0)+1,code='*'+String(n).padStart(4,'0');
+    fillField('jobNo',code);if(!/No reference provided/.test(S.draft.notes||'')){S.draft.notes='No reference provided. Customer name: '+(S.draft.notes?' · '+S.draft.notes:'');}
+    const t=$('#f-notes');if(t){t.value=S.draft.notes;t.focus();const k=S.draft.notes.indexOf('Customer name: ')+15;try{t.setSelectionRange(k,k)}catch(e){}t.scrollIntoView({block:'center',behavior:'smooth'})}
+    toast('Reference '+code+' added. Type the customer name in the comment.')},
   ocr:v=>{S.ocrTarget=v||'orderNo';S.target='ocr';const i=$('#scanInput');i.value='';i.click()},ocrPick:v=>{setOrder(v);toast((S.ocrTarget==='jobNo'?'Reference number':'Order number')+' set to '+v)},
   scan:v=>liveScan(v),scanClose:()=>stopScan(),scanPhoto:()=>{const t=SC.target;stopScan();photoScan(t)},
   toastAct:()=>{const f=toast.fn;toast.fn=null;$('#toast').hidden=true;if(f)f()},
