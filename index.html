@@ -1840,7 +1840,7 @@ function setTheme(t){document.documentElement.setAttribute('data-theme',t);try{l
 ACT.theme=()=>{setTheme(document.documentElement.getAttribute('data-theme')==='light'?'dark':'light')};
 
 /* tell each dashboard number how many digits it has, so the CSS can size it */
-(function(){const fit=()=>document.querySelectorAll('.stg b').forEach(b=>{const n=Math.max(2,(b.textContent||'').trim().length);if(b.style.getPropertyValue('--n')!=n)b.style.setProperty('--n',n)});
+(function(){const fit=()=>{const bs=[...document.querySelectorAll('.stg b')];const n=Math.max(2,...bs.map(b=>(b.textContent||'').trim().length));bs.forEach(b=>{if(b.style.getPropertyValue('--n')!=n)b.style.setProperty('--n',n)})};
   const go=()=>{const m=document.getElementById('main');if(!m)return setTimeout(go,300);new MutationObserver(fit).observe(m,{childList:true,subtree:true,characterData:true});fit()};go()})();
 </script>
 </body>
