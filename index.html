@@ -875,9 +875,9 @@ async function onOcr(file){
 const micBtn=(target,label)=>SR?'<button type="button" class="btn mic" data-act="mic" data-v="'+target+'" aria-label="Say the '+label+'">'+ic('mic')+'</button>':'';
 const cap=s=>s?s[0].toUpperCase()+s.slice(1):'';
 STATUS.splice(0,STATUS.length,'open','shelf','discarded','resent');
-const SLAB={open:'Open',shelf:'Back to shelf',discarded:'Discarded',resent:'Resent to customer'},SL=s=>SLAB[s]||cap(s);
+const SLAB={open:'Open',shelf:'Back to stock',discarded:'Discarded',resent:'Resent to customer'},SL=s=>SLAB[s]||cap(s);
 const STAGES=['open','rts','shelf','discarded','resent'];
-const STG={open:['Open','Customer returns logged, not put away yet'],rts:['RTS waiting','Return to sender, waiting on the tenant'],shelf:['Back to shelf','Received back into stock'],discarded:['Discarded','Damaged, recorded for write-off'],resent:['Resent','Sent out again to the customer']};
+const STG={open:['Open','Customer returns logged, not put away yet'],rts:['RTS waiting','Return to sender, waiting on the tenant'],shelf:['Back to stock','Received back into stock'],discarded:['Discarded','Damaged, recorded for write-off'],resent:['Resent','Sent out again to the customer']};
 const KINDS=[['return','Customer return'],['rts','Return to sender (RTS)']];
 REASONS.splice(0,REASONS.length,'Change of mind','Exchange requested','Unsuitable or adverse reaction','Faulty','Wrong item sent','Damaged in transit','Item not collected','Wrong or incomplete address','Refused delivery','Received with unclear reason','Other');
 const isRts=r=>r.kind==='rts';
@@ -1320,7 +1320,7 @@ function renderSheet(){
   if(r.notes)h+='<div><h3>Comment</h3><p style="margin:6px 0 0;white-space:pre-wrap">'+esc(r.notes)+'</p></div>';
   if(r.history&&r.history.length)h+='<div><h3>History</h3><ul class="hist" style="margin-top:6px">'+r.history.slice(-5).reverse().map(x=>'<li>'+esc(new Date(x.at).toLocaleString('en-AU'))+' · '+esc(x.what)+'</li>').join('')+'</ul></div>';
   h+='</div><footer class="sh-f"><button class="btn" data-act="editOpen" data-v="'+r.id+'">'+ic('pen')+'Edit</button>'
-   +(sg==='open'?'<button class="btn'+(doneStatus(r)==='discarded'?' pri':'')+'" data-act="discard" data-v="'+r.id+'"'+dis+'>'+(busy?'Saving…':'Discard')+'</button><button class="btn'+(doneStatus(r)==='shelf'?' pri':'')+'" data-act="shelf" data-v="'+r.id+'"'+dis+'>'+(busy?'Saving…':'Back to shelf')+'</button>'
+   +(sg==='open'?'<button class="btn'+(doneStatus(r)==='discarded'?' pri':'')+'" data-act="discard" data-v="'+r.id+'"'+dis+'>'+(busy?'Saving…':'Discard')+'</button><button class="btn'+(doneStatus(r)==='shelf'?' pri':'')+'" data-act="shelf" data-v="'+r.id+'"'+dis+'>'+(busy?'Saving…':'Back to stock')+'</button>'
      :sg==='rts'?'<button class="btn" data-act="sendTenant" data-v="'+r.id+'"'+dis+(mailState(r)==='prep'?' disabled':'')+'>'+(({ready:'Email tenant with '+photoIds(r).length+' photo'+(photoIds(r).length===1?'':'s'),prep:'Preparing photos…'})[mailState(r)]||'Email tenant')+'</button><button class="btn" data-act="discard" data-v="'+r.id+'"'+dis+'>Discard</button><button class="btn pri" data-act="rtsStock" data-v="'+r.id+'"'+dis+'>Back to stock</button><button class="btn pri" data-act="rtsResend" data-v="'+r.id+'"'+dis+'>Resend to customer</button>'
      :'<button class="btn" data-act="reopen" data-v="'+r.id+'"'+dis+'>Reopen</button>')+'</footer>';
   box.innerHTML=h;enhance(box);S.sheetStatus=sg;placeSegs();
@@ -1451,7 +1451,7 @@ function outcome(x,l){const g=+l.qtyGood||0,b=+l.qtyDamaged||0;
   if(x.status==='open')return isRts(x)?'Return to sender, waiting on tenant'+(packText(x)?' · '+packText(x):''):'Not put away yet';
   if(isRts(x)&&!g&&!b)return(({resent:'Resent to customer',discarded:'Discarded'})[x.status]||'Put back to stock')+(packText(x)?' · '+packText(x):'');
   if(x.status==='resent')return'Resent to customer';
-  return[g?g+' received in and put back to shelf':'',b?b+' damaged and discarded':''].filter(Boolean).join('; ')}
+  return[g?g+' received back into stock':'',b?b+' damaged and discarded':''].filter(Boolean).join('; ')}
 function repData(){
   const r=S.rep,dmg=r.show==='damaged',isDmg=x=>badQ(x)>0||(isRts(x)&&x.pack==='damaged');
   const rs=S.returns.filter(x=>match(x,{client:r.client,from:r.from,to:r.to})&&(!dmg||isDmg(x))&&(r.show!=='noref'||/^\*/.test(String(x.jobNo||'')))).sort((a,b)=>String(a.dateReceived).localeCompare(b.dateReceived));
