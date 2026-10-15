@@ -367,6 +367,10 @@ select option:disabled{color:#7b8794}
 .loc-row .note{grid-column:1/-1;margin:0}
 
 .note-mic{align-items:flex-start}.note-mic textarea{flex:1;min-width:0}
+
+/* dashboard numbers always fit their card, whatever the digit count */
+.stg{container-type:inline-size}
+.shell .stg b{font-size:min(clamp(56px,7.2vw,96px),calc((100cqi - 6px)/(var(--n,2)*.6)));white-space:nowrap;display:block;max-width:100%}
 </style>
 
 <style>
@@ -1834,6 +1838,10 @@ async function liveScan(t){
 function setTheme(t){document.documentElement.setAttribute('data-theme',t);try{localStorage.setItem('rd-theme',t)}catch(e){}const m=document.querySelector('meta[name=theme-color]');if(m)m.content=t==='light'?'#F8FAFD':'#05070D'}
 (function(){let t='dark';try{t=localStorage.getItem('rd-theme')||'dark'}catch(e){}setTheme(t)})();
 ACT.theme=()=>{setTheme(document.documentElement.getAttribute('data-theme')==='light'?'dark':'light')};
+
+/* tell each dashboard number how many digits it has, so the CSS can size it */
+(function(){const fit=()=>document.querySelectorAll('.stg b').forEach(b=>{const n=Math.max(2,(b.textContent||'').trim().length);if(b.style.getPropertyValue('--n')!=n)b.style.setProperty('--n',n)});
+  const go=()=>{const m=document.getElementById('main');if(!m)return setTimeout(go,300);new MutationObserver(fit).observe(m,{childList:true,subtree:true,characterData:true});fit()};go()})();
 </script>
 </body>
 </html>
