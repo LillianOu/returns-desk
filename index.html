@@ -371,6 +371,16 @@ select option:disabled{color:#7b8794}
 /* dashboard numbers always fit their card, whatever the digit count */
 .stg{container-type:inline-size}
 .shell .stg b{font-size:min(clamp(56px,7.2vw,96px),calc((100cqi - 6px)/(var(--n,2)*.6)));white-space:nowrap;display:block;max-width:100%}
+
+/* form fields get enough width for their text and buttons: 2 per row on desktop, 1 on phones */
+#main .panel .grid,#main .line .grid{grid-template-columns:repeat(auto-fit,minmax(min(320px,100%),1fr))}
+.with-btn input{text-overflow:ellipsis}
+.fld,.fld>span{min-width:0}
+.fld>span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
+/* never let a box's buttons cover its text: if space runs out, buttons move to the next line */
+.with-btn{flex-wrap:wrap}
+.with-btn input{flex:1 1 9.5em;min-width:9.5em}
 </style>
 
 <style>
@@ -1842,6 +1852,14 @@ ACT.theme=()=>{setTheme(document.documentElement.getAttribute('data-theme')==='l
 /* tell each dashboard number how many digits it has, so the CSS can size it */
 (function(){const fit=()=>{const bs=[...document.querySelectorAll('.stg b')];const n=Math.max(2,...bs.map(b=>(b.textContent||'').trim().length));bs.forEach(b=>{if(b.style.getPropertyValue('--n')!=n)b.style.setProperty('--n',n)})};
   const go=()=>{const m=document.getElementById('main');if(!m)return setTimeout(go,300);new MutationObserver(fit).observe(m,{childList:true,subtree:true,characterData:true});fit()};go()})();
+
+/* short labels when a box is narrow: "Order number" -> "Order #" */
+(function(){const SHORT={'Reference number':'Ref #','Order number':'Order #','Tracking number':'Tracking #'};
+  const fit=()=>document.querySelectorAll('#main .fld').forEach(f=>{const sp=f.querySelector(':scope>span'),inp=f.querySelector('.with-btn input');if(!sp||!inp)return;
+    const full=sp.dataset.full||(SHORT[sp.textContent.trim()]?sp.textContent.trim():null);if(!full)return;sp.dataset.full=full;
+    const want=inp.clientWidth&&inp.clientWidth<200?SHORT[full]:full;if(sp.textContent!==want)sp.textContent=want});
+  let q=0;const later=()=>{cancelAnimationFrame(q);q=requestAnimationFrame(fit)};
+  addEventListener('resize',later);const go=()=>{const m=document.getElementById('main');if(!m)return setTimeout(go,300);new MutationObserver(later).observe(m,{childList:true,subtree:true});later()};go()})();
 </script>
 </body>
 </html>
