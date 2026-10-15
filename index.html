@@ -365,6 +365,8 @@ select option:disabled{color:#7b8794}
 .loc-list{margin-top:12px;display:grid;gap:6px}
 .loc-row{display:grid;grid-template-columns:auto 1fr;gap:2px 12px;text-align:left;padding:10px 12px;border-radius:10px;border:1px solid var(--line);background:var(--surface);color:inherit;font:inherit;cursor:pointer}
 .loc-row .note{grid-column:1/-1;margin:0}
+
+.note-mic{align-items:flex-start}.note-mic textarea{flex:1;min-width:0}
 </style>
 
 <style>
@@ -828,7 +830,7 @@ const SLAB={open:'Open',shelf:'Back to shelf',discarded:'Discarded',resent:'Rese
 const STAGES=['open','rts','shelf','discarded','resent'];
 const STG={open:['Open','Customer returns logged, not put away yet'],rts:['RTS waiting','Return to sender, waiting on the tenant'],shelf:['Back to shelf','Received back into stock'],discarded:['Discarded','Damaged, recorded for write-off'],resent:['Resent','Sent out again to the customer']};
 const KINDS=[['return','Customer return'],['rts','Return to sender (RTS)']];
-REASONS.splice(0,REASONS.length,'Change of mind','Faulty','Wrong item sent','Damaged in transit','Item not collected','Wrong or incomplete address','Refused delivery','Received with unclear reason','Other');
+REASONS.splice(0,REASONS.length,'Change of mind','Exchange requested','Unsuitable or adverse reaction','Faulty','Wrong item sent','Damaged in transit','Item not collected','Wrong or incomplete address','Refused delivery','Received with unclear reason','Other');
 const isRts=r=>r.kind==='rts';
 const stage=r=>r.status==='open'?(isRts(r)?'rts':'open'):r.status;
 const goodQ=r=>(r.lines||[]).reduce((a,l)=>a+(+l.qtyGood||0),0),badQ=r=>(r.lines||[]).reduce((a,l)=>a+(+l.qtyDamaged||0),0);
@@ -1048,7 +1050,7 @@ function vForm(){
      +(S.assets?'<button class="btn" data-act="photo" data-v="'+i+'">Add photo</button>':'<span class="note">Sign in to add photos.</span>')+'</div></div>';
   });
   h+='<div><button class="btn" data-act="addLine">'+ic('plus')+'Add another item</button></div>';
-  h+='<div class="panel"><label class="fld"><span>Comment</span><textarea id="f-notes" data-f="notes">'+esc(d.notes)+'</textarea></label></div>';
+  h+='<div class="panel"><div class="fld"><span>Comment</span><div class="with-btn note-mic"><textarea id="f-notes" data-f="notes" aria-label="Comment">'+esc(d.notes)+'</textarea>'+micBtn('notes','comment')+'</div></div></div>';
   h+='<div class="savebar"><button class="btn pri big" data-act="save" id="saveBtn">'+(S.editId?'Save changes':'Save return')+'</button>'+(S.editId?'<button class="btn danger" data-act="del" data-v="'+S.editId+'">Delete return</button>':'')+'</div><div class="savebar-space"></div>';
   if(prev&&prev.history&&prev.history.length)h+='<div class="panel"><h3>History</h3><ul class="hist">'+prev.history.map(x=>'<li>'+esc(new Date(x.at).toLocaleString('en-AU'))+' · '+esc(x.what)+(x.by?' · '+esc(S.names[x.by]||'team member'):'')+'</li>').join('')+'</ul></div>';
   return h;
@@ -1142,7 +1144,7 @@ async function afterSave(body,id){
 /* ---------- returns list ---------- */
 function vList(){
   if(!S.returns.length)return emptyState();
-  const f=S.flt,open=S.filtersOpen||!!(f.client||f.from||f.to);
+  const f=S.flt,open=S.filtersOpen||!!(f.client||f.from||f.to||f.noref);
   return'<div class="row"><h2 style="flex:1 1 auto">Returns</h2><button class="btn pri" data-act="tab" data-v="new">'+ic('plus')+'Log a return</button></div>'
    +'<div class="fld" style="flex:none"><span>Search reference, order, tracking or SKU</span><div class="with-btn"><input id="q" type="search" data-flt="q" value="'+esc(f.q)+'" aria-label="Search reference, order, tracking or SKU">'+micBtn('search','job or order number')+'</div></div>'
    +'<div id="storeBox"></div>'
@@ -1151,8 +1153,9 @@ function vList(){
    +'<label class="fld"><span>Tenant</span><select id="fc" data-flt="client">'+opts([['','All tenants']].concat(S.clients.map(c=>[c.id,c.name])),f.client)+'</select></label>'
    +'<label class="fld"><span>Received from</span><input id="ff" type="date" data-flt="from" value="'+esc(f.from)+'"></label>'
    +'<label class="fld"><span>Received to</span><input id="ft" type="date" data-flt="to" value="'+esc(f.to)+'"></label>'
+   +'<label class="fld"><span>Show</span><select id="fn" data-flt="noref">'+opts([['','All returns'],['1','No reference provided (*)']],f.noref||'')+'</select></label>'
    +'<button class="btn" data-act="clearFlt">Clear</button></div></div></div>'
-   +'<button class="dr-bar" id="drBar" data-drbar aria-expanded="'+open+'" aria-controls="drIn"><i></i><span>'+ic('filter')+'<span id="drLabel">Client and date filters</span>'+ic('chev','chev')+'</span></button></div>'
+   +'<button class="dr-bar" id="drBar" data-drbar aria-expanded="'+open+'" aria-controls="drIn"><i></i><span>'+ic('filter')+'<span id="drLabel">Tenant, date and other filters</span>'+ic('chev','chev')+'</span></button></div>'
    +'<p class="note" id="rowsNote"></p><div id="rows"></div>';
 }
 function fltRows(skipStatus){
@@ -1168,7 +1171,7 @@ function drawRows(){
     const shown=(S.flt.q||'').trim()?'':S.flt.status;
     if(cur){cur.querySelectorAll('button').forEach((b,i)=>{b.innerHTML=o[i][1];b.setAttribute('aria-pressed',o[i][0]===shown)})}
     else sg.innerHTML=seg('fstatus','Status',o,shown);}
-  const act=[S.flt.client,S.flt.from,S.flt.to].filter(Boolean).length,dl=$('#drLabel');if(dl)dl.textContent='Tenant and date filters'+(act?' · '+act+' on':'');
+  const act=[S.flt.client,S.flt.from,S.flt.to,S.flt.noref].filter(Boolean).length,dl=$('#drLabel');if(dl)dl.textContent='Tenant, date and other filters'+(act?' · '+act+' on':'');
   const rs=fltRows(false),note=$('#rowsNote');
   const qq=(S.flt.q||'').trim(),tf=!!(S.flt.client||S.flt.from||S.flt.to);
   if(note)note.textContent=rs.length?rs.length+' return'+(rs.length===1?'':'s')+(qq?' found for "'+qq+'", across every status, tenant and date':'')+(rs.length>300?'. Showing the first 300.':''):qq?'Nothing found for "'+qq+'". Check the number, or try part of it.':'No returns match these filters.';
@@ -1368,7 +1371,10 @@ async function lookup(i,by){
   let cid=d.clientId,hit=null;
   if(cid){let m=await loadSku(cid);hit=find(m);if(!hit&&Date.now()-(m.t||0)>20000){m=await loadSku(cid,true);hit=find(m)}}
   else{setHint(i,'Searching every tenant\'s SKU list…','');
-    for(const c of S.clients){const m=await loadSku(c.id);const h=find(m);if(h){hit=h;cid=c.id;d.clientId=c.id;const s=$('#f-client');if(s)s.value=c.id;break}}}
+    const hits=[];for(const c of S.clients){const m=await loadSku(c.id);const h=find(m);if(h)hits.push([c.id,h])}
+    if(hits.length>1){l.sku=hits[0][1].sku||l.sku;const a=$('#l'+i+'-sku');if(a)a.value=l.sku;
+      return setHint(i,'This product is in more than one tenant\'s list ('+hits.map(x=>clientName(x[0])).join(', ')+'). Choose the tenant at the top.','new')}
+    if(hits.length===1){hit=hits[0][1];cid=hits[0][0];d.clientId=cid;const s=$('#f-client');if(s){s.value=cid;s.classList.remove('hit');void s.offsetWidth;s.classList.add('hit')}toast('Tenant set to '+clientName(cid)+' from the scanned product.')}}
   if(hit){l.sku=hit.sku||l.sku;l.name=hit.name||l.name;const a=$('#l'+i+'-sku'),b=$('#l'+i+'-name');if(a)a.value=l.sku;if(b)b.value=l.name;
     setHint(i,'Matched: '+(hit.name||hit.sku)+(d.clientId&&cid!==null?' ('+clientName(cid)+')':'')+'. Check it is the right product.','ok');return}
   if(!cid)return setHint(i,'Not found in any tenant\'s SKU list. Choose the tenant, or type the SKU and name.','new');
@@ -1399,7 +1405,7 @@ function outcome(x,l){const g=+l.qtyGood||0,b=+l.qtyDamaged||0;
   return[g?g+' received in and put back to shelf':'',b?b+' damaged and discarded':''].filter(Boolean).join('; ')}
 function repData(){
   const r=S.rep,dmg=r.show==='damaged',isDmg=x=>badQ(x)>0||(isRts(x)&&x.pack==='damaged');
-  const rs=S.returns.filter(x=>match(x,{client:r.client,from:r.from,to:r.to})&&(!dmg||isDmg(x))).sort((a,b)=>String(a.dateReceived).localeCompare(b.dateReceived));
+  const rs=S.returns.filter(x=>match(x,{client:r.client,from:r.from,to:r.to})&&(!dmg||isDmg(x))&&(r.show!=='noref'||/^\*/.test(String(x.jobNo||'')))).sort((a,b)=>String(a.dateReceived).localeCompare(b.dateReceived));
   const mk=list=>{const o=[];list.forEach(x=>{let ls=x.lines&&x.lines.length?x.lines:[{}];if(dmg&&badQ(x)>0)ls=ls.filter(l=>(+l.qtyDamaged||0)>0);ls.forEach(l=>o.push([fmtD(x.dateReceived),x.jobNo,clientName(x.clientId),x.orderNo||'',x.location||'',l.sku||'',l.name||'',sealedBox(x)?'':+l.qtyGood||0,sealedBox(x)?'':+l.qtyDamaged||0,[outcome(x,l),l.reason,x.notes,x.rts&&x.rts.note].filter(Boolean).join(' · '),SL(x.status)]))});return o};
   const ret=rs.filter(x=>!isRts(x)),rts=rs.filter(isRts);
   return{rs,ret,rts,rowsRet:mk(ret),rowsRts:mk(rts),good:rs.reduce((a,x)=>a+goodQ(x),0),bad:rs.reduce((a,x)=>a+badQ(x),0)};
@@ -1407,7 +1413,7 @@ function repData(){
 function repTable(rows){return'<div class="tbl"><table><thead><tr>'+RHEAD.map(x=>'<th>'+x+'</th>').join('')+'</tr></thead><tbody>'+rows.slice(0,150).map(x=>'<tr>'+x.map((v,i)=>'<td'+(i===1||i===3||i===4||i===5?' class="mono"':'')+'>'+esc(v)+'</td>').join('')+'</tr>').join('')+'</tbody></table></div>'+(rows.length>150?'<p class="note">Preview shows 150 of '+rows.length+' lines. The downloads contain all of them.</p>':'')}
 function drawReport(){
   const el=$('#rep');if(!el)return;const d=repData(),r=S.rep,c=S.clients.find(x=>x.id===r.client);
-  if(!d.rs.length){el.innerHTML='<div class="panel"><p class="note">'+(r.show==='damaged'?'No damaged items':'No returns were received')+' in this date range'+(c?' for '+esc(c.name):'')+'.</p></div>';return}
+  if(!d.rs.length){el.innerHTML='<div class="panel"><p class="note">'+(r.show==='damaged'?'No damaged items':r.show==='noref'?'No returns without a reference':'No returns were received')+' in this date range'+(c?' for '+esc(c.name):'')+'.</p></div>';return}
   let h='<div class="panel"><h3>Summary, '+fmtD(r.from)+' to '+fmtD(r.to)+'</h3><div class="tiles"><div class="tile"><span class="lab">Customer returns</span><b>'+d.ret.length+'</b></div><div class="tile"><span class="lab">Return to sender</span><b>'+d.rts.length+'</b></div><div class="tile"><span class="lab">Good units</span><b>'+d.good+'</b></div><div class="tile"><span class="lab">Damaged units</span><b>'+d.bad+'</b></div></div>'
    +'<div class="row">'+(S.dl?'<button class="btn pri big" data-act="xlsx">Download Excel</button><button class="btn" data-act="pdf">Download PDF</button>':'<p class="note">Downloads are not available in this view.</p>')+'</div><p class="note">The Excel file has two tabs: Returns and Return to sender.</p></div>';
   h+='<div class="panel"><h3>Returns</h3>'+(d.rowsRet.length?repTable(d.rowsRet):'<p class="note">None in this period.</p>')+'</div>';
@@ -1429,7 +1435,7 @@ async function makePdf(){
   const col=/^#[0-9a-f]{6}$/i.test(S.org.color||'')?rgb(S.org.color):[8,14,30],W=doc.internal.pageSize.getWidth();let x=40;
   doc.setFillColor(8,14,30);doc.rect(0,0,W,78,'F');doc.setFillColor(94,235,255);doc.rect(0,78,W,3,'F');
   const lg=await logoData();if(lg){const h=34,w=lg.w/lg.h*h;try{doc.addImage(lg.url,'PNG',40,24,w,h);x=40+w+14}catch(e){}}
-  doc.setTextColor(255);doc.setFont('helvetica','bold');doc.setFontSize(18);doc.text(S.rep.show==='damaged'?'Damaged items report':'Returns report',x,42);
+  doc.setTextColor(255);doc.setFont('helvetica','bold');doc.setFontSize(18);doc.text(S.rep.show==='damaged'?'Damaged items report':S.rep.show==='noref'?'No reference provided report':'Returns report',x,42);
   doc.setFont('helvetica','normal');doc.setFontSize(10);doc.text((S.org.name?S.org.name+'  ·  ':'')+(c?c.name:'All tenants')+'  ·  '+fmtD(r.from)+' to '+fmtD(r.to),x,60);
   doc.setTextColor(0);doc.setFontSize(10);doc.text('Customer returns: '+d.ret.length+'     Return to sender: '+d.rts.length+'     Good units: '+d.good+'     Damaged units: '+d.bad,40,104);
   const foot=()=>{doc.setFontSize(8);doc.setTextColor(110);doc.text('Generated '+fmtD(today())+'  ·  Page '+doc.internal.getNumberOfPages(),40,doc.internal.pageSize.getHeight()-20);doc.setTextColor(0)};
@@ -1443,7 +1449,7 @@ async function makePdf(){
 /* ---------- live camera scanner (barcodes and QR codes) ---------- */
 const SC={stream:null,reader:null,timer:null,target:null};
 function applyScan(t,code){
-  code=String(code||'').trim();if(!code)return;
+  code=String(code||'').replace(/^\][A-Za-z]\d/,'').replace(/[\x00-\x1f]+/g,' ').trim();if(!code)return;
   if(t.startsWith('line:')){const i=+t.slice(5);if(!S.draft.lines[i])return;S.draft.lines[i].barcode=code;const e=$('#l'+i+'-barcode');if(e){e.value=code;e.classList.remove('hit');void e.offsetWidth;e.classList.add('hit')}lookup(i,'barcode')}
   else{S.draft[t]=code;const e=$(t==='orderNo'?'#f-order':'#f-track');if(e){e.value=code;e.classList.remove('hit');void e.offsetWidth;e.classList.add('hit')}}
   toast('Scanned '+code);
@@ -1480,17 +1486,23 @@ Object.assign(ACT,{
   mic:(v,b)=>{
     if(S.rec){try{S.rec.stop()}catch(e){}return}
     const r=new SR();r.lang='en-AU';r.interimResults=false;r.maxAlternatives=1;S.rec=r;b.classList.add('rec');
-    r.onresult=e=>{const heard=e.results[0][0].transcript,code=spokenCode(heard);if(!code)return toast('Did not catch that. Try again.');
+    r.onresult=e=>{const heard=e.results[0][0].transcript;
+      if(v==='notes'){const t=$('#f-notes'),cur=t?t.value:(S.draft.notes||''),txt=heard.trim();if(!txt)return toast('Did not catch that. Try again.');
+        const at=t&&typeof t.selectionStart==='number'&&document.activeElement===t?t.selectionStart:cur.length,pre=cur.slice(0,at),post=cur.slice(at),
+          ins=(pre&&!/[\s:]$/.test(pre)?' ':'')+(/Customer name: $/.test(pre)?txt.replace(/\b\w/g,c=>c.toUpperCase()):txt);
+        S.draft.notes=pre+ins+post;if(t){t.value=S.draft.notes;const k=(pre+ins).length;try{t.focus();t.setSelectionRange(k,k)}catch(e){}}
+        return toast('Added: '+txt+'. Check it is right.')}
+      const code=spokenCode(heard);if(!code)return toast('Did not catch that. Try again.');
       if(v==='search'){S.flt.q=code;const q=$('#q');if(q)q.value=code;drawRows()}else{fillField(v,code);if(v==='jobNo'&&!S.draft.orderNo)fillField('orderNo',code)}
       toast('Heard '+code+'. Check it is right.')};
     r.onerror=e=>toast(e.error==='not-allowed'||e.error==='service-not-allowed'?'Allow microphone access for this site, then try again.':e.error==='no-speech'?'Did not hear anything. Tap the microphone and try again.':'Voice input did not work this time. Type the number instead.');
     r.onend=()=>{S.rec=null;if(b.isConnected)b.classList.remove('rec')};
-    try{r.start();toast('Listening… say the number')}catch(e){S.rec=null;b.classList.remove('rec')}
+    try{r.start();toast(v==='notes'?'Listening… say the comment or customer name':'Listening… say the number')}catch(e){S.rec=null;b.classList.remove('rec')}
   },
   noRef:()=>{const n=S.returns.reduce((m,r)=>{const x=/^\*(\d+)$/.exec(String(r.jobNo||''));return x?Math.max(m,+x[1]):m},0)+1,code='*'+String(n).padStart(6,'0');
     fillField('jobNo',code);if(!/No reference provided/.test(S.draft.notes||'')){S.draft.notes='No reference provided. Customer name: '+(S.draft.notes?' · '+S.draft.notes:'');}
     const t=$('#f-notes');if(t){t.value=S.draft.notes;t.focus();const k=S.draft.notes.indexOf('Customer name: ')+15;try{t.setSelectionRange(k,k)}catch(e){}t.scrollIntoView({block:'center',behavior:'smooth'})}
-    toast('Reference '+code+' added. Type the customer name in the comment.')},
+    toast('Reference '+code+' added. Type or say the customer name in the comment.')},
   ocr:v=>{S.ocrTarget=v||'orderNo';S.target='ocr';const i=$('#scanInput');i.value='';i.click()},ocrPick:v=>{setOrder(v);toast((S.ocrTarget==='jobNo'?'Reference number':'Order number')+' set to '+v)},
   scan:v=>liveScan(v),scanClose:()=>stopScan(),scanPhoto:()=>{const t=SC.target;stopScan();photoScan(t)},
   toastAct:()=>{const f=toast.fn;toast.fn=null;$('#toast').hidden=true;if(f)f()},
@@ -1515,7 +1527,7 @@ Object.assign(ACT,{
     const a=document.createElement('a');a.href=tenantMail(r,c);document.body.appendChild(a);a.click();a.remove();mark('Emailed tenant about RTS')},
   xlsx:()=>makeXlsx(),
   toList:v=>{S.flt.status=v;go('list')},
-  clearFlt:()=>{S.flt.client='';S.flt.from='';S.flt.to='';['fc','ff','ft'].forEach(i=>{const e=$('#'+i);if(e)e.value=''});drawRows()},
+  clearFlt:()=>{S.flt.client='';S.flt.from='';S.flt.to='';S.flt.noref='';['fc','ff','ft','fn'].forEach(i=>{const e=$('#'+i);if(e)e.value=''});drawRows()},
   seg:(v,b)=>{
     const k=b.parentNode.dataset.seg;
     if(k==='period'){S.period=+v;S.anim=true;return render()}
@@ -1584,7 +1596,7 @@ function locOpts(cur,exclude){
   return h;
 }
 function match(r,f){
-  if(f.client&&r.clientId!==f.client)return false;if(f.status&&r.status!==f.status)return false;
+  if(f.client&&r.clientId!==f.client)return false;if(f.noref&&!/^\*/.test(String(r.jobNo||'')))return false;if(f.status&&r.status!==f.status)return false;
   if(f.from&&r.dateReceived<f.from)return false;if(f.to&&r.dateReceived>f.to)return false;
   if(f.q){const q=f.q.toLowerCase(),hay=[r.jobNo,r.orderNo,r.tracking,r.notes,r.location?'loc '+r.location:''].concat((r.lines||[]).flatMap(l=>[l.sku,l.barcode,l.name])).join(' ').toLowerCase();if(!hay.includes(q))return false}
   return true;
@@ -1727,9 +1739,9 @@ function vReport(){
    +'<label class="fld"><span>Tenant</span><select id="rc" data-rep="client">'+opts([['','All tenants']].concat(S.clients.map(c=>[c.id,c.name])),r.client)+'</select></label>'
    +'<label class="fld"><span>Received from</span><input id="rf" type="date" data-rep="from" value="'+esc(r.from)+'"></label>'
    +'<label class="fld"><span>Received to</span><input id="rt" type="date" data-rep="to" value="'+esc(r.to)+'"></label>'
-   +'<label class="fld"><span>Show</span><select id="rs" data-rep="show">'+opts([['','All returns'],['damaged','Damaged only']],r.show||'')+'</select></label></div></div><div id="rep"></div>';
+   +'<label class="fld"><span>Show</span><select id="rs" data-rep="show">'+opts([['','All returns'],['damaged','Damaged only'],['noref','No reference provided (*)']],r.show||'')+'</select></label></div></div><div id="rep"></div>';
 }
-function fileBase(){const r=S.rep,c=S.clients.find(x=>x.id===r.client);return(r.show==='damaged'?'damaged-':'returns-')+(c?(c.code||c.name):'all').toLowerCase().replace(/[^a-z0-9]+/g,'-')+'-'+r.from+'-to-'+r.to}
+function fileBase(){const r=S.rep,c=S.clients.find(x=>x.id===r.client);return(r.show==='damaged'?'damaged-':r.show==='noref'?'no-reference-':'returns-')+(c?(c.code||c.name):'all').toLowerCase().replace(/[^a-z0-9]+/g,'-')+'-'+r.from+'-to-'+r.to}
 
 /* RTS storage check: tap a location to see the parcels waiting in it */
 function storeHtml(){
@@ -1745,6 +1757,33 @@ function storeHtml(){
 function drawStore(){const el=$('#storeBox');if(el)el.innerHTML=storeHtml()}
 ACT.storeLoc=v=>{S.storeSel=S.storeSel===v?'':v;drawStore()};
 const _drawRows=drawRows;drawRows=function(){_drawRows.apply(this,arguments);drawStore()};
+
+/* live scanner, tuned: QR / Data Matrix / Code 128 for tracking labels, faster frames, continuous focus */
+async function liveScan(t){
+  SC.target=t;
+  if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia||!(window.ZXing||'BarcodeDetector' in window))return photoScan(t);
+  const box=$('#scanner'),v=$('#scanVid'),msg=$('#scanMsg');box.hidden=false;msg.textContent='Starting the camera…';
+  try{SC.stream=await navigator.mediaDevices.getUserMedia({audio:false,video:{facingMode:{ideal:'environment'},width:{ideal:1280},height:{ideal:720}}})}
+  catch(e){console.error(e);msg.textContent=e&&(e.name==='NotAllowedError'||e.name==='SecurityError')?'The camera is blocked for this site. Allow camera access in the browser settings, or use a photo instead.':'No camera could be started on this device. Use a photo instead.';return}
+  if(box.hidden){SC.stream.getTracks().forEach(x=>x.stop());SC.stream=null;return}
+  const track=SC.stream.getVideoTracks()[0];
+  try{const cap=track.getCapabilities?track.getCapabilities():{},adv={};if(cap.focusMode&&cap.focusMode.includes('continuous'))adv.focusMode='continuous';if(cap.zoom&&cap.zoom.max>=1.5)adv.zoom=Math.min(2,cap.zoom.max);if(Object.keys(adv).length)await track.applyConstraints({advanced:[adv]})}catch(e){}
+  v.srcObject=SC.stream;try{await v.play()}catch(e){}
+  const isTrack=t==='tracking';
+  msg.textContent=isTrack?'Point at the tracking barcode or the square code on the label. Hold 15–20 cm away.':'Point the camera at the barcode or QR code';
+  const done=code=>{if(box.hidden)return;stopScan();if(navigator.vibrate)try{navigator.vibrate(40)}catch(e){}applyScan(t,code)};
+  const want=isTrack?['qr_code','data_matrix','code_128','code_39','pdf417']:['ean_13','ean_8','upc_a','upc_e','code_128','code_39','itf','qr_code','data_matrix'];
+  if('BarcodeDetector' in window){
+    let det;try{const sup=BarcodeDetector.getSupportedFormats?await BarcodeDetector.getSupportedFormats():want;const f=want.filter(x=>sup.includes(x));det=new BarcodeDetector(f.length?{formats:f}:undefined)}catch(e){try{det=new BarcodeDetector()}catch(e2){}}
+    if(det){let busy=false;SC.timer=setInterval(async()=>{if(busy||v.readyState<2)return;busy=true;try{const r=await det.detect(v);if(r&&r[0])done(r[0].rawValue)}catch(e){}busy=false},150);return}
+  }
+  try{const F=ZXing.BarcodeFormat,map={qr_code:F.QR_CODE,data_matrix:F.DATA_MATRIX,code_128:F.CODE_128,code_39:F.CODE_39,pdf417:F.PDF_417,ean_13:F.EAN_13,ean_8:F.EAN_8,upc_a:F.UPC_A,upc_e:F.UPC_E,itf:F.ITF};
+    const hints=new Map();hints.set(ZXing.DecodeHintType.TRY_HARDER,true);hints.set(ZXing.DecodeHintType.POSSIBLE_FORMATS,want.map(x=>map[x]).filter(x=>x!==undefined));
+    SC.reader=new ZXing.BrowserMultiFormatReader(hints,150);
+    SC.reader.decodeFromStream(SC.stream,v,(res)=>{if(res)done(res.getText())})}
+  catch(e){console.error(e);msg.textContent='The scanner could not start. Use a photo instead.'}
+  setTimeout(()=>{if(!box.hidden&&SC.target===t)msg.textContent='Still looking… move a little further back, add light, or tap "Use a photo instead".'},9000);
+}
 </script>
 </body>
 </html>
