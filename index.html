@@ -1,9 +1,10 @@
 <!doctype html>
 <html lang="en">
 <head>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#05070D">
+<meta name="theme-color" content="#060B22">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="robots" content="noindex">
@@ -272,7 +273,7 @@ input.hit{animation:hit .9s var(--out)}
 
 .scanner{position:fixed;inset:0;z-index:95;background:#000;display:flex;flex-direction:column;justify-content:flex-end}
 .scanner video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
-.scan-frame{position:absolute;left:50%;top:42%;width:min(78vw,420px);height:min(46vw,240px);translate:-50% -50%;border:3px solid #7FEBFF;border-radius:18px;box-shadow:0 0 0 100vmax rgba(0,0,0,.45),0 0 30px rgba(127,235,255,.6)}
+.scan-frame{position:absolute;left:50%;top:42%;width:min(78vw,420px);height:min(46vw,240px);translate:-50% -50%;border:3px solid #9DB4FF;border-radius:18px;box-shadow:0 0 0 100vmax rgba(0,0,0,.45),0 0 30px rgba(111,141,255,.6)}
 .scan-ui{position:relative;padding:18px 16px calc(22px + env(safe-area-inset-bottom,0px));display:flex;flex-direction:column;gap:12px;background:linear-gradient(transparent,rgba(0,0,0,.85) 40%)}
 .scan-ui p{margin:0;text-align:center;color:#fff;font-size:17px;font-weight:600}
 /* ---- tables, reports, settings ---- */
@@ -373,7 +374,7 @@ select option:disabled{color:#7b8794}
 .shell .stg b{white-space:nowrap;display:block}
 .shell .stg-t{overflow-wrap:normal;word-break:keep-all;hyphens:none}
 /* all five cards share one border style */
-.shell .stg.stg-open,.shell .stg.stg-rts{border-color:rgba(127,235,255,.45);box-shadow:inset 0 1px 0 rgba(255,255,255,.3),0 22px 60px -26px #5EEBFF}
+.shell .stg.stg-open,.shell .stg.stg-rts{border-color:rgba(111,141,255,.45);box-shadow:inset 0 1px 0 rgba(255,255,255,.3),0 22px 60px -26px #6F8DFF}
 
 /* form fields get enough width for their text and buttons: 2 per row on desktop, 1 on phones */
 #main .panel .grid,#main .line .grid{grid-template-columns:repeat(auto-fit,minmax(min(320px,100%),1fr))}
@@ -400,35 +401,35 @@ select option:disabled{color:#7b8794}
 
 <style>
 /* Glass look: single dark look by design. Translucent panels over a lit backdrop. */
-:root:root:root{--bg:#05070D;--surface:rgba(255,255,255,.06);--sunk:rgba(255,255,255,.09);--ink:#FFFFFF;--muted:#B9C7E0;--line:rgba(255,255,255,.15);
-  --accent:#5EEBFF;--accent-ink:#04121A;--ok:#5CF2B0;--warn:#FFC766;--bad:#FF8A9A;--tape:#5EEBFF;--tape-ink:#04121A;
-  --s-received:#7FEBFF;--s-inspected:#86CBFF;--s-processed:#93AEFF;--s-closed:#A893FF;
-  --c-received:#7FEBFF;--c-inspected:#86CBFF;--c-waiting:#8DBBFF;--c-action:#93AEFF;--c-closed:#A893FF;--s-waiting:#8DBBFF;--s-action:#93AEFF;
-  --shadow:0 24px 70px rgba(0,0,0,.55);--scrim:rgba(3,6,12,.62);--block-ink:#EAF2FF;--solid:#111A2B;color-scheme:dark}
-html{background:#070B14}
-body{background:radial-gradient(900px 620px at 10% -8%,rgba(94,235,255,.24),transparent 62%),radial-gradient(820px 620px at 96% 8%,rgba(165,120,255,.26),transparent 62%),radial-gradient(900px 700px at 55% 110%,rgba(94,180,255,.16),transparent 62%),#05070D;background-attachment:fixed;min-height:100vh}
+:root:root:root{--bg:#060B22;--surface:rgba(255,255,255,.06);--sunk:rgba(255,255,255,.09);--ink:#FFFFFF;--muted:#B9C7E0;--line:rgba(255,255,255,.15);
+  --accent:#6F8DFF;--accent-ink:#FFFFFF;--ok:#5CF2B0;--warn:#FFC766;--bad:#FF8A9A;--tape:#6F8DFF;--tape-ink:#FFFFFF;
+  --s-received:#9DB4FF;--s-inspected:#86A2FF;--s-processed:#7894FF;--s-closed:#7C8CFF;
+  --c-received:#9DB4FF;--c-inspected:#86A2FF;--c-waiting:#93ACFF;--c-action:#7894FF;--c-closed:#7C8CFF;--s-waiting:#93ACFF;--s-action:#7894FF;
+  --shadow:0 24px 70px rgba(0,0,0,.55);--scrim:rgba(3,6,12,.62);--block-ink:#EAF2FF;--solid:#0E1A45;color-scheme:dark}
+html{background:#070D26}
+body{background:radial-gradient(900px 620px at 10% -8%,rgba(91,123,255,.24),transparent 62%),radial-gradient(820px 620px at 96% 8%,rgba(33,72,242,.26),transparent 62%),radial-gradient(900px 700px at 55% 110%,rgba(74,111,245,.16),transparent 62%),#060B22;background-attachment:fixed;min-height:100vh}
 body::before{content:"";position:fixed;inset:0;pointer-events:none;z-index:0;background-image:linear-gradient(rgba(255,255,255,.04) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.04) 1px,transparent 1px);background-size:44px 44px;-webkit-mask-image:radial-gradient(circle at 50% 25%,#000,transparent 78%);mask-image:radial-gradient(circle at 50% 25%,#000,transparent 78%)}
 .shell{position:relative;z-index:1}
 .panel,.side,.brand,.nav,.drawer,.line,.sheet-p,.stg{-webkit-backdrop-filter:blur(22px) saturate(150%);backdrop-filter:blur(22px) saturate(150%)}
 .panel,.drawer,.line,.rw-card{box-shadow:inset 0 1px 0 rgba(255,255,255,.12),0 18px 40px -24px rgba(0,0,0,.7);border-radius:18px}
 .rw,.rw-under,.rw-main{border-radius:18px} .adv{border-radius:0 18px 18px 0}
-.sheet-p{background:rgba(14,21,36,.74);border:1px solid var(--line)}
+.sheet-p{background:rgba(12,26,75,.78);border:1px solid var(--line)}
 .steps button::before{background:var(--solid)}
 .steps li.done button::before,.steps li.cur button::before,.steps .bar2{background:var(--accent);border-color:var(--accent)}
-.steps li.cur button::before{box-shadow:0 0 0 5px rgba(94,235,255,.18),0 0 22px var(--accent)}
+.steps li.cur button::before{box-shadow:0 0 0 5px rgba(91,123,255,.18),0 0 22px var(--accent)}
 input,select,textarea{background:rgba(255,255,255,.05)}
 select option{background:var(--solid);color:var(--ink)}
 .nav-ind{background:rgba(255,255,255,.1);box-shadow:inset 0 1px 0 rgba(255,255,255,.18)}
-.seg-th{background:rgba(255,255,255,.17);box-shadow:inset 0 1px 0 rgba(255,255,255,.25),0 0 18px rgba(94,235,255,.18)}
-.btn.pri{background:linear-gradient(120deg,#5EEBFF,#9B8CFF);border-color:transparent;box-shadow:0 0 26px -6px #5EEBFF}
-.job{background:rgba(94,235,255,.13);color:#7FF0FF;border:1px solid rgba(94,235,255,.42)}
-.badge{background:linear-gradient(120deg,#5EEBFF,#9B8CFF)}
+.seg-th{background:rgba(255,255,255,.17);box-shadow:inset 0 1px 0 rgba(255,255,255,.25),0 0 18px rgba(91,123,255,.18)}
+.btn.pri{background:linear-gradient(120deg,#6F8DFF,#2F57F5);border-color:transparent;box-shadow:0 0 26px -6px #6F8DFF}
+.job{background:rgba(91,123,255,.13);color:#7FF0FF;border:1px solid rgba(91,123,255,.42)}
+.badge{background:linear-gradient(120deg,#6F8DFF,#2F57F5)}
 .qb{background:rgba(255,255,255,.12);box-shadow:inset 0 1px 0 rgba(255,255,255,.2)}
-.bar .fl,.trend i{background:linear-gradient(90deg,#5EEBFF,#9B8CFF);box-shadow:0 0 14px rgba(94,235,255,.45)}
-.trend i{background:linear-gradient(180deg,#5EEBFF,#9B8CFF)} .trend i.zero{background:var(--line);box-shadow:none}
+.bar .fl,.trend i{background:linear-gradient(90deg,#6F8DFF,#2F57F5);box-shadow:0 0 14px rgba(91,123,255,.45)}
+.trend i{background:linear-gradient(180deg,#6F8DFF,#2F57F5)} .trend i.zero{background:var(--line);box-shadow:none}
 #toast{background:rgba(234,242,255,.92);-webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px)}
-.hero-h{text-shadow:0 0 40px rgba(94,235,255,.25)}
-.hero-h b{rotate:0deg;background:linear-gradient(120deg,#5EEBFF,#9B8CFF);color:#04121A;box-shadow:0 0 34px -4px #5EEBFF;text-shadow:none}
+.hero-h{text-shadow:0 0 40px rgba(91,123,255,.25)}
+.hero-h b{rotate:0deg;background:linear-gradient(120deg,#6F8DFF,#2F57F5);color:#FFFFFF;box-shadow:0 0 34px -4px #6F8DFF;text-shadow:none}
 .stg,.stg:nth-child(odd),.stg:nth-child(even){rotate:0deg}
 .stg{--c:#fff;overflow:hidden;border:1px solid color-mix(in srgb,var(--c) 50%,transparent);background:linear-gradient(165deg,color-mix(in srgb,var(--c) 30%,transparent),rgba(255,255,255,.04) 58%);box-shadow:inset 0 1px 0 rgba(255,255,255,.28),0 22px 60px -22px var(--c);color:var(--ink)}
 .stg::before{content:"";position:absolute;left:-30%;top:-60%;width:80%;height:120%;background:radial-gradient(closest-side,color-mix(in srgb,var(--c) 45%,transparent),transparent);pointer-events:none;transition:translate .6s var(--out)}
@@ -436,8 +437,8 @@ select option{background:var(--solid);color:var(--ink)}
 .stg>*{position:relative}
 .stg:hover,.stg:focus-visible{translate:0 -7px;box-shadow:inset 0 1px 0 rgba(255,255,255,.4),0 30px 80px -18px var(--c)}
 .stg:active{translate:0 1px;box-shadow:inset 0 1px 0 rgba(255,255,255,.28),0 10px 30px -14px var(--c)}
-.stg-open{--c:#7FEBFF} .stg-rts{--c:#86CBFF} .stg-shelf{--c:#8DBBFF} .stg-discarded{--c:#93AEFF} .stg-resent{--c:#A893FF}
-.stg.stg-open,.stg.stg-rts,.stg.stg-shelf,.stg.stg-discarded,.stg.stg-resent{background:linear-gradient(180deg,rgba(127,235,255,.20),rgba(155,140,255,.10))}
+.stg-open{--c:#9DB4FF} .stg-rts{--c:#86A2FF} .stg-shelf{--c:#93ACFF} .stg-discarded{--c:#7894FF} .stg-resent{--c:#7C8CFF}
+.stg.stg-open,.stg.stg-rts,.stg.stg-shelf,.stg.stg-discarded,.stg.stg-resent{background:linear-gradient(180deg,rgba(111,141,255,.20),rgba(33,72,242,.10))}
 .stg-waiting{--c:var(--c-waiting)} .stg-action{--c:var(--c-action)} .stg-received{--c:var(--c-received)} .stg-inspected{--c:var(--c-inspected)} .stg-processed{--c:var(--c-processed)} .stg-closed{--c:var(--c-closed)}
 .stg b{background:linear-gradient(180deg,#fff 20%,var(--c));-webkit-background-clip:text;background-clip:text;color:transparent;filter:drop-shadow(0 0 22px color-mix(in srgb,var(--c) 55%,transparent));padding-right:.06em}
 .stg-n{color:var(--c);opacity:1}
@@ -447,17 +448,17 @@ select option{background:var(--solid);color:var(--ink)}
 @keyframes drop{from{opacity:0;translate:0 26px;scale:.94;filter:blur(8px)}}
 /* one colour family (cyan to violet), high contrast, larger type, less copy */
 body{font-size:17px}
-.stg{background:linear-gradient(180deg,rgba(127,235,255,.20),rgba(155,140,255,.10));border-color:rgba(127,235,255,.45);box-shadow:inset 0 1px 0 rgba(255,255,255,.3),0 22px 60px -26px #5EEBFF}
-.stg b{background:linear-gradient(180deg,#8EF0FF,#9B8CFF);-webkit-background-clip:text;background-clip:text;font-size:clamp(56px,7.2vw,96px)}
-.stg.stg-open,.stg.stg-rts{border-color:#8EF0FF;box-shadow:inset 0 1px 0 rgba(255,255,255,.4),0 0 0 1px rgba(142,240,255,.5),0 24px 70px -22px #5EEBFF}
+.stg{background:linear-gradient(180deg,rgba(111,141,255,.20),rgba(33,72,242,.10));border-color:rgba(111,141,255,.45);box-shadow:inset 0 1px 0 rgba(255,255,255,.3),0 22px 60px -26px #6F8DFF}
+.stg b{background:linear-gradient(180deg,#A9BEFF,#2F57F5);-webkit-background-clip:text;background-clip:text;font-size:clamp(56px,7.2vw,96px)}
+.stg.stg-open,.stg.stg-rts{border-color:#A9BEFF;box-shadow:inset 0 1px 0 rgba(255,255,255,.4),0 0 0 1px rgba(142,240,255,.5),0 24px 70px -22px #6F8DFF}
 .stg-t{min-height:2.3em}
 .stg-n,.stg-d{display:none}
 .stg-t{font-size:clamp(18px,2.2vw,24px);color:#fff}
 .stg-f{font-size:14.5px;color:var(--muted)}
-.pk i,.mix i{background:linear-gradient(180deg,#8EF0FF,#9B8CFF);box-shadow:0 0 12px rgba(94,235,255,.6)}
+.pk i,.mix i{background:linear-gradient(180deg,#A9BEFF,#2F57F5);box-shadow:0 0 12px rgba(91,123,255,.6)}
 .hero-s{font-size:18px} .hero-k{font-size:13.5px}
 h3{font-size:14px;color:var(--ink)} .note{font-size:15px} .hint,.qnote{font-size:14.5px}
-.pill{font-size:14.5px;color:var(--ink);background:rgba(255,255,255,.1)} .pill .dot{color:#7FEBFF}
+.pill{font-size:14.5px;color:var(--ink);background:rgba(255,255,255,.1)} .pill .dot{color:#9DB4FF}
 .job{font-size:15px} .job.big{font-size:17px}
 .seg button{font-size:16px;min-height:44px} .seg button small{font-size:13px}
 .nav button{font-size:12.5px} .btn{font-size:16.5px} .btn.big{font-size:18px}
@@ -472,41 +473,41 @@ table{font-size:16px} th{font-size:12.5px} .hist{font-size:15px} .tag{font-size:
 </style>
 <style>
 /* Light mode (switch in the header) */
-html[data-theme="light"]:root:root:root:root{--bg:#F4F6FB;--surface:rgba(255,255,255,.72);--sunk:rgba(240,244,252,.9);--ink:#0E1726;--muted:#5A6782;--line:rgba(30,50,90,.12);
-  --accent:#0AA9CC;--accent-ink:#FFFFFF;--ok:#12A374;--warn:#C98500;--bad:#D6455D;--tape:#0AA9CC;--tape-ink:#FFFFFF;
-  --s-received:#2CC4E0;--s-inspected:#4FA9F0;--s-processed:#6E8CF2;--s-closed:#8B6CF0;
-  --c-received:#2CC4E0;--c-inspected:#4FA9F0;--c-waiting:#5E9BF2;--c-action:#6E8CF2;--c-closed:#8B6CF0;--s-waiting:#5E9BF2;--s-action:#6E8CF2;
+html[data-theme="light"]:root:root:root:root{--bg:#F3F5FC;--surface:rgba(255,255,255,.72);--sunk:rgba(240,244,252,.9);--ink:#0E1726;--muted:#5A6782;--line:rgba(30,50,90,.12);
+  --accent:#2148F2;--accent-ink:#FFFFFF;--ok:#12A374;--warn:#C98500;--bad:#D6455D;--tape:#2148F2;--tape-ink:#FFFFFF;
+  --s-received:#5B7BFF;--s-inspected:#4466F4;--s-processed:#3352E0;--s-closed:#1F37B8;
+  --c-received:#5B7BFF;--c-inspected:#4466F4;--c-waiting:#4F70F5;--c-action:#3352E0;--c-closed:#1F37B8;--s-waiting:#4F70F5;--s-action:#3352E0;
   --shadow:0 24px 60px rgba(40,60,110,.16);--scrim:rgba(20,30,55,.35);--block-ink:#0E1726;--solid:#FFFFFF;color-scheme:light}
 html[data-theme="light"]{background:#F8FAFD}
-html[data-theme="light"] body{color:var(--ink);background:radial-gradient(900px 620px at 8% -10%,rgba(150,232,248,.30),transparent 62%),radial-gradient(820px 620px at 98% 6%,rgba(205,190,255,.28),transparent 62%),radial-gradient(900px 700px at 50% 112%,rgba(175,215,255,.22),transparent 62%),#F4F6FB;background-attachment:fixed}
+html[data-theme="light"] body{color:var(--ink);background:radial-gradient(900px 620px at 8% -10%,rgba(150,172,255,.30),transparent 62%),radial-gradient(820px 620px at 98% 6%,rgba(33,72,242,.28),transparent 62%),radial-gradient(900px 700px at 50% 112%,rgba(120,150,255,.22),transparent 62%),#F3F5FC;background-attachment:fixed}
 html[data-theme="light"] body::before{background-image:linear-gradient(rgba(30,50,90,.05) 1px,transparent 1px),linear-gradient(90deg,rgba(30,50,90,.05) 1px,transparent 1px)}
 html[data-theme="light"] .panel,html[data-theme="light"] .drawer,html[data-theme="light"] .line,html[data-theme="light"] .rw-card{box-shadow:inset 0 1px 0 rgba(255,255,255,.9),0 16px 36px -22px rgba(40,60,110,.35);border:1px solid rgba(255,255,255,.75)}
 html[data-theme="light"] .brand,html[data-theme="light"] .nav{background:rgba(255,255,255,.7);border-color:rgba(30,50,90,.08)}
 html[data-theme="light"] .sheet-p{background:rgba(255,255,255,.88);border:1px solid rgba(255,255,255,.9)}
 html[data-theme="light"] input,html[data-theme="light"] select,html[data-theme="light"] textarea{background:rgba(255,255,255,.85);color:var(--ink);border-color:rgba(30,50,90,.16)}
 html[data-theme="light"] select option{background:#fff;color:var(--ink)}
-html[data-theme="light"] .nav-ind{background:rgba(10,169,204,.12);box-shadow:inset 0 1px 0 rgba(255,255,255,.8)}
+html[data-theme="light"] .nav-ind{background:rgba(33,72,242,.12);box-shadow:inset 0 1px 0 rgba(255,255,255,.8)}
 html[data-theme="light"] .seg-th{background:#fff;box-shadow:0 2px 10px rgba(40,60,110,.15)}
 html[data-theme="light"] .btn{color:var(--ink)}
-html[data-theme="light"] .btn.pri{background:linear-gradient(120deg,#16C2E3,#8B76F5);color:#fff;border-color:transparent;box-shadow:0 10px 24px -10px rgba(22,150,220,.7)}
-html[data-theme="light"] .job{background:rgba(10,169,204,.1);color:#077C96;border:1px solid rgba(10,169,204,.35)}
-html[data-theme="light"] .badge{background:linear-gradient(120deg,#16C2E3,#8B76F5);color:#fff}
+html[data-theme="light"] .btn.pri{background:linear-gradient(120deg,#4F70F5,#2148F2);color:#fff;border-color:transparent;box-shadow:0 10px 24px -10px rgba(33,72,242,.7)}
+html[data-theme="light"] .job{background:rgba(33,72,242,.1);color:#1A3FD6;border:1px solid rgba(33,72,242,.35)}
+html[data-theme="light"] .badge{background:linear-gradient(120deg,#4F70F5,#2148F2);color:#fff}
 html[data-theme="light"] .qb{background:#fff;box-shadow:0 1px 4px rgba(40,60,110,.15)}
-html[data-theme="light"] .bar .fl,html[data-theme="light"] .trend i{background:linear-gradient(90deg,#16C2E3,#8B76F5);box-shadow:none}
-html[data-theme="light"] .trend i{background:linear-gradient(180deg,#16C2E3,#8B76F5)}
+html[data-theme="light"] .bar .fl,html[data-theme="light"] .trend i{background:linear-gradient(90deg,#4F70F5,#2148F2);box-shadow:none}
+html[data-theme="light"] .trend i{background:linear-gradient(180deg,#4F70F5,#2148F2)}
 html[data-theme="light"] #toast{background:rgba(14,23,38,.9);color:#fff}
 html[data-theme="light"] .hero-h{text-shadow:none}
 html[data-theme="light"] .savebar{box-shadow:0 -8px 24px rgba(40,60,110,.12)}
-html[data-theme="light"] .loc-tile.on{outline-color:#0AA9CC}
+html[data-theme="light"] .loc-tile.on{outline-color:#2148F2}
 html[data-theme="light"] .loc-tile.full{border-color:#E68AA0}
 html[data-theme="light"] .gate{background:rgba(230,236,248,.6)}
 html[data-theme="light"] .gate-p{background:rgba(255,255,255,.85)!important;border-color:rgba(255,255,255,.95)!important;box-shadow:0 30px 70px -30px rgba(40,60,110,.45)}
-html[data-theme="light"] .gate-p h2 span{background:linear-gradient(120deg,#16C2E3,#8B76F5);-webkit-background-clip:text;background-clip:text;color:transparent}
+html[data-theme="light"] .gate-p h2 span{background:linear-gradient(120deg,#4F70F5,#2148F2);-webkit-background-clip:text;background-clip:text;color:transparent}
 html[data-theme="light"] .scanner{background:#0E1726}
 html[data-theme="light"] .stg,html[data-theme="light"] .stg.stg-open,html[data-theme="light"] .stg.stg-rts,html[data-theme="light"] .stg.stg-shelf,html[data-theme="light"] .stg.stg-discarded,html[data-theme="light"] .stg.stg-resent{background:linear-gradient(180deg,rgba(255,255,255,.92),rgba(236,242,255,.85));border-color:rgba(30,50,90,.08);box-shadow:0 14px 34px -20px rgba(40,60,110,.4)}
 html[data-theme="light"] .stg::before{opacity:.35}
 html[data-theme="light"] .stg-t{color:var(--ink)!important}
-html[data-theme="light"] .stg b{background:linear-gradient(180deg,#0AA9CC,#7C6CF0);-webkit-background-clip:text;background-clip:text;color:transparent;filter:none}
+html[data-theme="light"] .stg b{background:linear-gradient(180deg,#2148F2,#1F37B8);-webkit-background-clip:text;background-clip:text;color:transparent;filter:none}
 html[data-theme="light"] .stg-f{border-top-color:rgba(30,50,90,.08)}
 html[data-theme="light"] .hero-h,html[data-theme="light"] h2,html[data-theme="light"] h3{color:var(--ink)}
 .theme-tg{margin-left:8px;flex:none;width:40px;height:40px;border-radius:12px;border:1px solid var(--line);background:var(--surface);color:var(--ink);display:grid;place-items:center;cursor:pointer}
@@ -531,22 +532,31 @@ html[data-theme="light"] .shell .stg.stg-open,html[data-theme="light"] .shell .s
 </div>
 <style>
 .gate{position:fixed;inset:0;z-index:90;display:grid;place-items:center;padding:20px;overflow:auto;background:rgba(3,6,12,.55);-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px)}
-.gate-p{width:100%;max-width:440px;display:flex;flex-direction:column;gap:14px;padding:28px 24px;border-radius:26px;border:1px solid var(--line);background:linear-gradient(180deg,rgba(127,235,255,.14),rgba(155,140,255,.07));box-shadow:inset 0 1px 0 rgba(255,255,255,.3),0 30px 90px -30px #5EEBFF}
+.gate-p{width:100%;max-width:440px;display:flex;flex-direction:column;gap:14px;padding:28px 24px;border-radius:26px;border:1px solid var(--line);background:linear-gradient(180deg,rgba(111,141,255,.14),rgba(33,72,242,.07));box-shadow:inset 0 1px 0 rgba(255,255,255,.3),0 30px 90px -30px #6F8DFF}
 .gate-p h2{font-family:var(--funk);font-weight:800;font-size:34px;letter-spacing:-.04em}
-.gate-p h2 span{background:linear-gradient(120deg,#8EF0FF,#9B8CFF);-webkit-background-clip:text;background-clip:text;color:transparent}
+.gate-p h2 span{background:linear-gradient(120deg,#A9BEFF,#2F57F5);-webkit-background-clip:text;background-clip:text;color:transparent}
 .gate-err{color:var(--bad);font-size:15px;min-height:1.3em;margin:0}
 .gate details{font-size:15px;color:var(--muted)} .gate summary{cursor:pointer;padding:4px 0}
 </style>
 <div id="gate" class="gate" hidden>
   <form class="gate-p" onsubmit="return false" aria-labelledby="gate-t">
     <h2 id="gate-t">Returns <span>Bench</span></h2>
-    <p class="note">Sign in once on this device. Your initials go on every return you touch.</p>
-    <label class="fld"><span>Your initials</span><input id="gh-name" maxlength="4" autocapitalize="characters" autocomplete="off" placeholder=" "></label>
-    <label class="fld"><span>Access key</span><input id="gh-key" type="password" autocomplete="off" placeholder=" "></label>
-    <details><summary>Data repository</summary><label class="fld" style="margin-top:8px"><span>GitHub repository (owner/name)</span><input id="gh-repo" autocomplete="off" autocapitalize="none" spellcheck="false" placeholder=" "></label></details>
+    <div id="gate-login" style="display:flex;flex-direction:column;gap:14px"><p class="note">Sign in with the email your manager invited.</p>
+    <label class="fld"><span>Email</span><input id="sb-email" type="email" autocomplete="username" autocapitalize="none" spellcheck="false" placeholder=" "></label>
+    <label class="fld"><span>Password</span><input id="sb-pass" type="password" autocomplete="current-password" placeholder=" "></label>
+    <label class="fld"><span>Your initials (on every return you touch)</span><input id="sb-initials" maxlength="4" autocapitalize="characters" autocomplete="off" placeholder=" "></label>
+    <button class="btn pri big" data-act="connect" type="submit">Sign in</button>
+    <button class="btn" data-act="sendLink" type="button">Email me a sign-in link instead</button></div>
+    <div id="gate-pw" hidden style="display:flex;flex-direction:column;gap:14px"><p class="note" id="sb-pw-sub">Welcome. Create a password for your account. You'll use it with your email to sign in next time.</p>
+    <label class="fld"><span>New password (at least 8 characters)</span><input id="sb-np1" type="password" autocomplete="new-password" placeholder=" "></label>
+    <label class="fld"><span>Type it again</span><input id="sb-np2" type="password" autocomplete="new-password" placeholder=" "></label>
+    <label class="fld"><span>Your initials (on every return you touch)</span><input id="sb-ini2" maxlength="4" autocapitalize="characters" autocomplete="off" placeholder=" "></label>
+    <button class="btn pri big" data-act="firstPass" type="button">Create password and continue</button></div>
+    <div id="gate-company" hidden style="display:flex;flex-direction:column;gap:14px"><p class="note">You're signed in. Name your company to finish setting up. You become its admin.</p>
+    <label class="fld"><span>Company name</span><input id="sb-company" autocomplete="organization" placeholder=" "></label>
+    <button class="btn pri big" data-act="makeCompany" type="button">Create company</button></div>
     <p class="gate-err" id="gate-err" role="alert"></p>
-    <button class="btn pri big" data-act="connect" type="submit">Connect</button>
-  </form>
+      </form>
 </div>
 <div id="sheet" class="sheet" hidden>
   <div class="sheet-bg" data-act="closeSheet"></div>
@@ -959,7 +969,7 @@ function render(){
   let h='';
   if(S.conn==='wait')h+='<div class="banner">Connecting to your returns data…</div>';
   if(S.conn==='none')h+='<div class="banner">This device is not signed in yet.</div>';
-  if(S.conn==='lost')h+='<div class="banner">Lost the connection to GitHub. Check the internet, then reload the page.</div>';
+  if(S.conn==='lost')h+='<div class="banner">Lost the connection to the server. Check the internet, then reload the page.</div>';
   S.formLive=false;
   h+=({dash:vDash,new:vForm,list:vList,report:vReport,settings:vSettings})[S.tab]();
   const m=$('#main');m.innerHTML=h;
@@ -1689,119 +1699,263 @@ ACT.saveStore=async()=>{const c=Math.max(1,Math.min(999,parseInt($('#st-count').
 const _boot=boot;
 boot=async function(){await _boot();if(S.db)S.db.doc('orgs/storage').onSnapshot(s=>{const d=s.exists?s.data():{};S.store={count:+d.count||50,cap:+d.cap||10};soft()},()=>{})};
 /* =====================================================================
-   GitHub storage. The app is a static page; every record is kept as JSON
-   in a private GitHub repository and read and written through the GitHub API
-   with an access key typed in once per device. Each save is a commit.
-   Files: orgs.json, clients.json, returns.json, skus/<client>.json, blobs/<photo>
+   Supabase storage. Same surface as the GitHub adapter (db / assets /
+   downloads / user), so the rest of the app is unchanged.
+   Tables: companies (settings = orgs docs), tenants (= clients), returns,
+   sku_docs (= clients/<id>/skus/<chunk>). Photos: bucket "photos",
+   path <company_id>/<photo id>. Row level security does the access control.
    ===================================================================== */
+
+/* the invite / sign-in link leaves a one-time code in the address; never reload with it */
+const AUTH_HASH=/access_token|refresh_token|error_description|error_code|type=(invite|magiclink|recovery|signup)/;
+const LINK_ERR=(()=>{try{const h=new URLSearchParams(location.hash.slice(1));const d=h.get('error_description');return d?d.replace(/\+/g,' '):''}catch(e){return''}})();
+function cleanAddress(){if(AUTH_HASH.test(location.hash)||location.search)history.replaceState(null,'',location.pathname)}
+function cleanReload(){location.replace(location.origin+location.pathname)}
 const GH=(()=>{
-  const DEFAULT_REPO='LillianOu/returns-desk-data',KEY='rd-gh';
-  let cfg=null;try{cfg=JSON.parse(localStorage.getItem(KEY)||'null')}catch(e){}
-  const files={},urls={};let onAuthFail=null,timer=null;
-  const clone=o=>JSON.parse(JSON.stringify(o));
-  const b64bytes=b=>{let o='';for(let i=0;i<b.length;i+=0x8000)o+=String.fromCharCode.apply(null,b.subarray(i,i+0x8000));return btoa(o)};
-  const b64e=s=>b64bytes(new TextEncoder().encode(s));
-  const b64d=s=>new TextDecoder().decode(Uint8Array.from(atob(s.replace(/\s/g,'')),c=>c.charCodeAt(0)));
+  const URL_='https://khaqoynnxnbeeuwqbgkh.supabase.co',KEY='sb_publishable_q6RkKGPvAITnCx1TBs3cbQ_WDQMNmSV';
+  const sb=window.supabase.createClient(URL_,KEY,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true,storageKey:'rd-sb'}});
+  let me=null,onAuthFail=null,timer=null;const urls={},watchers=[];
+  const clone=o=>o==null?o:JSON.parse(JSON.stringify(o));
   const newId=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,8);
-  function api(path,opt,c){c=c||cfg;opt=opt||{};
-    return fetch('https://api.github.com/repos/'+c.repo+path,Object.assign({cache:'no-store'},opt,{headers:Object.assign({Authorization:'Bearer '+c.token,Accept:'application/vnd.github+json','X-GitHub-Api-Version':'2022-11-28'},opt.headers||{})}))}
-  function fail(r){const e=new Error('GitHub '+r.status);e.status=r.status;e.code=r.status===401||r.status===403||r.status===404?'not_granted':'network';if((r.status===401||r.status===403)&&onAuthFail)onAuthFail(e);return e}
-  const F=p=>files[p]||(files[p]={data:{},sha:null,etag:null,loaded:false,loading:null,subs:[],q:Promise.resolve()});
-  const notify=f=>f.subs.forEach(s=>{try{s.cb()}catch(e){console.error(e)}});
-  async function pull(p,force){
-    const f=F(p),h={};if(f.etag&&!force)h['If-None-Match']=f.etag;
-    const r=await api('/contents/'+p,{headers:h});
-    if(r.status===304)return f;
-    if(r.status===404){const was=f.loaded&&f.sha;f.data={};f.sha=null;f.etag=null;f.loaded=true;if(was)notify(f);return f}
-    if(!r.ok)throw fail(r);
-    const j=await r.json();let txt;
-    if(j.content)txt=b64d(j.content);else{const b=await api('/git/blobs/'+j.sha);if(!b.ok)throw fail(b);txt=b64d((await b.json()).content)}
-    const changed=j.sha!==f.sha;f.etag=r.headers.get('ETag');
-    if(changed||!f.loaded){try{f.data=txt.trim()?JSON.parse(txt):{}}catch(e){throw new Error(p+' is not valid JSON')}f.sha=j.sha;f.loaded=true;notify(f)}
-    return f;
+  const isDate=v=>typeof v==='string'&&/^\d{4}-\d\d-\d\d$/.test(v);
+  function fail(err){const e=new Error((err&&err.message)||'Supabase error');const s=err&&(err.status||err.statusCode);
+    e.code=(s==401||s==403||(err&&err.code==='42501'))?'not_granted':'network';if(s==401&&onAuthFail)onAuthFail(e);return e}
+  const ok=r=>{if(r.error)throw fail(r.error);return r.data};
+  const C=()=>me.company_id;
+
+  /* ---- row <-> app doc ---- */
+  const retRow=(id,d)=>({company_id:C(),legacy_id:id,client_key:d.clientId||null,job_no:d.jobNo||null,kind:d.kind==='rts'?'rts':'return',
+    pack:d.pack||null,location:d.location||null,order_no:d.orderNo||null,tracking:d.tracking||null,carrier:d.carrier||null,
+    date_received:isDate(d.dateReceived)?d.dateReceived:null,date_processed:isDate(d.dateProcessed)?d.dateProcessed:null,
+    status:d.status||'open',notes:d.notes||null,rts:d.rts||null,lines:d.lines||[],history:d.history||[],extra:d});
+  const tenRow=(id,d)=>({company_id:C(),legacy_id:id,name:d.name||'',code:d.code||null,email:d.email||null,settings:d});
+
+  /* ---- path routing ---- */
+  function route(path){const s=path.split('/');
+    if(s[0]==='orgs')return{t:'org',key:s[1]};
+    if(s[0]==='clients'&&s[2]==='skus')return{t:'sku',cid:s[1],key:s[3]};
+    if(s[0]==='clients')return{t:'ten',key:s[1]};
+    if(s[0]==='returns')return{t:'ret',key:s[1]};
+    throw new Error('Unknown path '+path)}
+
+  async function readDoc(r){
+    if(r.t==='org'){const d=ok(await sb.from('companies').select('settings').eq('id',C()).single());const v=(d.settings||{})[r.key];return v===undefined?null:v}
+    if(r.t==='ten'){const d=ok(await sb.from('tenants').select('settings').eq('company_id',C()).eq('legacy_id',r.key).maybeSingle());return d?d.settings:null}
+    if(r.t==='ret'){const d=ok(await sb.from('returns').select('extra').eq('company_id',C()).eq('legacy_id',r.key).maybeSingle());return d?d.extra:null}
+    if(r.t==='sku'){const d=ok(await sb.from('sku_docs').select('items').eq('company_id',C()).eq('client_key',r.cid).eq('doc_key',r.key).maybeSingle());return d?{items:d.items}:null}
   }
-  const ensure=p=>{const f=F(p);if(f.loaded)return Promise.resolve(f);return f.loading||(f.loading=pull(p,true).finally(()=>f.loading=null))};
-  function push(p,mut,msg){
-    const f=F(p);
-    const run=f.q.then(async()=>{
-      for(let i=0;i<5;i++){
-        if(!f.loaded||i)await pull(p,true);
-        const next=mut(clone(f.data));
-        const r=await api('/contents/'+p,{method:'PUT',body:JSON.stringify({message:msg+(cfg.name?' ('+cfg.name+')':''),content:b64e(JSON.stringify(next)),sha:f.sha||undefined})});
-        if(r.ok){const j=await r.json();f.data=next;f.sha=j.content.sha;f.etag=null;f.loaded=true;notify(f);return}
-        if(r.status!==409&&r.status!==422)throw fail(r);
-        await new Promise(s=>setTimeout(s,250*(i+1)));
-      }
-      const e=new Error('Someone else was saving at the same moment');e.code='conflict';throw e;
-    });
-    f.q=run.catch(()=>{});
-    run.catch(()=>pull(p,true).catch(()=>{}));
-    if(f.loaded){try{f.data=mut(clone(f.data));notify(f)}catch(e){}}
-    return run;
+  async function writeDoc(r,d){
+    if(r.t==='org'){const cur=ok(await sb.from('companies').select('settings').eq('id',C()).single()).settings||{};cur[r.key]=d;ok(await sb.from('companies').update({settings:cur}).eq('id',C()));return}
+    if(r.t==='ten'){ok(await sb.from('tenants').upsert(tenRow(r.key,d),{onConflict:'company_id,legacy_id'}));return}
+    if(r.t==='ret'){ok(await sb.from('returns').upsert(retRow(r.key,d),{onConflict:'company_id,legacy_id'}));return}
+    if(r.t==='sku'){ok(await sb.from('sku_docs').upsert({company_id:C(),client_key:r.cid,doc_key:r.key,items:(d&&d.items)||{},updated_at:new Date().toISOString()},{onConflict:'company_id,client_key,doc_key'}));return}
   }
-  function where(path){const s=path.split('/');return s[0]==='clients'&&s[2]==='skus'?{file:'skus/'+s[1]+'.json',key:s[3]}:{file:s[0]+'.json',key:s[1]}}
-  const dsnap=(f,key)=>({exists:Object.prototype.hasOwnProperty.call(f.data,key),id:key,data:()=>clone(f.data[key])});
-  function watch(file,cb,err){const f=F(file);f.subs.push({cb});ensure(file).then(()=>cb()).catch(e=>{console.error(e);if(err)err(e)});poll()}
-  function doc(path){
-    const w=where(path),f=F(w.file);
-    return{id:w.key,
-      get:async()=>{await ensure(w.file);return dsnap(f,w.key)},
-      set:d=>push(w.file,m=>{m[w.key]=clone(d);return m},w.file.replace('.json','')+': save '+w.key),
-      update:d=>push(w.file,m=>{m[w.key]=Object.assign(m[w.key]||{},clone(d));return m},w.file.replace('.json','')+': update '+w.key),
-      delete:()=>push(w.file,m=>{delete m[w.key];return m},w.file.replace('.json','')+': delete '+w.key),
-      onSnapshot:(cb,err)=>watch(w.file,()=>cb(dsnap(f,w.key)),err)};
+  async function deleteDoc(r){
+    if(r.t==='org'){const cur=ok(await sb.from('companies').select('settings').eq('id',C()).single()).settings||{};delete cur[r.key];ok(await sb.from('companies').update({settings:cur}).eq('id',C()));return}
+    const q={ten:['tenants','legacy_id'],ret:['returns','legacy_id'],sku:['sku_docs','doc_key']}[r.t];
+    let b=sb.from(q[0]).delete().eq('company_id',C()).eq(q[1],r.key);if(r.t==='sku')b=b.eq('client_key',r.cid);ok(await b);
   }
-  function collection(path){
-    const s=path.split('/'),file=s.length===3?'skus/'+s[1]+'.json':s[0]+'.json',f=F(file);let ord=null,lim=0;
-    const snap=()=>{let d=Object.keys(f.data).map(k=>dsnap(f,k));if(ord)d.sort((a,b)=>{const x=String(a.data()[ord.k]||''),y=String(b.data()[ord.k]||'');return ord.desc?y.localeCompare(x):x.localeCompare(y)});if(lim)d=d.slice(0,lim);return{docs:d}};
-    const o={get:async()=>{await ensure(file);return snap()},doc:id=>doc(path+'/'+(id||newId())),add:async d=>{const r=doc(path+'/'+newId());await r.set(d);return r},
-      orderBy:(k,dir)=>{ord={k,desc:dir==='desc'};return o},limit:n=>{lim=n;return o},onSnapshot:(cb,err)=>watch(file,()=>cb(snap()),err)};
+  async function readAll(path){const s=path.split('/');const out=[];
+    const page=async(build,map)=>{for(let from=0;;from+=1000){const d=ok(await build().range(from,from+999));d.forEach(x=>out.push(map(x)));if(d.length<1000)break}};
+    if(s[0]==='clients'&&s[2]==='skus')await page(()=>sb.from('sku_docs').select('doc_key,items').eq('company_id',C()).eq('client_key',s[1]).order('doc_key'),x=>[x.doc_key,{items:x.items}]);
+    else if(s[0]==='clients')await page(()=>sb.from('tenants').select('legacy_id,settings').eq('company_id',C()).order('legacy_id'),x=>[x.legacy_id,x.settings]);
+    else if(s[0]==='returns')await page(()=>sb.from('returns').select('legacy_id,extra').eq('company_id',C()).order('created_at',{ascending:false}),x=>[x.legacy_id,x.extra]);
+    else throw new Error('Unknown collection '+path);
+    return out}
+
+  /* ---- live updates: re-read watched data every 20 s and whenever the tab comes back ---- */
+  function refresh(){watchers.forEach(w=>w.run().catch(e=>{console.error(e)}))}
+  function poll(){if(timer)return;timer=setInterval(()=>{if(!document.hidden)refresh()},20000);document.addEventListener('visibilitychange',()=>{if(!document.hidden)refresh()})}
+  const dsnap=(id,v)=>({exists:v!=null,id,data:()=>clone(v)});
+
+  function doc(path){const r=route(path);
+    return{id:r.key,
+      get:async()=>dsnap(r.key,await readDoc(r)),
+      set:async d=>{await writeDoc(r,clone(d));refresh()},
+      update:async d=>{const cur=(await readDoc(r))||{};await writeDoc(r,Object.assign(cur,clone(d)));refresh()},
+      delete:async()=>{await deleteDoc(r);refresh()},
+      onSnapshot:(cb,err)=>{let last;const w={run:async()=>{const v=await readDoc(r),j=JSON.stringify(v);if(j!==last){last=j;cb(dsnap(r.key,v))}}};watchers.push(w);w.run().catch(e=>{console.error(e);if(err)err(e)});poll()}};
+  }
+  function collection(path){let ord=null,lim=0;
+    const snap=rows=>{let d=rows.map(([k,v])=>dsnap(k,v));if(ord)d.sort((a,b)=>{const x=String(a.data()[ord.k]||''),y=String(b.data()[ord.k]||'');return ord.desc?y.localeCompare(x):x.localeCompare(y)});if(lim)d=d.slice(0,lim);return{docs:d}};
+    const o={get:async()=>snap(await readAll(path)),doc:id=>doc(path+'/'+(id||newId())),add:async d=>{const r=doc(path+'/'+newId());await r.set(d);return r},
+      orderBy:(k,dir)=>{ord={k,desc:dir==='desc'};return o},limit:n=>{lim=n;return o},
+      onSnapshot:(cb,err)=>{let last;const w={run:async()=>{const rows=await readAll(path),j=JSON.stringify(rows);if(j!==last){last=j;cb(snap(rows))}}};watchers.push(w);w.run().catch(e=>{console.error(e);if(err)err(e)});poll()}};
     return o;
   }
-  function poll(){
-    if(timer)return;
-    const tick=()=>{if(document.hidden||!cfg)return;Object.keys(files).forEach(p=>{if(files[p].subs.length)files[p].q=files[p].q.then(()=>pull(p)).catch(()=>{})})};
-    timer=setInterval(tick,20000);document.addEventListener('visibilitychange',()=>{if(!document.hidden)tick()});
-  }
+
+  /* ---- photos ---- */
   async function blobUrl(id){
     if(urls[id])return urls[id];
-    return urls[id]=(async()=>{const r=await api('/contents/blobs/'+id,{headers:{Accept:'application/vnd.github.raw+json'}});if(!r.ok){delete urls[id];throw fail(r)}return URL.createObjectURL(await r.blob())})();
+    return urls[id]=(async()=>{const r=await sb.storage.from('photos').download(C()+'/'+id);if(r.error){delete urls[id];throw fail(r.error)}return URL.createObjectURL(new Blob([r.data],{type:/\.png$/i.test(id)?'image/png':'image/jpeg'}))})();
   }
   function img(el,id){if(!id||el.dataset.got===id)return;el.dataset.got=id;blobUrl(id).then(u=>{if(el.dataset.got===id)el.src=u}).catch(()=>{delete el.dataset.got})}
-  const assets={upload:async(blob,o)=>{const t=(o&&o.type)||blob.type||'',id=newId()+(t.includes('png')?'.png':'.jpg'),bytes=new Uint8Array(await blob.arrayBuffer());
-    const r=await api('/contents/blobs/'+id,{method:'PUT',body:JSON.stringify({message:'photo '+id+(cfg.name?' ('+cfg.name+')':''),content:b64bytes(bytes)})});if(!r.ok)throw fail(r);
-    urls[id]=Promise.resolve(URL.createObjectURL(blob));return{id,sizeBytes:bytes.length,contentType:t}}};
+  const assets={upload:async(blob,o)=>{const t=(o&&o.type)||blob.type||'image/jpeg',id=newId()+(t.includes('png')?'.png':'.jpg');
+    const r=await sb.storage.from('photos').upload(C()+'/'+id,blob,{contentType:t,upsert:false});if(r.error)throw fail(r.error);
+    urls[id]=Promise.resolve(URL.createObjectURL(blob));return{id,sizeBytes:blob.size,contentType:t}}};
   const downloads={save:async({filename,data})=>{const b=data instanceof Blob?data:new Blob([data],{type:'text/csv;charset=utf-8'}),a=document.createElement('a');a.href=URL.createObjectURL(b);a.download=filename;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),4000)}};
-  const user={id:async()=>cfg.name,profiles:async ids=>Object.fromEntries(ids.map(i=>[i,{name:i}]))};
-  const use=async n=>!cfg?null:({db:{doc,collection},assets,downloads,user})[n]||null;
-  async function connect(name,token,repo){
-    name=(name||'').trim().toUpperCase();token=(token||'').trim();repo=(repo||'').trim().replace(/^https:\/\/github\.com\//,'').replace(/\.git$/,'').replace(/\/$/,'')||DEFAULT_REPO;
-    if(!name)throw new Error('Type your initials.');
-    if(!token)throw new Error('Paste the access key your manager gave you.');
-    if(!/^[\w.-]+\/[\w.-]+$/.test(repo))throw new Error('The data repository should look like owner/name.');
-    let r;try{r=await api('',{},{repo,token})}catch(e){throw new Error('Could not reach GitHub. Check the internet connection and try again.')}
-    if(r.status===401)throw new Error('GitHub did not accept that access key. Check it was pasted in full and has not expired.');
-    if(!r.ok)throw new Error('That key cannot open '+repo+'. Ask your manager to check the key covers this repository.');
-    const j=await r.json();if(j.permissions&&!j.permissions.push)throw new Error('That key can read '+repo+' but not save to it. It needs Contents: read and write.');
-    cfg={name,token,repo};try{localStorage.setItem(KEY,JSON.stringify(cfg))}catch(e){}
+  const user={id:async()=>me.initials,profiles:async ids=>Object.fromEntries(ids.map(i=>[i,{name:i}]))};
+  const use=async n=>!me?null:({db:{doc,collection},assets,downloads,user})[n]||null;
+
+  /* ---- sign in ---- */
+  async function loadMe(){
+    const s=(await sb.auth.getSession()).data.session;if(!s)return null;
+    const rows=ok(await sb.rpc('my_company'));const m=rows&&rows[0];
+    let fresh=null;try{fresh=(await sb.auth.getUser()).data.user}catch(e){}
+    const meta=((fresh||s.user).user_metadata)||{};
+    me={email:s.user.email,company_id:m&&m.company_id,role:m&&m.role,company:m&&m.name,account:m&&m.account_no,
+        initials:(localStorage.getItem('rd-initials')||meta.initials||s.user.email.slice(0,2)).toUpperCase(),pwSet:!!meta.pw_set};
+    return me}
+  async function start(){
+    let m=null;try{m=await loadMe()}catch(e){console.error(e)}
+    cleanAddress();
+    if(m&&!m.pwSet){render();showGate('',false,true);return}
+    if(m&&m.company_id&&m.role!=='viewer'){boot();return}
+    render();
+    if(!m){showGate(LINK_ERR?(/expired|invalid/i.test(LINK_ERR)?'That email link has expired or was already used. Sign in with your email and password, or ask for a new link.':LINK_ERR):'');return}
+    if(!m.company_id){let ex=true;try{ex=(await sb.rpc('company_exists')).data!==false}catch(e){}
+      if(ex){showGate('You are signed in as '+m.email+', but this account has not been given access yet. Ask your manager to add you in Settings → Staff access.');return}
+      showGate('',true);return}
+    location.replace(location.pathname.replace(/(v2\/)?(index\.html)?$/,'')+'portal/');
   }
-  function signOut(){try{localStorage.removeItem(KEY)}catch(e){}location.reload()}
-  return{use,connect,signOut,blobUrl,img,cfg:()=>cfg,DEFAULT_REPO,onAuth:f=>onAuthFail=f};
+  async function signIn(email,password){
+    email=(email||'').trim().toLowerCase();if(!email)throw new Error('Type your email.');if(!password)throw new Error('Type your password.');
+    const r=await sb.auth.signInWithPassword({email,password});
+    if(r.error)throw new Error(/invalid/i.test(r.error.message)?'That email and password do not match.':r.error.message);
+    if(!(((r.data&&r.data.user)||{}).user_metadata||{}).pw_set){try{await sb.auth.updateUser({data:{pw_set:true}})}catch(e){}}
+  }
+  async function sendLink(email){
+    email=(email||'').trim().toLowerCase();if(!email)throw new Error('Type your email first.');
+    const r=await sb.auth.signInWithOtp({email,options:{shouldCreateUser:false,emailRedirectTo:location.origin+location.pathname}});
+    if(r.error)throw new Error(r.error.message);
+  }
+  async function setPassword(p){if(!p||p.length<8)throw new Error('Use at least 8 characters.');const r=await sb.auth.updateUser({password:p,data:{pw_set:true}});if(r.error)throw new Error(r.error.message)}
+  async function createCompany(name){name=(name||'').trim();if(!name)throw new Error('Type the company name.');ok(await sb.rpc('create_company',{company_name:name}))}
+  async function signOut(){await sb.auth.signOut();cleanReload()}
+  sb.auth.onAuthStateChange(ev=>{if(ev==='SIGNED_OUT'&&me)cleanReload()});
+  return{use,start,signIn,sendLink,setPassword,createCompany,signOut,blobUrl,img,me:()=>me,sb,onAuth:f=>onAuthFail=f};
 })();
-function showGate(msg){
-  const g=$('#gate');g.hidden=false;$('#shell').inert=true;$('#gh-repo').value=(GH.cfg()&&GH.cfg().repo)||GH.DEFAULT_REPO;
-  if(GH.cfg())$('#gh-name').value=GH.cfg().name;$('#gate-err').textContent=msg||'';enhance(g);
+function showGate(msg,needCompany,needPw){
+  const g=$('#gate');g.hidden=false;$('#shell').inert=true;
+  $("#gate-login").hidden=!!(needCompany||needPw);$("#gate-company").hidden=!needCompany;$("#gate-pw").hidden=!needPw;
+  if(needPw){const m=GH.me();$("#sb-pw-sub").textContent="Welcome, "+m.email+". Create a password for your account. You'll use it with your email to sign in next time."}
+  const m=GH.me();if(m)$('#sb-email').value=m.email||'';
+  $('#gate-err').textContent=msg||'';enhance(g);
 }
 Object.assign(ACT,{
-  connect:async(v,b)=>{const er=$('#gate-err');er.textContent='';b.disabled=true;b.textContent='Connecting…';
-    try{await GH.connect($('#gh-name').value,$('#gh-key').value,$('#gh-repo').value);location.reload()}
-    catch(e){er.textContent=e.message;b.disabled=false;b.textContent='Connect'}},
+  connect:async(v,b)=>{const er=$('#gate-err');er.textContent='';b.disabled=true;b.textContent='Signing in…';
+    try{const i=$('#sb-initials').value.trim();if(i)try{localStorage.setItem('rd-initials',i.toUpperCase())}catch(e){}
+      await GH.signIn($('#sb-email').value,$('#sb-pass').value);cleanReload()}
+    catch(e){er.textContent=e.message;b.disabled=false;b.textContent='Sign in'}},
+  sendLink:async(v,b)=>{const er=$('#gate-err');er.textContent='';b.disabled=true;
+    try{await GH.sendLink($('#sb-email').value);er.textContent='Check your email for a sign-in link.'}catch(e){er.textContent=e.message}b.disabled=false},
+  makeCompany:async(v,b)=>{const er=$('#gate-err');er.textContent='';b.disabled=true;
+    try{await GH.createCompany($('#sb-company').value);cleanReload()}catch(e){er.textContent=e.message;b.disabled=false}},
+  setPass:async(v,b)=>{try{await GH.setPassword($('#sb-newpass').value);toast('Password saved');$('#sb-newpass').value=''}catch(e){toast(e.message)}},
+  firstPass:async(v,b)=>{const er=$('#gate-err'),a=$('#sb-np1').value,c=$('#sb-np2').value,i=$('#sb-ini2').value.trim();er.textContent='';
+    if(a.length<8){er.textContent='Use at least 8 characters.';return}if(a!==c){er.textContent='The two passwords do not match.';return}
+    if(i)try{localStorage.setItem('rd-initials',i.toUpperCase())}catch(e){}
+    b.disabled=true;try{await GH.setPassword(a);cleanReload()}catch(e){er.textContent=/same/i.test(e.message)?'Choose a different password from your old one.':e.message;b.disabled=false}},
   signOut:(v,b)=>twice(b,()=>GH.signOut())
 });
-GH.panel=()=>{const c=GH.cfg();return'<div class="panel"><h3>This device</h3><p class="note">Signed in as <strong>'+esc(c.name)+'</strong>. Data is saved to the private GitHub repository <span class="sel">'+esc(c.repo)+'</span>. Other devices pick up changes within about 20 seconds.</p><div><button class="btn danger" data-act="signOut">Sign out of this device</button></div></div>'};
-GH.onAuth(()=>{if($('#gate').hidden)showGate('GitHub stopped accepting the access key on this device. Paste a current key to carry on.')});
+GH.panel=()=>{const m=GH.me();return'<div class="panel"><h3>This device</h3><p class="note">Signed in as <strong>'+esc(m.email)+'</strong> ('+esc(m.initials)+', '+esc(m.role)+') for <strong>'+esc(m.company||'')+'</strong> · account '+esc(m.account||'')+'. Data is saved in Supabase (Sydney). Other devices pick up changes within about 20 seconds.</p>'+
+  '<label class="fld"><span>New password</span><input id="sb-newpass" type="password" autocomplete="new-password" placeholder=" "></label><div class="row"><button class="btn" data-act="setPass">Set password</button> <button class="btn danger" data-act="signOut">Sign out of this device</button></div>'+(GH.importPanel?GH.importPanel():'')+'</div>'+(m.role==='admin'?GH.staffPanel()+GH.portalPanel():'')};
+GH.onAuth(()=>{if($('#gate').hidden)showGate('Your sign-in has expired. Sign in again to carry on.')});
 
-if(GH.cfg())boot();else{render();showGate()}
+/* ---- Client portal access (admin) ---- */
+GH.portalUrl=()=>location.origin+location.pathname.replace(/(v2\/)?(index\.html)?$/,'')+'portal/';
+GH.portalPanel=()=>(setTimeout(GH.portalList,60),'')+'<div class="panel"><h3>Client portal access</h3><p class="note">Clients see only their own brand\'s returns, photos and the "Note for client" field. Internal comments stay private. Portal link: <span class="sel">'+esc(GH.portalUrl())+'</span></p>'+
+ '<p class="note"><strong>Step 1:</strong> invite the contact in Supabase (Authentication → Users → Add user → Send invitation). <strong>Step 2:</strong> link them to their brand here.</p>'+
+ '<div class="row" style="gap:10px;flex-wrap:wrap;align-items:flex-end"><label class="fld" style="flex:1 1 220px"><span>Client email</span><input id="pa-email" type="email" autocapitalize="none" spellcheck="false" placeholder=" "></label>'+
+ '<label class="fld" style="flex:1 1 180px"><span>Tenant</span><select id="pa-tenant">'+S.clients.map(c=>'<option value="'+esc(c.id)+'">'+esc(c.name)+'</option>').join('')+'</select></label>'+
+ '<button class="btn pri" data-act="portalGrant">Give access</button></div><p class="note" id="pa-log" aria-live="polite"></p><div id="pa-list"><p class="note">Loading…</p></div>'+
+ '<div class="row"><a class="btn" href="'+esc(GH.portalUrl())+'" target="_blank" rel="noopener">Open the portal (staff preview)</a></div></div>';
+GH.portalList=async()=>{const el=$('#pa-list');if(!el)return;const r=await GH.sb.rpc('portal_users');if(r.error){el.innerHTML='<p class="note">'+esc(r.error.message)+'</p>';return}
+ el.innerHTML=r.data.length?'<ul class="note" style="padding-left:18px">'+r.data.map(u=>'<li>'+esc(u.email)+' · '+esc(u.tenant_name||'')+' · '+(u.last_sign_in?'last signed in '+new Date(u.last_sign_in).toLocaleDateString('en-AU'):'not signed in yet')+' <button class="btn" data-act="portalRevoke" data-v="'+esc(u.email)+'">Remove</button></li>').join('')+'</ul>':'<p class="note">No clients have access yet.</p>'};
+Object.assign(ACT,{
+ portalGrant:async(v,b)=>{const log=$('#pa-log'),email=($('#pa-email').value||'').trim(),t=$('#pa-tenant').value;if(!email){log.textContent='Type the client\'s email.';return}
+  b.disabled=true;const r=await GH.sb.rpc('portal_grant',{p_email:email,p_tenant:t});b.disabled=false;
+  if(r.error){log.textContent=r.error.message;return}
+  log.textContent=r.data==='ok'?'Done. '+email+' can now sign in to the portal.':r.data==='not_invited'?'That email has not been invited yet. Invite it in Supabase first (step 1), then try again.':r.data==='is_staff'?'That email belongs to a staff member, so it already sees everything.':r.data;
+  if(r.data==='ok'){$('#pa-email').value='';GH.portalList()}},
+ portalRevoke:(v,b)=>twice(b,async()=>{const r=await GH.sb.rpc('portal_revoke',{p_email:v});if(r.error)toast(r.error.message);else{toast('Access removed');GH.portalList()}})
+});
+
+/* ---- Staff access (admin) ---- */
+GH.staffPanel=()=>(setTimeout(GH.staffList,60),'')+'<div class="panel"><h3>Staff access</h3><p class="note"><strong>Step 1:</strong> invite the person in Supabase (Authentication → Users → Add user → Send invitation). <strong>Step 2:</strong> add them here. They open the invite email, then set a password in Settings.</p>'+
+ '<div class="row" style="gap:10px;flex-wrap:wrap;align-items:flex-end"><label class="fld" style="flex:1 1 220px"><span>Staff email</span><input id="sa-email" type="email" autocapitalize="none" spellcheck="false" placeholder=" "></label>'+
+ '<label class="fld" style="flex:0 1 160px"><span>Role</span><select id="sa-role"><option value="staff">Staff</option><option value="admin">Admin</option></select></label>'+
+ '<button class="btn pri" data-act="staffGrant">Add staff</button></div><p class="note" id="sa-log" aria-live="polite"></p><div id="sa-list"><p class="note">Loading…</p></div></div>';
+GH.staffList=async()=>{const el=$('#sa-list');if(!el)return;const r=await GH.sb.rpc('staff_users');if(r.error){el.innerHTML='<p class="note">'+esc(r.error.message)+'</p>';return}
+ el.innerHTML='<ul class="note" style="padding-left:18px">'+(r.data||[]).map(u=>'<li>'+esc(u.email)+' · '+esc(u.role)+' · '+(u.last_sign_in?'last signed in '+new Date(u.last_sign_in).toLocaleDateString('en-AU'):'not signed in yet')+(u.email===GH.me().email?' (you)':' <button class="btn" data-act="staffRevoke" data-v="'+esc(u.email)+'">Remove</button>')+'</li>').join('')+'</ul>'};
+Object.assign(ACT,{
+ staffGrant:async(v,b)=>{const log=$('#sa-log'),email=($('#sa-email').value||'').trim();if(!email){log.textContent='Type the staff member\'s email.';return}
+  b.disabled=true;const r=await GH.sb.rpc('staff_grant',{p_email:email,p_role:$('#sa-role').value});b.disabled=false;
+  if(r.error){log.textContent=r.error.message;return}
+  log.textContent=r.data==='ok'?'Done. '+email+' can now sign in to the staff app.':r.data==='not_invited'?'That email has not been invited yet. Invite it in Supabase first (step 1), then try again.':r.data;
+  if(r.data==='ok'){$('#sa-email').value='';GH.staffList()}},
+ staffRevoke:(v,b)=>twice(b,async()=>{const r=await GH.sb.rpc('staff_revoke',{p_email:v});if(r.error)toast(r.error.message);else{toast('Access removed');GH.staffList()}})
+});
+
+/* One-off copy from the GitHub data repository into Supabase. Admin only.
+   Uses the GitHub key already saved on this device by the old version (same website), or one typed in. */
+GH.importPanel=()=>GH.me().role!=='admin'?'':'<div style="margin-top:16px"><h3>Copy data from the GitHub version</h3><p class="note">Copies the company settings, tenants, SKU lists, returns and photos from the private GitHub repository. Safe to run again: it updates records instead of doubling them.</p><label class="fld"><span>GitHub access key (leave empty to use the one saved on this device)</span><input id="imp-key" type="password" autocomplete="off" placeholder=" "></label><div class="row"><button class="btn pri" data-act="ghImport">Copy everything</button></div><p class="note" id="imp-log" aria-live="polite"></p></div>';
+ACT.ghImport=async(v,b)=>{
+  const log=t=>{$('#imp-log').textContent=t};
+  let saved=null;try{saved=JSON.parse(localStorage.getItem('rd-gh')||'null')}catch(e){}
+  const token=($('#imp-key').value||'').trim()||(saved&&saved.token),repo=(saved&&saved.repo)||'LillianOu/returns-desk-data';
+  if(!token){log('No GitHub key on this device. Paste one above.');return}
+  b.disabled=true;
+  const api=(p,acc)=>fetch('https://api.github.com/repos/'+repo+'/contents/'+p,{cache:'no-store',headers:{Authorization:'Bearer '+token,Accept:acc||'application/vnd.github.raw+json'}});
+  const json=async p=>{const r=await api(p);if(r.status===404)return{};if(!r.ok)throw new Error('GitHub '+r.status+' reading '+p);const t=await r.text();return t.trim()?JSON.parse(t):{}};
+  const list=async p=>{const r=await api(p,'application/vnd.github+json');if(r.status===404)return[];if(!r.ok)throw new Error('GitHub '+r.status+' listing '+p);return r.json()};
+  const sb=GH.sb,C=GH.me().company_id,ok=r=>{if(r.error)throw new Error(r.error.message);return r.data};
+  try{
+    log('Reading company settings…');
+    const orgs=await json('orgs.json');
+    const cur=ok(await sb.from('companies').select('settings').eq('id',C).single()).settings||{};
+    ok(await sb.from('companies').update({settings:Object.assign(cur,orgs)}).eq('id',C));
+    log('Copying tenants…');
+    const clients=await json('clients.json');
+    const trows=Object.entries(clients).map(([id,d])=>({company_id:C,legacy_id:id,name:d.name||'',code:d.code||null,email:d.email||null,settings:d}));
+    if(trows.length)ok(await sb.from('tenants').upsert(trows,{onConflict:'company_id,legacy_id'}));
+    log('Copying SKU lists…');
+    let nsku=0;
+    for(const f of (await list('skus')).filter(f=>f.name.endsWith('.json'))){
+      const cid=f.name.replace(/\.json$/,''),docs=await json('skus/'+f.name);
+      const rows=Object.entries(docs).map(([k,d])=>({company_id:C,client_key:cid,doc_key:k,items:(d&&d.items)||{}}));
+      rows.forEach(r=>nsku+=Object.keys(r.items).length);
+      if(rows.length)ok(await sb.from('sku_docs').upsert(rows,{onConflict:'company_id,client_key,doc_key'}));
+    }
+    log('Copying returns…');
+    const rets=Object.entries(await json('returns.json')),isD=v=>typeof v==='string'&&/^\d{4}-\d\d-\d\d$/.test(v);
+    for(let i=0;i<rets.length;i+=200){
+      const rows=rets.slice(i,i+200).map(([id,d])=>({company_id:C,legacy_id:id,client_key:d.clientId||null,job_no:d.jobNo||null,kind:d.kind==='rts'?'rts':'return',pack:d.pack||null,location:d.location||null,order_no:d.orderNo||null,tracking:d.tracking||null,carrier:d.carrier||null,date_received:isD(d.dateReceived)?d.dateReceived:null,date_processed:isD(d.dateProcessed)?d.dateProcessed:null,status:d.status||'open',notes:d.notes||null,rts:d.rts||null,lines:d.lines||[],history:d.history||[],extra:d,created_at:d.createdAt?new Date(d.createdAt).toISOString():undefined}));
+      ok(await sb.from('returns').upsert(rows,{onConflict:'company_id,legacy_id'}));
+      log('Copying returns… '+Math.min(i+200,rets.length)+' of '+rets.length);
+    }
+    const blobs=(await list('blobs')).filter(f=>f.type==='file');let done=0,skipped=0;
+    const have=new Set();for(let from=0;;from+=1000){const d=ok(await sb.storage.from('photos').list(C,{limit:1000,offset:from}));d.forEach(x=>have.add(x.name));if(d.length<1000)break}
+    for(const f of blobs){
+      if(have.has(f.name)){skipped++;continue}
+      const r=await api('blobs/'+f.name);if(!r.ok)throw new Error('GitHub '+r.status+' reading photo '+f.name);
+      const t=f.name.endsWith('.png')?'image/png':'image/jpeg',blob=new Blob([await r.arrayBuffer()],{type:t});
+      ok(await sb.storage.from('photos').upload(C+'/'+f.name,blob,{contentType:t,upsert:true}));
+      done++;log('Copying photos… '+(done+skipped)+' of '+blobs.length);
+    }
+    log('Done: '+trows.length+' tenants, '+nsku+' SKUs, '+rets.length+' returns, '+blobs.length+' photos ('+skipped+' already there). Reload to see them.');
+  }catch(e){console.error(e);log('Stopped: '+e.message+'. Nothing is lost; run it again to carry on.')}
+  b.disabled=false;
+};
+
+/* Show / hide button on every password box */
+(()=>{const css=document.createElement('style');css.textContent='.pw-wrap{position:relative;display:block;width:100%}.pw-wrap input{width:100%;padding-right:4.6em!important;box-sizing:border-box}.pw-eye{position:absolute;right:6px;top:50%;transform:translateY(-50%);border:0;background:transparent;color:inherit;opacity:.8;font:inherit;font-size:13px;font-weight:600;padding:6px 8px;border-radius:8px;cursor:pointer}.pw-eye:hover{opacity:1}.pw-eye:focus-visible{outline:2px solid currentColor}';document.head.appendChild(css);
+ function add(root){(root||document).querySelectorAll('input[type=password]:not([data-eye])').forEach(i=>{i.dataset.eye='1';const w=document.createElement('span');w.className='pw-wrap';i.parentNode.insertBefore(w,i);w.appendChild(i);
+  const b=document.createElement('button');b.type='button';b.className='pw-eye';b.textContent='Show';b.setAttribute('aria-label','Show password');
+  b.addEventListener('click',e=>{e.preventDefault();e.stopPropagation();const show=i.type==='password';i.type=show?'text':'password';b.textContent=show?'Hide':'Show';b.setAttribute('aria-label',show?'Hide password':'Show password');i.focus()});w.appendChild(b)})}
+ add();new MutationObserver(()=>add()).observe(document.body,{childList:true,subtree:true});})();
+
+GH.start();
 
 /* keep the Save bar sitting exactly on top of the bottom menu on every phone */
 (function(){const set=()=>{const n=document.getElementById('tabs');if(n&&getComputedStyle(n).position==='fixed')document.documentElement.style.setProperty('--navh',n.offsetHeight+'px')};addEventListener('resize',set);addEventListener('load',set);setTimeout(set,300);setTimeout(set,1500)})();
@@ -1860,7 +2014,7 @@ async function liveScan(t){
 }
 
 /* light / dark mode, remembered on this device */
-function setTheme(t){document.documentElement.setAttribute('data-theme',t);try{localStorage.setItem('rd-theme',t)}catch(e){}const m=document.querySelector('meta[name=theme-color]');if(m)m.content=t==='light'?'#F8FAFD':'#05070D'}
+function setTheme(t){document.documentElement.setAttribute('data-theme',t);try{localStorage.setItem('rd-theme',t)}catch(e){}const m=document.querySelector('meta[name=theme-color]');if(m)m.content=t==='light'?'#F8FAFD':'#060B22'}
 (function(){let t='dark';try{t=localStorage.getItem('rd-theme')||'dark'}catch(e){}setTheme(t)})();
 ACT.theme=()=>{setTheme(document.documentElement.getAttribute('data-theme')==='light'?'dark':'light')};
 
