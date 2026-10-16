@@ -391,6 +391,11 @@ select option:disabled{color:#7b8794}
 .shell .stg-t{font-weight:500;letter-spacing:-.02em}
 .shell .stg b{font-weight:600;letter-spacing:-.04em}
 .shell h1,.shell h2,.shell h3{font-weight:600}
+
+.ph-btn{padding:0;border:0;background:none;cursor:zoom-in;font:inherit}
+.ph-view{position:fixed;inset:0;z-index:95;display:grid;place-items:center;padding:16px;background:rgba(3,6,12,.82);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px)}
+.ph-box{display:flex;flex-direction:column;gap:12px;max-width:min(900px,100%);max-height:100%}
+.ph-box img{max-width:100%;max-height:calc(100vh - 140px);object-fit:contain;border-radius:14px;background:#0b111c}
 </style>
 
 <style>
@@ -1334,9 +1339,9 @@ function renderSheet(){
      +'<label class="fld"><span>New address or tenant instructions</span><textarea id="rts-note" placeholder=" ">'+esc(S.rtsNote)+'</textarea></label>'
      +(mailState(r)==='noattach'?'<p class="note">This device cannot attach photos to an email. Send from a phone or tablet to include them.</p>':'')+'</div>'}
   else if(r.rts)h+='<div class="dec"><h3>Tenant answer</h3><p class="dec-t">'+(({resend:'Resend to the customer',discard:'Discard'})[r.rts.answer]||'Back to stock')+'</p>'+(r.rts.note?'<p style="margin:0;white-space:pre-wrap">'+esc(r.rts.note)+'</p>':'')+'</div>';
-  h+='<div><h3>Items</h3>'+(n?r.lines.map(l=>'<div class="it"><div class="it-h"><b>'+esc(l.name||l.sku||l.barcode||'Item')+'</b>'+(l.sku?'<span class="mono note">'+esc(l.sku)+'</span>':'')+'<span class="q">'+(+l.qtyGood||0)+' good · '+(+l.qtyDamaged||0)+' damaged</span></div>'
+  h+='<div><div class="row" style="align-items:center"><h3 style="flex:1 1 auto">Items</h3>'+(photoIds(r).length&&S.dl?'<button class="btn" data-act="photosZip" data-v="'+r.id+'">Download all photos ('+photoIds(r).length+')</button>':'')+'</div>'+(n?r.lines.map(l=>'<div class="it"><div class="it-h"><b>'+esc(l.name||l.sku||l.barcode||'Item')+'</b>'+(l.sku?'<span class="mono note">'+esc(l.sku)+'</span>':'')+'<span class="q">'+(+l.qtyGood||0)+' good · '+(+l.qtyDamaged||0)+' damaged</span></div>'
      +(l.reason?'<div class="tags"><span class="tag">'+esc(l.reason)+'</span></div>':'')
-     +((l.photos||[]).length?'<div class="photos">'+l.photos.map((p,j)=>'<span class="ph"><img data-blob="'+esc(p)+'" alt="Photo '+(j+1)+' of '+esc(l.name||l.sku||'item')+'"></span>').join('')+'</div>':'')+'</div>').join(''):(isRts(r)?'<p class="note">'+esc(packText(r)||'Packaging not checked')+'. Contents not counted.</p>':'<p class="note">No items recorded.</p>'))+'</div>';
+     +((l.photos||[]).length?'<div class="photos">'+l.photos.map((p,j)=>'<button type="button" class="ph ph-btn" data-act="photoView" data-v="'+esc(p)+'" data-n="'+esc(photoName(r,l,j))+'" aria-label="Open photo '+(j+1)+' to view or download"><img data-blob="'+esc(p)+'" alt="Photo '+(j+1)+' of '+esc(l.name||l.sku||'item')+'"></button>').join('')+'</div>':'')+'</div>').join(''):(isRts(r)?'<p class="note">'+esc(packText(r)||'Packaging not checked')+'. Contents not counted.</p>':'<p class="note">No items recorded.</p>'))+'</div>';
   if(r.notes)h+='<div><h3>Comment</h3><p style="margin:6px 0 0;white-space:pre-wrap">'+esc(r.notes)+'</p></div>';
   if(r.history&&r.history.length)h+='<div><h3>History</h3><ul class="hist" style="margin-top:6px">'+r.history.slice(-5).reverse().map(x=>'<li>'+esc(new Date(x.at).toLocaleString('en-AU'))+' · '+esc(x.what)+'</li>').join('')+'</ul></div>';
   h+='</div><footer class="sh-f"><button class="btn" data-act="editOpen" data-v="'+r.id+'">'+ic('pen')+'Edit</button>'
@@ -1420,7 +1425,7 @@ async function prepFiles(r){
   const ids=photoIds(r),key=r.id+':'+ids.join(',');if(!ids.length||!canShareFiles()||S.mailFiles.key===key)return;
   S.mailFiles={key,files:null};
   try{const fs=[];let i=0;
-    for(const id of ids){const b=await(await fetch(await GH.blobUrl(id))).blob(),png=/\.png$/.test(id)||b.type==='image/png';fs.push(new File([b],r.jobNo+'-photo-'+(++i)+(png?'.png':'.jpg'),{type:png?'image/png':'image/jpeg'}))}
+    for(const id of ids){const b=await photoBlob(id),png=/\.png$/.test(id)||b.type==='image/png';fs.push(new File([b],r.jobNo+'-photo-'+(++i)+(png?'.png':'.jpg'),{type:png?'image/png':'image/jpeg'}))}
     if(S.mailFiles.key===key){S.mailFiles.files=fs;if(S.sheetId===r.id)renderSheet()}}
   catch(e){console.error(e);if(S.mailFiles.key===key){S.mailFiles={key:'',files:null};S.mailFail=r.id;if(S.sheetId===r.id)renderSheet()}}
 }
@@ -1879,6 +1884,21 @@ ACT.theme=()=>{setTheme(document.documentElement.getAttribute('data-theme')==='l
     const want=inp.clientWidth&&inp.clientWidth<200?SHORT[full]:full;if(sp.textContent!==want)sp.textContent=want});
   let q=0;const later=()=>{cancelAnimationFrame(q);q=requestAnimationFrame(fit)};
   addEventListener('resize',later);const go=()=>{const m=document.getElementById('main');if(!m)return setTimeout(go,300);new MutationObserver(later).observe(m,{childList:true,subtree:true});later()};go()})();
+
+/* photos: view full size, download one, or download all as a ZIP */
+async function photoBlob(id){return(await fetch(await GH.blobUrl(id))).blob()}
+function photoName(r,l,j){const ref=String(r.jobNo||'return').replace(/[^A-Za-z0-9-]+/g,'')||'return',it=String(l.sku||l.name||'item').replace(/[^A-Za-z0-9-]+/g,'-').replace(/^-+|-+$/g,'').slice(0,30)||'item';return ref+'-'+it+'-'+(j+1)+(/\.png$/i.test((l.photos||[])[j]||'')?'.png':'.jpg')}
+function loadZip(){return loadZip.p||(loadZip.p=new Promise((res,rej)=>{if(window.JSZip)return res();const s=document.createElement('script');s.src='https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js';s.onload=res;s.onerror=()=>{loadZip.p=null;rej(new Error('load'))};document.head.appendChild(s)}))}
+ACT.photoView=async(v,b)=>{const name=(b&&b.dataset.n)||'photo.jpg';let ov=$('#phView');
+  if(!ov){ov=document.createElement('div');ov.id='phView';ov.className='ph-view';ov.setAttribute('role','dialog');ov.setAttribute('aria-modal','true');ov.setAttribute('aria-label','Photo');document.body.appendChild(ov);
+    ov.addEventListener('click',e=>{if(e.target===ov||e.target.closest('[data-x]'))ov.hidden=true});addEventListener('keydown',e=>{if(e.key==='Escape')ov.hidden=true})}
+  ov.innerHTML='<div class="ph-box"><img alt="'+esc(name)+'"><div class="row" style="justify-content:center"><button class="btn pri" type="button" id="phDl">Download photo</button><button class="btn" type="button" data-x>Close</button></div></div>';ov.hidden=false;
+  try{const blob=await photoBlob(v);ov.querySelector('img').src=URL.createObjectURL(blob);
+    ov.querySelector('#phDl').onclick=()=>S.dl?saveFile(name,blob):toast('Downloads are not available on this device.')}catch(e){console.error(e);toast('That photo could not be loaded.')}};
+ACT.photosZip=async v=>{const r=S.returns.find(x=>x.id===v);if(!r)return;const list=[];(r.lines||[]).forEach(l=>(l.photos||[]).forEach((p,j)=>list.push([p,photoName(r,l,j)])));if(!list.length)return;
+  toast('Preparing '+list.length+' photo'+(list.length===1?'':'s')+'…');
+  try{await loadZip();const z=new JSZip();for(const [id,n] of list)z.file(n,await photoBlob(id));const blob=await z.generateAsync({type:'blob'});
+    await saveFile(String(r.jobNo||'return').replace(/[^A-Za-z0-9-]+/g,'')+'-photos.zip',blob)}catch(e){console.error(e);toast('The photos could not be zipped. Check the connection and try again.')}};
 </script>
 </body>
 </html>
