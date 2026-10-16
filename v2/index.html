@@ -547,6 +547,11 @@ html[data-theme="light"] .shell .stg.stg-open,html[data-theme="light"] .shell .s
     <label class="fld"><span>Your initials (on every return you touch)</span><input id="sb-initials" maxlength="4" autocapitalize="characters" autocomplete="off" placeholder=" "></label>
     <button class="btn pri big" data-act="connect" type="submit">Sign in</button>
     <button class="btn" data-act="sendLink" type="button">Email me a sign-in link instead</button></div>
+    <div id="gate-pw" hidden style="display:flex;flex-direction:column;gap:14px"><p class="note" id="sb-pw-sub">Welcome. Create a password for your account. You'll use it with your email to sign in next time.</p>
+    <label class="fld"><span>New password (at least 8 characters)</span><input id="sb-np1" type="password" autocomplete="new-password" placeholder=" "></label>
+    <label class="fld"><span>Type it again</span><input id="sb-np2" type="password" autocomplete="new-password" placeholder=" "></label>
+    <label class="fld"><span>Your initials (on every return you touch)</span><input id="sb-ini2" maxlength="4" autocapitalize="characters" autocomplete="off" placeholder=" "></label>
+    <button class="btn pri big" data-act="firstPass" type="button">Create password and continue</button></div>
     <div id="gate-company" hidden style="display:flex;flex-direction:column;gap:14px"><p class="note">You're signed in. Name your company to finish setting up. You become its admin.</p>
     <label class="fld"><span>Company name</span><input id="sb-company" autocomplete="organization" placeholder=" "></label>
     <button class="btn pri big" data-act="makeCompany" type="button">Create company</button></div>
@@ -1792,10 +1797,11 @@ const GH=(()=>{
     const rows=ok(await sb.rpc('my_company'));const m=rows&&rows[0];
     const meta=s.user.user_metadata||{};
     me={email:s.user.email,company_id:m&&m.company_id,role:m&&m.role,company:m&&m.name,account:m&&m.account_no,
-        initials:(localStorage.getItem('rd-initials')||meta.initials||s.user.email.slice(0,2)).toUpperCase()};
+        initials:(localStorage.getItem('rd-initials')||meta.initials||s.user.email.slice(0,2)).toUpperCase(),pwSet:!!meta.pw_set};
     return me}
   async function start(){
     let m=null;try{m=await loadMe()}catch(e){console.error(e)}
+    if(m&&!m.pwSet){render();showGate('',false,true);return}
     if(m&&m.company_id&&m.role!=='viewer'){boot();return}
     render();
     if(!m){showGate();return}
@@ -1814,15 +1820,16 @@ const GH=(()=>{
     const r=await sb.auth.signInWithOtp({email,options:{shouldCreateUser:false,emailRedirectTo:location.origin+location.pathname}});
     if(r.error)throw new Error(r.error.message);
   }
-  async function setPassword(p){if(!p||p.length<8)throw new Error('Use at least 8 characters.');const r=await sb.auth.updateUser({password:p});if(r.error)throw new Error(r.error.message)}
+  async function setPassword(p){if(!p||p.length<8)throw new Error('Use at least 8 characters.');const r=await sb.auth.updateUser({password:p,data:{pw_set:true}});if(r.error)throw new Error(r.error.message)}
   async function createCompany(name){name=(name||'').trim();if(!name)throw new Error('Type the company name.');ok(await sb.rpc('create_company',{company_name:name}))}
   async function signOut(){await sb.auth.signOut();location.reload()}
   sb.auth.onAuthStateChange(ev=>{if(ev==='SIGNED_OUT'&&me)location.reload()});
   return{use,start,signIn,sendLink,setPassword,createCompany,signOut,blobUrl,img,me:()=>me,sb,onAuth:f=>onAuthFail=f};
 })();
-function showGate(msg,needCompany){
+function showGate(msg,needCompany,needPw){
   const g=$('#gate');g.hidden=false;$('#shell').inert=true;
-  $("#gate-login").hidden=!!needCompany;$("#gate-company").hidden=!needCompany;
+  $("#gate-login").hidden=!!(needCompany||needPw);$("#gate-company").hidden=!needCompany;$("#gate-pw").hidden=!needPw;
+  if(needPw){const m=GH.me();$("#sb-pw-sub").textContent="Welcome, "+m.email+". Create a password for your account. You'll use it with your email to sign in next time."}
   const m=GH.me();if(m)$('#sb-email').value=m.email||'';
   $('#gate-err').textContent=msg||'';enhance(g);
 }
@@ -1836,6 +1843,10 @@ Object.assign(ACT,{
   makeCompany:async(v,b)=>{const er=$('#gate-err');er.textContent='';b.disabled=true;
     try{await GH.createCompany($('#sb-company').value);location.reload()}catch(e){er.textContent=e.message;b.disabled=false}},
   setPass:async(v,b)=>{try{await GH.setPassword($('#sb-newpass').value);toast('Password saved');$('#sb-newpass').value=''}catch(e){toast(e.message)}},
+  firstPass:async(v,b)=>{const er=$('#gate-err'),a=$('#sb-np1').value,c=$('#sb-np2').value,i=$('#sb-ini2').value.trim();er.textContent='';
+    if(a.length<8){er.textContent='Use at least 8 characters.';return}if(a!==c){er.textContent='The two passwords do not match.';return}
+    if(i)try{localStorage.setItem('rd-initials',i.toUpperCase())}catch(e){}
+    b.disabled=true;try{await GH.setPassword(a);location.reload()}catch(e){er.textContent=/same/i.test(e.message)?'Choose a different password from your old one.':e.message;b.disabled=false}},
   signOut:(v,b)=>twice(b,()=>GH.signOut())
 });
 GH.panel=()=>{const m=GH.me();return'<div class="panel"><h3>This device</h3><p class="note">Signed in as <strong>'+esc(m.email)+'</strong> ('+esc(m.initials)+', '+esc(m.role)+') for <strong>'+esc(m.company||'')+'</strong> · account '+esc(m.account||'')+'. Data is saved in Supabase (Sydney). Other devices pick up changes within about 20 seconds.</p>'+
