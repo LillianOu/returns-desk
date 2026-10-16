@@ -1799,7 +1799,9 @@ const GH=(()=>{
     if(m&&m.company_id&&m.role!=='viewer'){boot();return}
     render();
     if(!m){showGate();return}
-    if(!m.company_id){showGate('',true);return}
+    if(!m.company_id){let ex=true;try{ex=(await sb.rpc('company_exists')).data!==false}catch(e){}
+      if(ex){showGate('You are signed in as '+m.email+', but this account has not been given access yet. Ask your manager to add you in Settings → Staff access.');return}
+      showGate('',true);return}
     location.replace(location.pathname.replace(/(v2\/)?(index\.html)?$/,'')+'portal/'+location.hash);
   }
   async function signIn(email,password){
@@ -1837,7 +1839,7 @@ Object.assign(ACT,{
   signOut:(v,b)=>twice(b,()=>GH.signOut())
 });
 GH.panel=()=>{const m=GH.me();return'<div class="panel"><h3>This device</h3><p class="note">Signed in as <strong>'+esc(m.email)+'</strong> ('+esc(m.initials)+', '+esc(m.role)+') for <strong>'+esc(m.company||'')+'</strong> · account '+esc(m.account||'')+'. Data is saved in Supabase (Sydney). Other devices pick up changes within about 20 seconds.</p>'+
-  '<label class="fld"><span>New password</span><input id="sb-newpass" type="password" autocomplete="new-password" placeholder=" "></label><div class="row"><button class="btn" data-act="setPass">Set password</button> <button class="btn danger" data-act="signOut">Sign out of this device</button></div>'+(GH.importPanel?GH.importPanel():'')+'</div>'+(m.role==='admin'?GH.portalPanel():'')};
+  '<label class="fld"><span>New password</span><input id="sb-newpass" type="password" autocomplete="new-password" placeholder=" "></label><div class="row"><button class="btn" data-act="setPass">Set password</button> <button class="btn danger" data-act="signOut">Sign out of this device</button></div>'+(GH.importPanel?GH.importPanel():'')+'</div>'+(m.role==='admin'?GH.staffPanel()+GH.portalPanel():'')};
 GH.onAuth(()=>{if($('#gate').hidden)showGate('Your sign-in has expired. Sign in again to carry on.')});
 
 /* ---- Client portal access (admin) ---- */
@@ -1857,6 +1859,22 @@ Object.assign(ACT,{
   log.textContent=r.data==='ok'?'Done. '+email+' can now sign in to the portal.':r.data==='not_invited'?'That email has not been invited yet. Invite it in Supabase first (step 1), then try again.':r.data==='is_staff'?'That email belongs to a staff member, so it already sees everything.':r.data;
   if(r.data==='ok'){$('#pa-email').value='';GH.portalList()}},
  portalRevoke:(v,b)=>twice(b,async()=>{const r=await GH.sb.rpc('portal_revoke',{p_email:v});if(r.error)toast(r.error.message);else{toast('Access removed');GH.portalList()}})
+});
+
+/* ---- Staff access (admin) ---- */
+GH.staffPanel=()=>(setTimeout(GH.staffList,60),'')+'<div class="panel"><h3>Staff access</h3><p class="note"><strong>Step 1:</strong> invite the person in Supabase (Authentication → Users → Add user → Send invitation). <strong>Step 2:</strong> add them here. They open the invite email, then set a password in Settings.</p>'+
+ '<div class="row" style="gap:10px;flex-wrap:wrap;align-items:flex-end"><label class="fld" style="flex:1 1 220px"><span>Staff email</span><input id="sa-email" type="email" autocapitalize="none" spellcheck="false" placeholder=" "></label>'+
+ '<label class="fld" style="flex:0 1 160px"><span>Role</span><select id="sa-role"><option value="staff">Staff</option><option value="admin">Admin</option></select></label>'+
+ '<button class="btn pri" data-act="staffGrant">Add staff</button></div><p class="note" id="sa-log" aria-live="polite"></p><div id="sa-list"><p class="note">Loading…</p></div></div>';
+GH.staffList=async()=>{const el=$('#sa-list');if(!el)return;const r=await GH.sb.rpc('staff_users');if(r.error){el.innerHTML='<p class="note">'+esc(r.error.message)+'</p>';return}
+ el.innerHTML='<ul class="note" style="padding-left:18px">'+(r.data||[]).map(u=>'<li>'+esc(u.email)+' · '+esc(u.role)+' · '+(u.last_sign_in?'last signed in '+new Date(u.last_sign_in).toLocaleDateString('en-AU'):'not signed in yet')+(u.email===GH.me().email?' (you)':' <button class="btn" data-act="staffRevoke" data-v="'+esc(u.email)+'">Remove</button>')+'</li>').join('')+'</ul>'};
+Object.assign(ACT,{
+ staffGrant:async(v,b)=>{const log=$('#sa-log'),email=($('#sa-email').value||'').trim();if(!email){log.textContent='Type the staff member\'s email.';return}
+  b.disabled=true;const r=await GH.sb.rpc('staff_grant',{p_email:email,p_role:$('#sa-role').value});b.disabled=false;
+  if(r.error){log.textContent=r.error.message;return}
+  log.textContent=r.data==='ok'?'Done. '+email+' can now sign in to the staff app.':r.data==='not_invited'?'That email has not been invited yet. Invite it in Supabase first (step 1), then try again.':r.data;
+  if(r.data==='ok'){$('#sa-email').value='';GH.staffList()}},
+ staffRevoke:(v,b)=>twice(b,async()=>{const r=await GH.sb.rpc('staff_revoke',{p_email:v});if(r.error)toast(r.error.message);else{toast('Access removed');GH.staffList()}})
 });
 
 /* One-off copy from the GitHub data repository into Supabase. Admin only.
