@@ -293,6 +293,7 @@ $('#g-in').addEventListener('click',async()=>{const e=$('#g-email').value.trim()
   if(!e||!p){$('#g-err').textContent='Type your email and password.';return}
   const r=await sb.auth.signInWithPassword({email:e,password:p});
   if(r.error){$('#g-err').textContent=/invalid/i.test(r.error.message)?'That email and password do not match.':r.error.message;return}
+  if(!(((r.data&&r.data.user)||{}).user_metadata||{}).pw_set){try{await sb.auth.updateUser({data:{pw_set:true}})}catch(e){}}
   location.reload()});
 $('#g-link').addEventListener('click',async()=>{const e=$('#g-email').value.trim().toLowerCase();if(!e){$('#g-err').textContent='Type your email first.';return}
   const r=await sb.auth.signInWithOtp({email:e,options:{shouldCreateUser:false,emailRedirectTo:location.origin+location.pathname}});
@@ -407,6 +408,13 @@ $('#xlsx').addEventListener('click',()=>{const f=$('#from').value,t=$('#to').val
 try{const th=store.get('cp-theme');if(th)document.documentElement.dataset.theme=th;const tab=store.get('cp-tab');if(tab)go(tab)}catch(e){}
 (()=>{const n=new Date(),p=x=>String(x).padStart(2,'0');$('#from').value=n.getFullYear()+'-'+p(n.getMonth()+1)+'-01';$('#to').value=n.getFullYear()+'-'+p(n.getMonth()+1)+'-'+p(n.getDate())})();
 start();
+
+/* Show / hide button on every password box */
+(()=>{const css=document.createElement('style');css.textContent='.pw-wrap{position:relative;display:block;width:100%}.pw-wrap input{width:100%;padding-right:4.6em!important;box-sizing:border-box}.pw-eye{position:absolute;right:6px;top:50%;transform:translateY(-50%);border:0;background:transparent;color:inherit;opacity:.8;font:inherit;font-size:13px;font-weight:600;padding:6px 8px;border-radius:8px;cursor:pointer}.pw-eye:hover{opacity:1}.pw-eye:focus-visible{outline:2px solid currentColor}';document.head.appendChild(css);
+ function add(root){(root||document).querySelectorAll('input[type=password]:not([data-eye])').forEach(i=>{i.dataset.eye='1';const w=document.createElement('span');w.className='pw-wrap';i.parentNode.insertBefore(w,i);w.appendChild(i);
+  const b=document.createElement('button');b.type='button';b.className='pw-eye';b.textContent='Show';b.setAttribute('aria-label','Show password');
+  b.addEventListener('click',e=>{e.preventDefault();e.stopPropagation();const show=i.type==='password';i.type=show?'text':'password';b.textContent=show?'Hide':'Show';b.setAttribute('aria-label',show?'Hide password':'Show password');i.focus()});w.appendChild(b)})}
+ add();new MutationObserver(()=>add()).observe(document.body,{childList:true,subtree:true});})();
 
 </script>
 </body>
