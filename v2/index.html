@@ -1815,6 +1815,7 @@ const GH=(()=>{
     email=(email||'').trim().toLowerCase();if(!email)throw new Error('Type your email.');if(!password)throw new Error('Type your password.');
     const r=await sb.auth.signInWithPassword({email,password});
     if(r.error)throw new Error(/invalid/i.test(r.error.message)?'That email and password do not match.':r.error.message);
+    if(!(((r.data&&r.data.user)||{}).user_metadata||{}).pw_set){try{await sb.auth.updateUser({data:{pw_set:true}})}catch(e){}}
   }
   async function sendLink(email){
     email=(email||'').trim().toLowerCase();if(!email)throw new Error('Type your email first.');
@@ -1939,6 +1940,13 @@ ACT.ghImport=async(v,b)=>{
   }catch(e){console.error(e);log('Stopped: '+e.message+'. Nothing is lost; run it again to carry on.')}
   b.disabled=false;
 };
+
+/* Show / hide button on every password box */
+(()=>{const css=document.createElement('style');css.textContent='.pw-wrap{position:relative;display:block;width:100%}.pw-wrap input{width:100%;padding-right:4.6em!important;box-sizing:border-box}.pw-eye{position:absolute;right:6px;top:50%;transform:translateY(-50%);border:0;background:transparent;color:inherit;opacity:.8;font:inherit;font-size:13px;font-weight:600;padding:6px 8px;border-radius:8px;cursor:pointer}.pw-eye:hover{opacity:1}.pw-eye:focus-visible{outline:2px solid currentColor}';document.head.appendChild(css);
+ function add(root){(root||document).querySelectorAll('input[type=password]:not([data-eye])').forEach(i=>{i.dataset.eye='1';const w=document.createElement('span');w.className='pw-wrap';i.parentNode.insertBefore(w,i);w.appendChild(i);
+  const b=document.createElement('button');b.type='button';b.className='pw-eye';b.textContent='Show';b.setAttribute('aria-label','Show password');
+  b.addEventListener('click',e=>{e.preventDefault();e.stopPropagation();const show=i.type==='password';i.type=show?'text':'password';b.textContent=show?'Hide':'Show';b.setAttribute('aria-label',show?'Hide password':'Show password');i.focus()});w.appendChild(b)})}
+ add();new MutationObserver(()=>add()).observe(document.body,{childList:true,subtree:true});})();
 
 GH.start();
 
