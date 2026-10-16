@@ -302,7 +302,8 @@ $('#out').addEventListener('click',async()=>{await sb.auth.signOut();location.re
 /* ---------- start ---------- */
 async function start(){
   const s=(await sb.auth.getSession()).data.session;if(!s){gate();return}
-  if(!(s.user.user_metadata||{}).pw_set){gate('',true);$('#g-pw-sub').textContent='Welcome, '+s.user.email+'. Choose a password for your account. You\'ll use it with your email to sign in next time.';$('#g-np1').focus();return}
+  let fresh=null;try{fresh=(await sb.auth.getUser()).data.user}catch(e){}
+  if(!(((fresh||s.user).user_metadata)||{}).pw_set){gate('',true);$('#g-pw-sub').textContent='Welcome, '+s.user.email+'. Choose a password for your account. You\'ll use it with your email to sign in next time.';$('#g-np1').focus();return}
   const me=await sb.rpc('portal_me');
   if(me.error||!me.data||!me.data.length){gate('This email does not have portal access yet. Ask your Fulfilment Australia contact.');return}
   P.me=Object.assign({email:s.user.email},me.data[0]);
