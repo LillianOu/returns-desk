@@ -4,7 +4,7 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#05070D">
+<meta name="theme-color" content="#060B22">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="robots" content="noindex">
@@ -273,7 +273,7 @@ input.hit{animation:hit .9s var(--out)}
 
 .scanner{position:fixed;inset:0;z-index:95;background:#000;display:flex;flex-direction:column;justify-content:flex-end}
 .scanner video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
-.scan-frame{position:absolute;left:50%;top:42%;width:min(78vw,420px);height:min(46vw,240px);translate:-50% -50%;border:3px solid #7FEBFF;border-radius:18px;box-shadow:0 0 0 100vmax rgba(0,0,0,.45),0 0 30px rgba(127,235,255,.6)}
+.scan-frame{position:absolute;left:50%;top:42%;width:min(78vw,420px);height:min(46vw,240px);translate:-50% -50%;border:3px solid #9DB4FF;border-radius:18px;box-shadow:0 0 0 100vmax rgba(0,0,0,.45),0 0 30px rgba(111,141,255,.6)}
 .scan-ui{position:relative;padding:18px 16px calc(22px + env(safe-area-inset-bottom,0px));display:flex;flex-direction:column;gap:12px;background:linear-gradient(transparent,rgba(0,0,0,.85) 40%)}
 .scan-ui p{margin:0;text-align:center;color:#fff;font-size:17px;font-weight:600}
 /* ---- tables, reports, settings ---- */
@@ -374,7 +374,7 @@ select option:disabled{color:#7b8794}
 .shell .stg b{white-space:nowrap;display:block}
 .shell .stg-t{overflow-wrap:normal;word-break:keep-all;hyphens:none}
 /* all five cards share one border style */
-.shell .stg.stg-open,.shell .stg.stg-rts{border-color:rgba(127,235,255,.45);box-shadow:inset 0 1px 0 rgba(255,255,255,.3),0 22px 60px -26px #5EEBFF}
+.shell .stg.stg-open,.shell .stg.stg-rts{border-color:rgba(111,141,255,.45);box-shadow:inset 0 1px 0 rgba(255,255,255,.3),0 22px 60px -26px #6F8DFF}
 
 /* form fields get enough width for their text and buttons: 2 per row on desktop, 1 on phones */
 #main .panel .grid,#main .line .grid{grid-template-columns:repeat(auto-fit,minmax(min(320px,100%),1fr))}
@@ -401,35 +401,35 @@ select option:disabled{color:#7b8794}
 
 <style>
 /* Glass look: single dark look by design. Translucent panels over a lit backdrop. */
-:root:root:root{--bg:#05070D;--surface:rgba(255,255,255,.06);--sunk:rgba(255,255,255,.09);--ink:#FFFFFF;--muted:#B9C7E0;--line:rgba(255,255,255,.15);
-  --accent:#5EEBFF;--accent-ink:#04121A;--ok:#5CF2B0;--warn:#FFC766;--bad:#FF8A9A;--tape:#5EEBFF;--tape-ink:#04121A;
-  --s-received:#7FEBFF;--s-inspected:#86CBFF;--s-processed:#93AEFF;--s-closed:#A893FF;
-  --c-received:#7FEBFF;--c-inspected:#86CBFF;--c-waiting:#8DBBFF;--c-action:#93AEFF;--c-closed:#A893FF;--s-waiting:#8DBBFF;--s-action:#93AEFF;
-  --shadow:0 24px 70px rgba(0,0,0,.55);--scrim:rgba(3,6,12,.62);--block-ink:#EAF2FF;--solid:#111A2B;color-scheme:dark}
-html{background:#070B14}
-body{background:radial-gradient(900px 620px at 10% -8%,rgba(94,235,255,.24),transparent 62%),radial-gradient(820px 620px at 96% 8%,rgba(165,120,255,.26),transparent 62%),radial-gradient(900px 700px at 55% 110%,rgba(94,180,255,.16),transparent 62%),#05070D;background-attachment:fixed;min-height:100vh}
+:root:root:root{--bg:#060B22;--surface:rgba(255,255,255,.06);--sunk:rgba(255,255,255,.09);--ink:#FFFFFF;--muted:#B9C7E0;--line:rgba(255,255,255,.15);
+  --accent:#6F8DFF;--accent-ink:#FFFFFF;--ok:#5CF2B0;--warn:#FFC766;--bad:#FF8A9A;--tape:#6F8DFF;--tape-ink:#FFFFFF;
+  --s-received:#9DB4FF;--s-inspected:#86A2FF;--s-processed:#7894FF;--s-closed:#7C8CFF;
+  --c-received:#9DB4FF;--c-inspected:#86A2FF;--c-waiting:#93ACFF;--c-action:#7894FF;--c-closed:#7C8CFF;--s-waiting:#93ACFF;--s-action:#7894FF;
+  --shadow:0 24px 70px rgba(0,0,0,.55);--scrim:rgba(3,6,12,.62);--block-ink:#EAF2FF;--solid:#0E1A45;color-scheme:dark}
+html{background:#070D26}
+body{background:radial-gradient(900px 620px at 10% -8%,rgba(91,123,255,.24),transparent 62%),radial-gradient(820px 620px at 96% 8%,rgba(33,72,242,.26),transparent 62%),radial-gradient(900px 700px at 55% 110%,rgba(74,111,245,.16),transparent 62%),#060B22;background-attachment:fixed;min-height:100vh}
 body::before{content:"";position:fixed;inset:0;pointer-events:none;z-index:0;background-image:linear-gradient(rgba(255,255,255,.04) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.04) 1px,transparent 1px);background-size:44px 44px;-webkit-mask-image:radial-gradient(circle at 50% 25%,#000,transparent 78%);mask-image:radial-gradient(circle at 50% 25%,#000,transparent 78%)}
 .shell{position:relative;z-index:1}
 .panel,.side,.brand,.nav,.drawer,.line,.sheet-p,.stg{-webkit-backdrop-filter:blur(22px) saturate(150%);backdrop-filter:blur(22px) saturate(150%)}
 .panel,.drawer,.line,.rw-card{box-shadow:inset 0 1px 0 rgba(255,255,255,.12),0 18px 40px -24px rgba(0,0,0,.7);border-radius:18px}
 .rw,.rw-under,.rw-main{border-radius:18px} .adv{border-radius:0 18px 18px 0}
-.sheet-p{background:rgba(14,21,36,.74);border:1px solid var(--line)}
+.sheet-p{background:rgba(12,26,75,.78);border:1px solid var(--line)}
 .steps button::before{background:var(--solid)}
 .steps li.done button::before,.steps li.cur button::before,.steps .bar2{background:var(--accent);border-color:var(--accent)}
-.steps li.cur button::before{box-shadow:0 0 0 5px rgba(94,235,255,.18),0 0 22px var(--accent)}
+.steps li.cur button::before{box-shadow:0 0 0 5px rgba(91,123,255,.18),0 0 22px var(--accent)}
 input,select,textarea{background:rgba(255,255,255,.05)}
 select option{background:var(--solid);color:var(--ink)}
 .nav-ind{background:rgba(255,255,255,.1);box-shadow:inset 0 1px 0 rgba(255,255,255,.18)}
-.seg-th{background:rgba(255,255,255,.17);box-shadow:inset 0 1px 0 rgba(255,255,255,.25),0 0 18px rgba(94,235,255,.18)}
-.btn.pri{background:linear-gradient(120deg,#5EEBFF,#9B8CFF);border-color:transparent;box-shadow:0 0 26px -6px #5EEBFF}
-.job{background:rgba(94,235,255,.13);color:#7FF0FF;border:1px solid rgba(94,235,255,.42)}
-.badge{background:linear-gradient(120deg,#5EEBFF,#9B8CFF)}
+.seg-th{background:rgba(255,255,255,.17);box-shadow:inset 0 1px 0 rgba(255,255,255,.25),0 0 18px rgba(91,123,255,.18)}
+.btn.pri{background:linear-gradient(120deg,#6F8DFF,#2F57F5);border-color:transparent;box-shadow:0 0 26px -6px #6F8DFF}
+.job{background:rgba(91,123,255,.13);color:#7FF0FF;border:1px solid rgba(91,123,255,.42)}
+.badge{background:linear-gradient(120deg,#6F8DFF,#2F57F5)}
 .qb{background:rgba(255,255,255,.12);box-shadow:inset 0 1px 0 rgba(255,255,255,.2)}
-.bar .fl,.trend i{background:linear-gradient(90deg,#5EEBFF,#9B8CFF);box-shadow:0 0 14px rgba(94,235,255,.45)}
-.trend i{background:linear-gradient(180deg,#5EEBFF,#9B8CFF)} .trend i.zero{background:var(--line);box-shadow:none}
+.bar .fl,.trend i{background:linear-gradient(90deg,#6F8DFF,#2F57F5);box-shadow:0 0 14px rgba(91,123,255,.45)}
+.trend i{background:linear-gradient(180deg,#6F8DFF,#2F57F5)} .trend i.zero{background:var(--line);box-shadow:none}
 #toast{background:rgba(234,242,255,.92);-webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px)}
-.hero-h{text-shadow:0 0 40px rgba(94,235,255,.25)}
-.hero-h b{rotate:0deg;background:linear-gradient(120deg,#5EEBFF,#9B8CFF);color:#04121A;box-shadow:0 0 34px -4px #5EEBFF;text-shadow:none}
+.hero-h{text-shadow:0 0 40px rgba(91,123,255,.25)}
+.hero-h b{rotate:0deg;background:linear-gradient(120deg,#6F8DFF,#2F57F5);color:#FFFFFF;box-shadow:0 0 34px -4px #6F8DFF;text-shadow:none}
 .stg,.stg:nth-child(odd),.stg:nth-child(even){rotate:0deg}
 .stg{--c:#fff;overflow:hidden;border:1px solid color-mix(in srgb,var(--c) 50%,transparent);background:linear-gradient(165deg,color-mix(in srgb,var(--c) 30%,transparent),rgba(255,255,255,.04) 58%);box-shadow:inset 0 1px 0 rgba(255,255,255,.28),0 22px 60px -22px var(--c);color:var(--ink)}
 .stg::before{content:"";position:absolute;left:-30%;top:-60%;width:80%;height:120%;background:radial-gradient(closest-side,color-mix(in srgb,var(--c) 45%,transparent),transparent);pointer-events:none;transition:translate .6s var(--out)}
@@ -437,8 +437,8 @@ select option{background:var(--solid);color:var(--ink)}
 .stg>*{position:relative}
 .stg:hover,.stg:focus-visible{translate:0 -7px;box-shadow:inset 0 1px 0 rgba(255,255,255,.4),0 30px 80px -18px var(--c)}
 .stg:active{translate:0 1px;box-shadow:inset 0 1px 0 rgba(255,255,255,.28),0 10px 30px -14px var(--c)}
-.stg-open{--c:#7FEBFF} .stg-rts{--c:#86CBFF} .stg-shelf{--c:#8DBBFF} .stg-discarded{--c:#93AEFF} .stg-resent{--c:#A893FF}
-.stg.stg-open,.stg.stg-rts,.stg.stg-shelf,.stg.stg-discarded,.stg.stg-resent{background:linear-gradient(180deg,rgba(127,235,255,.20),rgba(155,140,255,.10))}
+.stg-open{--c:#9DB4FF} .stg-rts{--c:#86A2FF} .stg-shelf{--c:#93ACFF} .stg-discarded{--c:#7894FF} .stg-resent{--c:#7C8CFF}
+.stg.stg-open,.stg.stg-rts,.stg.stg-shelf,.stg.stg-discarded,.stg.stg-resent{background:linear-gradient(180deg,rgba(111,141,255,.20),rgba(33,72,242,.10))}
 .stg-waiting{--c:var(--c-waiting)} .stg-action{--c:var(--c-action)} .stg-received{--c:var(--c-received)} .stg-inspected{--c:var(--c-inspected)} .stg-processed{--c:var(--c-processed)} .stg-closed{--c:var(--c-closed)}
 .stg b{background:linear-gradient(180deg,#fff 20%,var(--c));-webkit-background-clip:text;background-clip:text;color:transparent;filter:drop-shadow(0 0 22px color-mix(in srgb,var(--c) 55%,transparent));padding-right:.06em}
 .stg-n{color:var(--c);opacity:1}
@@ -448,17 +448,17 @@ select option{background:var(--solid);color:var(--ink)}
 @keyframes drop{from{opacity:0;translate:0 26px;scale:.94;filter:blur(8px)}}
 /* one colour family (cyan to violet), high contrast, larger type, less copy */
 body{font-size:17px}
-.stg{background:linear-gradient(180deg,rgba(127,235,255,.20),rgba(155,140,255,.10));border-color:rgba(127,235,255,.45);box-shadow:inset 0 1px 0 rgba(255,255,255,.3),0 22px 60px -26px #5EEBFF}
-.stg b{background:linear-gradient(180deg,#8EF0FF,#9B8CFF);-webkit-background-clip:text;background-clip:text;font-size:clamp(56px,7.2vw,96px)}
-.stg.stg-open,.stg.stg-rts{border-color:#8EF0FF;box-shadow:inset 0 1px 0 rgba(255,255,255,.4),0 0 0 1px rgba(142,240,255,.5),0 24px 70px -22px #5EEBFF}
+.stg{background:linear-gradient(180deg,rgba(111,141,255,.20),rgba(33,72,242,.10));border-color:rgba(111,141,255,.45);box-shadow:inset 0 1px 0 rgba(255,255,255,.3),0 22px 60px -26px #6F8DFF}
+.stg b{background:linear-gradient(180deg,#A9BEFF,#2F57F5);-webkit-background-clip:text;background-clip:text;font-size:clamp(56px,7.2vw,96px)}
+.stg.stg-open,.stg.stg-rts{border-color:#A9BEFF;box-shadow:inset 0 1px 0 rgba(255,255,255,.4),0 0 0 1px rgba(142,240,255,.5),0 24px 70px -22px #6F8DFF}
 .stg-t{min-height:2.3em}
 .stg-n,.stg-d{display:none}
 .stg-t{font-size:clamp(18px,2.2vw,24px);color:#fff}
 .stg-f{font-size:14.5px;color:var(--muted)}
-.pk i,.mix i{background:linear-gradient(180deg,#8EF0FF,#9B8CFF);box-shadow:0 0 12px rgba(94,235,255,.6)}
+.pk i,.mix i{background:linear-gradient(180deg,#A9BEFF,#2F57F5);box-shadow:0 0 12px rgba(91,123,255,.6)}
 .hero-s{font-size:18px} .hero-k{font-size:13.5px}
 h3{font-size:14px;color:var(--ink)} .note{font-size:15px} .hint,.qnote{font-size:14.5px}
-.pill{font-size:14.5px;color:var(--ink);background:rgba(255,255,255,.1)} .pill .dot{color:#7FEBFF}
+.pill{font-size:14.5px;color:var(--ink);background:rgba(255,255,255,.1)} .pill .dot{color:#9DB4FF}
 .job{font-size:15px} .job.big{font-size:17px}
 .seg button{font-size:16px;min-height:44px} .seg button small{font-size:13px}
 .nav button{font-size:12.5px} .btn{font-size:16.5px} .btn.big{font-size:18px}
@@ -473,41 +473,41 @@ table{font-size:16px} th{font-size:12.5px} .hist{font-size:15px} .tag{font-size:
 </style>
 <style>
 /* Light mode (switch in the header) */
-html[data-theme="light"]:root:root:root:root{--bg:#F4F6FB;--surface:rgba(255,255,255,.72);--sunk:rgba(240,244,252,.9);--ink:#0E1726;--muted:#5A6782;--line:rgba(30,50,90,.12);
-  --accent:#0AA9CC;--accent-ink:#FFFFFF;--ok:#12A374;--warn:#C98500;--bad:#D6455D;--tape:#0AA9CC;--tape-ink:#FFFFFF;
-  --s-received:#2CC4E0;--s-inspected:#4FA9F0;--s-processed:#6E8CF2;--s-closed:#8B6CF0;
-  --c-received:#2CC4E0;--c-inspected:#4FA9F0;--c-waiting:#5E9BF2;--c-action:#6E8CF2;--c-closed:#8B6CF0;--s-waiting:#5E9BF2;--s-action:#6E8CF2;
+html[data-theme="light"]:root:root:root:root{--bg:#F3F5FC;--surface:rgba(255,255,255,.72);--sunk:rgba(240,244,252,.9);--ink:#0E1726;--muted:#5A6782;--line:rgba(30,50,90,.12);
+  --accent:#2148F2;--accent-ink:#FFFFFF;--ok:#12A374;--warn:#C98500;--bad:#D6455D;--tape:#2148F2;--tape-ink:#FFFFFF;
+  --s-received:#5B7BFF;--s-inspected:#4466F4;--s-processed:#3352E0;--s-closed:#1F37B8;
+  --c-received:#5B7BFF;--c-inspected:#4466F4;--c-waiting:#4F70F5;--c-action:#3352E0;--c-closed:#1F37B8;--s-waiting:#4F70F5;--s-action:#3352E0;
   --shadow:0 24px 60px rgba(40,60,110,.16);--scrim:rgba(20,30,55,.35);--block-ink:#0E1726;--solid:#FFFFFF;color-scheme:light}
 html[data-theme="light"]{background:#F8FAFD}
-html[data-theme="light"] body{color:var(--ink);background:radial-gradient(900px 620px at 8% -10%,rgba(150,232,248,.30),transparent 62%),radial-gradient(820px 620px at 98% 6%,rgba(205,190,255,.28),transparent 62%),radial-gradient(900px 700px at 50% 112%,rgba(175,215,255,.22),transparent 62%),#F4F6FB;background-attachment:fixed}
+html[data-theme="light"] body{color:var(--ink);background:radial-gradient(900px 620px at 8% -10%,rgba(150,172,255,.30),transparent 62%),radial-gradient(820px 620px at 98% 6%,rgba(33,72,242,.28),transparent 62%),radial-gradient(900px 700px at 50% 112%,rgba(120,150,255,.22),transparent 62%),#F3F5FC;background-attachment:fixed}
 html[data-theme="light"] body::before{background-image:linear-gradient(rgba(30,50,90,.05) 1px,transparent 1px),linear-gradient(90deg,rgba(30,50,90,.05) 1px,transparent 1px)}
 html[data-theme="light"] .panel,html[data-theme="light"] .drawer,html[data-theme="light"] .line,html[data-theme="light"] .rw-card{box-shadow:inset 0 1px 0 rgba(255,255,255,.9),0 16px 36px -22px rgba(40,60,110,.35);border:1px solid rgba(255,255,255,.75)}
 html[data-theme="light"] .brand,html[data-theme="light"] .nav{background:rgba(255,255,255,.7);border-color:rgba(30,50,90,.08)}
 html[data-theme="light"] .sheet-p{background:rgba(255,255,255,.88);border:1px solid rgba(255,255,255,.9)}
 html[data-theme="light"] input,html[data-theme="light"] select,html[data-theme="light"] textarea{background:rgba(255,255,255,.85);color:var(--ink);border-color:rgba(30,50,90,.16)}
 html[data-theme="light"] select option{background:#fff;color:var(--ink)}
-html[data-theme="light"] .nav-ind{background:rgba(10,169,204,.12);box-shadow:inset 0 1px 0 rgba(255,255,255,.8)}
+html[data-theme="light"] .nav-ind{background:rgba(33,72,242,.12);box-shadow:inset 0 1px 0 rgba(255,255,255,.8)}
 html[data-theme="light"] .seg-th{background:#fff;box-shadow:0 2px 10px rgba(40,60,110,.15)}
 html[data-theme="light"] .btn{color:var(--ink)}
-html[data-theme="light"] .btn.pri{background:linear-gradient(120deg,#16C2E3,#8B76F5);color:#fff;border-color:transparent;box-shadow:0 10px 24px -10px rgba(22,150,220,.7)}
-html[data-theme="light"] .job{background:rgba(10,169,204,.1);color:#077C96;border:1px solid rgba(10,169,204,.35)}
-html[data-theme="light"] .badge{background:linear-gradient(120deg,#16C2E3,#8B76F5);color:#fff}
+html[data-theme="light"] .btn.pri{background:linear-gradient(120deg,#4F70F5,#2148F2);color:#fff;border-color:transparent;box-shadow:0 10px 24px -10px rgba(33,72,242,.7)}
+html[data-theme="light"] .job{background:rgba(33,72,242,.1);color:#1A3FD6;border:1px solid rgba(33,72,242,.35)}
+html[data-theme="light"] .badge{background:linear-gradient(120deg,#4F70F5,#2148F2);color:#fff}
 html[data-theme="light"] .qb{background:#fff;box-shadow:0 1px 4px rgba(40,60,110,.15)}
-html[data-theme="light"] .bar .fl,html[data-theme="light"] .trend i{background:linear-gradient(90deg,#16C2E3,#8B76F5);box-shadow:none}
-html[data-theme="light"] .trend i{background:linear-gradient(180deg,#16C2E3,#8B76F5)}
+html[data-theme="light"] .bar .fl,html[data-theme="light"] .trend i{background:linear-gradient(90deg,#4F70F5,#2148F2);box-shadow:none}
+html[data-theme="light"] .trend i{background:linear-gradient(180deg,#4F70F5,#2148F2)}
 html[data-theme="light"] #toast{background:rgba(14,23,38,.9);color:#fff}
 html[data-theme="light"] .hero-h{text-shadow:none}
 html[data-theme="light"] .savebar{box-shadow:0 -8px 24px rgba(40,60,110,.12)}
-html[data-theme="light"] .loc-tile.on{outline-color:#0AA9CC}
+html[data-theme="light"] .loc-tile.on{outline-color:#2148F2}
 html[data-theme="light"] .loc-tile.full{border-color:#E68AA0}
 html[data-theme="light"] .gate{background:rgba(230,236,248,.6)}
 html[data-theme="light"] .gate-p{background:rgba(255,255,255,.85)!important;border-color:rgba(255,255,255,.95)!important;box-shadow:0 30px 70px -30px rgba(40,60,110,.45)}
-html[data-theme="light"] .gate-p h2 span{background:linear-gradient(120deg,#16C2E3,#8B76F5);-webkit-background-clip:text;background-clip:text;color:transparent}
+html[data-theme="light"] .gate-p h2 span{background:linear-gradient(120deg,#4F70F5,#2148F2);-webkit-background-clip:text;background-clip:text;color:transparent}
 html[data-theme="light"] .scanner{background:#0E1726}
 html[data-theme="light"] .stg,html[data-theme="light"] .stg.stg-open,html[data-theme="light"] .stg.stg-rts,html[data-theme="light"] .stg.stg-shelf,html[data-theme="light"] .stg.stg-discarded,html[data-theme="light"] .stg.stg-resent{background:linear-gradient(180deg,rgba(255,255,255,.92),rgba(236,242,255,.85));border-color:rgba(30,50,90,.08);box-shadow:0 14px 34px -20px rgba(40,60,110,.4)}
 html[data-theme="light"] .stg::before{opacity:.35}
 html[data-theme="light"] .stg-t{color:var(--ink)!important}
-html[data-theme="light"] .stg b{background:linear-gradient(180deg,#0AA9CC,#7C6CF0);-webkit-background-clip:text;background-clip:text;color:transparent;filter:none}
+html[data-theme="light"] .stg b{background:linear-gradient(180deg,#2148F2,#1F37B8);-webkit-background-clip:text;background-clip:text;color:transparent;filter:none}
 html[data-theme="light"] .stg-f{border-top-color:rgba(30,50,90,.08)}
 html[data-theme="light"] .hero-h,html[data-theme="light"] h2,html[data-theme="light"] h3{color:var(--ink)}
 .theme-tg{margin-left:8px;flex:none;width:40px;height:40px;border-radius:12px;border:1px solid var(--line);background:var(--surface);color:var(--ink);display:grid;place-items:center;cursor:pointer}
@@ -532,9 +532,9 @@ html[data-theme="light"] .shell .stg.stg-open,html[data-theme="light"] .shell .s
 </div>
 <style>
 .gate{position:fixed;inset:0;z-index:90;display:grid;place-items:center;padding:20px;overflow:auto;background:rgba(3,6,12,.55);-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px)}
-.gate-p{width:100%;max-width:440px;display:flex;flex-direction:column;gap:14px;padding:28px 24px;border-radius:26px;border:1px solid var(--line);background:linear-gradient(180deg,rgba(127,235,255,.14),rgba(155,140,255,.07));box-shadow:inset 0 1px 0 rgba(255,255,255,.3),0 30px 90px -30px #5EEBFF}
+.gate-p{width:100%;max-width:440px;display:flex;flex-direction:column;gap:14px;padding:28px 24px;border-radius:26px;border:1px solid var(--line);background:linear-gradient(180deg,rgba(111,141,255,.14),rgba(33,72,242,.07));box-shadow:inset 0 1px 0 rgba(255,255,255,.3),0 30px 90px -30px #6F8DFF}
 .gate-p h2{font-family:var(--funk);font-weight:800;font-size:34px;letter-spacing:-.04em}
-.gate-p h2 span{background:linear-gradient(120deg,#8EF0FF,#9B8CFF);-webkit-background-clip:text;background-clip:text;color:transparent}
+.gate-p h2 span{background:linear-gradient(120deg,#A9BEFF,#2F57F5);-webkit-background-clip:text;background-clip:text;color:transparent}
 .gate-err{color:var(--bad);font-size:15px;min-height:1.3em;margin:0}
 .gate details{font-size:15px;color:var(--muted)} .gate summary{cursor:pointer;padding:4px 0}
 </style>
@@ -924,7 +924,7 @@ function norm(r){ /* carries records saved under the earlier five-stage flow int
   return r;
 }
 function blankLine(){return{barcode:'',sku:'',name:'',qtyGood:1,qtyDamaged:0,reason:'',photos:[],hint:''}}
-function newDraft(){S.editId=null;S.draft={jobNo:'',clientId:'',kind:'return',pack:'sealed',orderNo:'',tracking:'',carrier:'',dateReceived:today(),dateProcessed:'',status:'open',notes:'',lines:[blankLine()]}}
+function newDraft(){S.editId=null;S.draft={jobNo:'',clientId:'',kind:'return',pack:'sealed',orderNo:'',tracking:'',carrier:'',dateReceived:today(),dateProcessed:'',status:'open',notes:'',clientNote:'',lines:[blankLine()]}}
 S.rtsNote='';
 const pill=(s,pop)=>'<span class="pill st-'+esc(s)+(pop?' pop':'')+'"><i class="dot"></i>'+esc(STG[s]?STG[s][0]:SL(s))+'</span>';
 const say=m=>{const l=$('#live');l.textContent='';setTimeout(()=>l.textContent=m,30)};
@@ -1129,7 +1129,7 @@ function vForm(){
      +(S.assets?'<button class="btn" data-act="photo" data-v="'+i+'">Add photo</button>':'<span class="note">Sign in to add photos.</span>')+'</div></div>';
   });
   h+='<div><button class="btn" data-act="addLine">'+ic('plus')+'Add another item</button></div>';
-  h+='<div class="panel"><div class="fld"><span>Comment</span><div class="with-btn note-mic"><textarea id="f-notes" data-f="notes" aria-label="Comment">'+esc(d.notes)+'</textarea>'+micBtn('notes','comment')+'</div></div></div>';
+  h+='<div class="panel"><div class="fld"><span>Comment</span><div class="with-btn note-mic"><textarea id="f-notes" data-f="notes" aria-label="Comment">'+esc(d.notes)+'</textarea>'+micBtn('notes','comment')+'</div></div><label class="fld" style="margin-top:12px"><span>Note for client (shown in the client portal)</span><textarea id="f-cnote" data-f="clientNote" aria-label="Note for client" placeholder=" ">'+esc(d.clientNote||'')+'</textarea></label></div>';
   h+='<div class="savebar"><button class="btn pri big" data-act="save" id="saveBtn">'+(S.editId?'Save changes':'Save return')+'</button>'+(S.editId?'<button class="btn danger" data-act="del" data-v="'+S.editId+'">Delete return</button>':'')+'</div><div class="savebar-space"></div>';
   if(prev&&prev.history&&prev.history.length)h+='<div class="panel"><h3>History</h3><ul class="hist">'+prev.history.map(x=>'<li>'+esc(new Date(x.at).toLocaleString('en-AU'))+' · '+esc(x.what)+(x.by?' · '+esc(S.names[x.by]||'team member'):'')+'</li>').join('')+'</ul></div>';
   return h;
@@ -1144,7 +1144,7 @@ async function saveReturn(){
   const now=new Date().toISOString(),prev=S.editId?S.returns.find(r=>r.id===S.editId):null,by=S.uid||'';
   const hist=((prev&&prev.history)||[]).slice(-40);
   hist.push({at:now,by,what:!prev?'Logged as '+(d.kind==='rts'?'return to sender':'customer return'):prev.status!==d.status?'Status changed to '+SL(d.status):'Edited'});
-  const body={jobNo:d.jobNo.trim(),clientId:d.clientId,kind:d.kind==='rts'?'rts':'return',pack:d.kind==='rts'?(d.pack||''):'',location:d.kind==='rts'?(d.location||''):'',orderNo:(d.orderNo||'').trim(),tracking:(d.tracking||'').trim(),carrier:d.carrier||'',dateReceived:d.dateReceived||today(),dateProcessed:d.dateProcessed||'',status:d.status,notes:(d.notes||'').trim(),
+  const body={jobNo:d.jobNo.trim(),clientId:d.clientId,kind:d.kind==='rts'?'rts':'return',pack:d.kind==='rts'?(d.pack||''):'',location:d.kind==='rts'?(d.location||''):'',orderNo:(d.orderNo||'').trim(),tracking:(d.tracking||'').trim(),carrier:d.carrier||'',dateReceived:d.dateReceived||today(),dateProcessed:d.dateProcessed||'',status:d.status,notes:(d.notes||'').trim(),clientNote:(d.clientNote||'').trim(),
     lines:d.lines.filter(l=>l.barcode||l.sku||l.name||l.photos.length).map(l=>({barcode:l.barcode.trim(),sku:l.sku.trim(),name:l.name.trim(),qtyGood:+l.qtyGood||0,qtyDamaged:+l.qtyDamaged||0,reason:l.reason||'',photos:l.photos})),
     createdAt:(prev&&prev.createdAt)||now,createdBy:(prev&&prev.createdBy)||by,updatedAt:now,history:hist};
   if(prev&&prev.example)body.example=true;if(prev&&prev.rts)body.rts=prev.rts;if(prev&&prev.emailedAt)body.emailedAt=prev.emailedAt;
@@ -1347,7 +1347,7 @@ function renderSheet(){
   h+='<div><div class="row" style="align-items:center"><h3 style="flex:1 1 auto">Items</h3>'+(photoIds(r).length&&S.dl?'<button class="btn" data-act="photosZip" data-v="'+r.id+'">Download all photos ('+photoIds(r).length+')</button>':'')+'</div>'+(n?r.lines.map(l=>'<div class="it"><div class="it-h"><b>'+esc(l.name||l.sku||l.barcode||'Item')+'</b>'+(l.sku?'<span class="mono note">'+esc(l.sku)+'</span>':'')+'<span class="q">'+(+l.qtyGood||0)+' good · '+(+l.qtyDamaged||0)+' damaged</span></div>'
      +(l.reason?'<div class="tags"><span class="tag">'+esc(l.reason)+'</span></div>':'')
      +((l.photos||[]).length?'<div class="photos">'+l.photos.map((p,j)=>'<button type="button" class="ph ph-btn" data-act="photoView" data-v="'+esc(p)+'" data-n="'+esc(photoName(r,l,j))+'" aria-label="Open photo '+(j+1)+' to view or download"><img data-blob="'+esc(p)+'" alt="Photo '+(j+1)+' of '+esc(l.name||l.sku||'item')+'"></button>').join('')+'</div>':'')+'</div>').join(''):(isRts(r)?'<p class="note">'+esc(packText(r)||'Packaging not checked')+'. Contents not counted.</p>':'<p class="note">No items recorded.</p>'))+'</div>';
-  if(r.notes)h+='<div><h3>Comment</h3><p style="margin:6px 0 0;white-space:pre-wrap">'+esc(r.notes)+'</p></div>';
+  if(r.notes)h+='<div><h3>Comment</h3><p style="margin:6px 0 0;white-space:pre-wrap">'+esc(r.notes)+'</p></div>';if(r.clientNote)h+='<div><h3>Note for client</h3><p style="margin:6px 0 0;white-space:pre-wrap">'+esc(r.clientNote)+'</p></div>';
   if(r.history&&r.history.length)h+='<div><h3>History</h3><ul class="hist" style="margin-top:6px">'+r.history.slice(-5).reverse().map(x=>'<li>'+esc(new Date(x.at).toLocaleString('en-AU'))+' · '+esc(x.what)+'</li>').join('')+'</ul></div>';
   h+='</div><footer class="sh-f"><button class="btn" data-act="editOpen" data-v="'+r.id+'">'+ic('pen')+'Edit</button>'
    +(sg==='open'?'<button class="btn'+(doneStatus(r)==='discarded'?' pri':'')+'" data-act="discard" data-v="'+r.id+'"'+dis+'>'+(busy?'Saving…':'Discard')+'</button><button class="btn'+(doneStatus(r)==='shelf'?' pri':'')+'" data-act="shelf" data-v="'+r.id+'"'+dis+'>'+(busy?'Saving…':'Back to stock')+'</button>'
@@ -1776,7 +1776,7 @@ const GH=(()=>{
   /* ---- photos ---- */
   async function blobUrl(id){
     if(urls[id])return urls[id];
-    return urls[id]=(async()=>{const r=await sb.storage.from('photos').download(C()+'/'+id);if(r.error){delete urls[id];throw fail(r.error)}return URL.createObjectURL(r.data)})();
+    return urls[id]=(async()=>{const r=await sb.storage.from('photos').download(C()+'/'+id);if(r.error){delete urls[id];throw fail(r.error)}return URL.createObjectURL(new Blob([r.data],{type:/\.png$/i.test(id)?'image/png':'image/jpeg'}))})();
   }
   function img(el,id){if(!id||el.dataset.got===id)return;el.dataset.got=id;blobUrl(id).then(u=>{if(el.dataset.got===id)el.src=u}).catch(()=>{delete el.dataset.got})}
   const assets={upload:async(blob,o)=>{const t=(o&&o.type)||blob.type||'image/jpeg',id=newId()+(t.includes('png')?'.png':'.jpg');
@@ -1800,7 +1800,7 @@ const GH=(()=>{
     render();
     if(!m){showGate();return}
     if(!m.company_id){showGate('',true);return}
-    showGate('This login is for the tenant portal, which is not open yet.');
+    location.replace(location.pathname.replace(/(v2\/)?(index\.html)?$/,'')+'portal/'+location.hash);
   }
   async function signIn(email,password){
     email=(email||'').trim().toLowerCase();if(!email)throw new Error('Type your email.');if(!password)throw new Error('Type your password.');
@@ -1837,8 +1837,27 @@ Object.assign(ACT,{
   signOut:(v,b)=>twice(b,()=>GH.signOut())
 });
 GH.panel=()=>{const m=GH.me();return'<div class="panel"><h3>This device</h3><p class="note">Signed in as <strong>'+esc(m.email)+'</strong> ('+esc(m.initials)+', '+esc(m.role)+') for <strong>'+esc(m.company||'')+'</strong> · account '+esc(m.account||'')+'. Data is saved in Supabase (Sydney). Other devices pick up changes within about 20 seconds.</p>'+
-  '<label class="fld"><span>New password</span><input id="sb-newpass" type="password" autocomplete="new-password" placeholder=" "></label><div class="row"><button class="btn" data-act="setPass">Set password</button> <button class="btn danger" data-act="signOut">Sign out of this device</button></div>'+(GH.importPanel?GH.importPanel():'')+'</div>'};
+  '<label class="fld"><span>New password</span><input id="sb-newpass" type="password" autocomplete="new-password" placeholder=" "></label><div class="row"><button class="btn" data-act="setPass">Set password</button> <button class="btn danger" data-act="signOut">Sign out of this device</button></div>'+(GH.importPanel?GH.importPanel():'')+'</div>'+(m.role==='admin'?GH.portalPanel():'')};
 GH.onAuth(()=>{if($('#gate').hidden)showGate('Your sign-in has expired. Sign in again to carry on.')});
+
+/* ---- Client portal access (admin) ---- */
+GH.portalUrl=()=>location.origin+location.pathname.replace(/(v2\/)?(index\.html)?$/,'')+'portal/';
+GH.portalPanel=()=>(setTimeout(GH.portalList,60),'')+'<div class="panel"><h3>Client portal access</h3><p class="note">Clients see only their own brand\'s returns, photos and the "Note for client" field. Internal comments stay private. Portal link: <span class="sel">'+esc(GH.portalUrl())+'</span></p>'+
+ '<p class="note"><strong>Step 1:</strong> invite the contact in Supabase (Authentication → Users → Add user → Send invitation). <strong>Step 2:</strong> link them to their brand here.</p>'+
+ '<div class="row" style="gap:10px;flex-wrap:wrap;align-items:flex-end"><label class="fld" style="flex:1 1 220px"><span>Client email</span><input id="pa-email" type="email" autocapitalize="none" spellcheck="false" placeholder=" "></label>'+
+ '<label class="fld" style="flex:1 1 180px"><span>Tenant</span><select id="pa-tenant">'+S.clients.map(c=>'<option value="'+esc(c.id)+'">'+esc(c.name)+'</option>').join('')+'</select></label>'+
+ '<button class="btn pri" data-act="portalGrant">Give access</button></div><p class="note" id="pa-log" aria-live="polite"></p><div id="pa-list"><p class="note">Loading…</p></div>'+
+ '<div class="row"><a class="btn" href="'+esc(GH.portalUrl())+'" target="_blank" rel="noopener">Open the portal (staff preview)</a></div></div>';
+GH.portalList=async()=>{const el=$('#pa-list');if(!el)return;const r=await GH.sb.rpc('portal_users');if(r.error){el.innerHTML='<p class="note">'+esc(r.error.message)+'</p>';return}
+ el.innerHTML=r.data.length?'<ul class="note" style="padding-left:18px">'+r.data.map(u=>'<li>'+esc(u.email)+' · '+esc(u.tenant_name||'')+' · '+(u.last_sign_in?'last signed in '+new Date(u.last_sign_in).toLocaleDateString('en-AU'):'not signed in yet')+' <button class="btn" data-act="portalRevoke" data-v="'+esc(u.email)+'">Remove</button></li>').join('')+'</ul>':'<p class="note">No clients have access yet.</p>'};
+Object.assign(ACT,{
+ portalGrant:async(v,b)=>{const log=$('#pa-log'),email=($('#pa-email').value||'').trim(),t=$('#pa-tenant').value;if(!email){log.textContent='Type the client\'s email.';return}
+  b.disabled=true;const r=await GH.sb.rpc('portal_grant',{p_email:email,p_tenant:t});b.disabled=false;
+  if(r.error){log.textContent=r.error.message;return}
+  log.textContent=r.data==='ok'?'Done. '+email+' can now sign in to the portal.':r.data==='not_invited'?'That email has not been invited yet. Invite it in Supabase first (step 1), then try again.':r.data==='is_staff'?'That email belongs to a staff member, so it already sees everything.':r.data;
+  if(r.data==='ok'){$('#pa-email').value='';GH.portalList()}},
+ portalRevoke:(v,b)=>twice(b,async()=>{const r=await GH.sb.rpc('portal_revoke',{p_email:v});if(r.error)toast(r.error.message);else{toast('Access removed');GH.portalList()}})
+});
 
 /* One-off copy from the GitHub data repository into Supabase. Admin only.
    Uses the GitHub key already saved on this device by the old version (same website), or one typed in. */
@@ -1882,7 +1901,7 @@ ACT.ghImport=async(v,b)=>{
     for(const f of blobs){
       if(have.has(f.name)){skipped++;continue}
       const r=await api('blobs/'+f.name);if(!r.ok)throw new Error('GitHub '+r.status+' reading photo '+f.name);
-      const blob=await r.blob(),t=f.name.endsWith('.png')?'image/png':'image/jpeg';
+      const t=f.name.endsWith('.png')?'image/png':'image/jpeg',blob=new Blob([await r.arrayBuffer()],{type:t});
       ok(await sb.storage.from('photos').upload(C+'/'+f.name,blob,{contentType:t,upsert:true}));
       done++;log('Copying photos… '+(done+skipped)+' of '+blobs.length);
     }
@@ -1950,7 +1969,7 @@ async function liveScan(t){
 }
 
 /* light / dark mode, remembered on this device */
-function setTheme(t){document.documentElement.setAttribute('data-theme',t);try{localStorage.setItem('rd-theme',t)}catch(e){}const m=document.querySelector('meta[name=theme-color]');if(m)m.content=t==='light'?'#F8FAFD':'#05070D'}
+function setTheme(t){document.documentElement.setAttribute('data-theme',t);try{localStorage.setItem('rd-theme',t)}catch(e){}const m=document.querySelector('meta[name=theme-color]');if(m)m.content=t==='light'?'#F8FAFD':'#060B22'}
 (function(){let t='dark';try{t=localStorage.getItem('rd-theme')||'dark'}catch(e){}setTheme(t)})();
 ACT.theme=()=>{setTheme(document.documentElement.getAttribute('data-theme')==='light'?'dark':'light')};
 
