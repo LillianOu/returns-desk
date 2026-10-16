@@ -1795,7 +1795,8 @@ const GH=(()=>{
   async function loadMe(){
     const s=(await sb.auth.getSession()).data.session;if(!s)return null;
     const rows=ok(await sb.rpc('my_company'));const m=rows&&rows[0];
-    const meta=s.user.user_metadata||{};
+    let fresh=null;try{fresh=(await sb.auth.getUser()).data.user}catch(e){}
+    const meta=((fresh||s.user).user_metadata)||{};
     me={email:s.user.email,company_id:m&&m.company_id,role:m&&m.role,company:m&&m.name,account:m&&m.account_no,
         initials:(localStorage.getItem('rd-initials')||meta.initials||s.user.email.slice(0,2)).toUpperCase(),pwSet:!!meta.pw_set};
     return me}
