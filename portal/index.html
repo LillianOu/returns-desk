@@ -273,6 +273,12 @@ const sb=window.supabase.createClient(SB_URL,SB_KEY,{auth:{persistSession:true,a
 const $=s=>document.querySelector(s);
 const esc=v=>String(v==null?'':v).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const P={me:null,tenant:null,rows:[],urls:{}};
+/* the invite / sign-in link leaves a one-time code in the address; never reload with it */
+const AUTH_HASH=/access_token|refresh_token|error_description|error_code|type=(invite|magiclink|recovery|signup)/;
+const LINK_ERR=(()=>{try{const h=new URLSearchParams(location.hash.slice(1));const d=h.get('error_description');return d?d.replace(/\+/g,' '):''}catch(e){return''}})();
+function cleanAddress(){if(AUTH_HASH.test(location.hash)||location.search)history.replaceState(null,'',location.pathname)}
+function cleanReload(){location.replace(location.origin+location.pathname)}
+
 const store={get:k=>{try{return localStorage.getItem(k)}catch(e){return null}},set:(k,v)=>{try{localStorage.setItem(k,v)}catch(e){}}};
 function toast(t){const el=$('#toast');el.textContent=t;el.hidden=false;clearTimeout(toast.t);toast.t=setTimeout(()=>el.hidden=true,3200)}
 
@@ -294,15 +300,15 @@ $('#g-in').addEventListener('click',async()=>{const e=$('#g-email').value.trim()
   const r=await sb.auth.signInWithPassword({email:e,password:p});
   if(r.error){$('#g-err').textContent=/invalid/i.test(r.error.message)?'That email and password do not match.':r.error.message;return}
   if(!(((r.data&&r.data.user)||{}).user_metadata||{}).pw_set){try{await sb.auth.updateUser({data:{pw_set:true}})}catch(e){}}
-  location.reload()});
+  cleanReload()});
 $('#g-link').addEventListener('click',async()=>{const e=$('#g-email').value.trim().toLowerCase();if(!e){$('#g-err').textContent='Type your email first.';return}
   const r=await sb.auth.signInWithOtp({email:e,options:{shouldCreateUser:false,emailRedirectTo:location.origin+location.pathname}});
   $('#g-err').textContent=r.error?r.error.message:'Check your email for a sign-in link.'});
-$('#out').addEventListener('click',async()=>{await sb.auth.signOut();location.reload()});
+$('#out').addEventListener('click',async()=>{await sb.auth.signOut();cleanReload()});
 
 /* ---------- start ---------- */
 async function start(){
-  const s=(await sb.auth.getSession()).data.session;if(!s){gate();return}
+  const s=(await sb.auth.getSession()).data.session;cleanAddress();if(!s){gate(LINK_ERR?(/expired|invalid/i.test(LINK_ERR)?'That email link has expired or was already used. Sign in with your email and password, or ask for a new link.':LINK_ERR):'');return}
   let fresh=null;try{fresh=(await sb.auth.getUser()).data.user}catch(e){}
   if(!(((fresh||s.user).user_metadata)||{}).pw_set){gate('',true);$('#g-pw-sub').textContent='Welcome, '+s.user.email+'. Choose a password for your account. You\'ll use it with your email to sign in next time.';$('#g-np1').focus();return}
   const me=await sb.rpc('portal_me');
