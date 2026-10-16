@@ -155,6 +155,13 @@ h2.mono{font-family:var(--mono);font-weight:500}
       <label for="g-pass">Password<input id="g-pass" type="password" autocomplete="current-password"></label>
       <div class="btns"><button class="btn pri" id="g-in" type="submit">Sign in</button><button class="btn" id="g-link" type="button">Email me a sign-in link</button></div>
     </div>
+    <div id="g-pw" class="form" hidden>
+      <h2 style="font-family:var(--display);font-weight:500;margin:0">Create your password</h2>
+      <p class="sub" id="g-pw-sub">Welcome. Choose a password for your account. You'll use it with your email to sign in next time.</p>
+      <label for="g-np1">New password (at least 8 characters)<input id="g-np1" type="password" autocomplete="new-password"></label>
+      <label for="g-np2">Type it again<input id="g-np2" type="password" autocomplete="new-password"></label>
+      <div class="btns"><button class="btn pri" id="g-save" type="button">Create password and continue</button></div>
+    </div>
     <p class="gate-err" id="g-err" role="alert"></p>
   </form>
 </div>
@@ -181,10 +188,6 @@ h2.mono{font-family:var(--mono);font-weight:500}
 </header>
 
 <main class="wrap">
-  <div id="pwnote" class="card note-card" hidden>
-    <div><b>Set a password</b><p class="sub" style="margin:2px 0 0">So you can sign in next time without an email link.</p></div>
-    <div class="btns"><button class="btn pri" data-go="account" type="button">Set password</button><button class="btn" id="pw-later" type="button">Later</button></div>
-  </div>
 
   <section id="overview">
     <div class="toprow">
@@ -245,7 +248,7 @@ h2.mono{font-family:var(--mono);font-weight:500}
     <div class="toprow"><div><h1>Account</h1><p class="sub" id="acct-sub"></p></div></div>
     <div class="report">
       <div class="card form">
-        <h2>Set a new password</h2>
+        <h2>Change your password</h2>
         <label for="np1">New password (at least 8 characters)<input id="np1" type="password" autocomplete="new-password"></label>
         <label for="np2">Type it again<input id="np2" type="password" autocomplete="new-password"></label>
         <div class="btns"><button class="btn pri" id="setpw" type="button">Save password</button></div>
@@ -285,7 +288,7 @@ const bad=r=>(r.lines||[]).reduce((a,l)=>a+(+l.qtyDamaged||0),0);
 const packL={sealed:'New box, unopened',damaged:'Damaged box',opened:'Opened'};
 
 /* ---------- sign in ---------- */
-function gate(msg){$('#gate').hidden=false;$('#g-err').textContent=msg||''}
+function gate(msg,pw){$('#gate').hidden=false;$('#g-login').hidden=!!pw;$('#g-pw').hidden=!pw;$('#g-err').textContent=msg||''}
 $('#g-in').addEventListener('click',async()=>{const e=$('#g-email').value.trim().toLowerCase(),p=$('#g-pass').value;$('#g-err').textContent='';
   if(!e||!p){$('#g-err').textContent='Type your email and password.';return}
   const r=await sb.auth.signInWithPassword({email:e,password:p});
@@ -299,6 +302,7 @@ $('#out').addEventListener('click',async()=>{await sb.auth.signOut();location.re
 /* ---------- start ---------- */
 async function start(){
   const s=(await sb.auth.getSession()).data.session;if(!s){gate();return}
+  if(!(s.user.user_metadata||{}).pw_set){gate('',true);$('#g-pw-sub').textContent='Welcome, '+s.user.email+'. Choose a password for your account. You\'ll use it with your email to sign in next time.';$('#g-np1').focus();return}
   const me=await sb.rpc('portal_me');
   if(me.error||!me.data||!me.data.length){gate('This email does not have portal access yet. Ask your Fulfilment Australia contact.');return}
   P.me=Object.assign({email:s.user.email},me.data[0]);
@@ -306,7 +310,7 @@ async function start(){
   $('#logo').textContent=(P.me.company||'FA').split(/\s+/).map(w=>w[0]).join('').slice(0,2).toUpperCase();
   $('#acct-sub').textContent='Signed in as '+s.user.email;
   if(P.me.role==='viewer'){P.tenant=P.me.tenant_key;$('#tname').textContent=P.me.tenant_name;$('#tname').hidden=false;
-    if(!store.get('cp-pw-'+s.user.id))$('#pwnote').hidden=false}
+}
   else{const t=await sb.rpc('portal_tenants');const list=(t.data||[]);
     $('#mode').textContent='Staff preview';$('#tpick').innerHTML=list.map(x=>'<option value="'+esc(x.tenant_key)+'">'+esc(x.name)+'</option>').join('');$('#tpick').hidden=false;
     P.tenant=store.get('cp-preview')||(list[0]&&list[0].tenant_key);if(P.tenant)$('#tpick').value=P.tenant}
@@ -376,12 +380,15 @@ document.addEventListener('click',e=>{const t=e.target.closest('[data-tab],[data
   if(e.target.id==='close'||e.target.id==='bg')close()});
 document.addEventListener('keydown',e=>{if(e.key==='Escape'){const v=document.querySelector('.viewer');if(v)v.remove();else close()}if(e.key==='Enter'&&e.target.matches('tr.row'))open(e.target.dataset.id)});
 $('#theme').addEventListener('click',()=>{const r=document.documentElement,dark=r.dataset.theme?r.dataset.theme==='dark':matchMedia('(prefers-color-scheme: dark)').matches;r.dataset.theme=dark?'light':'dark';store.set('cp-theme',r.dataset.theme)});
-$('#pw-later').addEventListener('click',()=>{$('#pwnote').hidden=true});
+$('#g-save').addEventListener('click',async()=>{const a=$('#g-np1').value,b=$('#g-np2').value,er=$('#g-err');er.textContent='';
+  if(a.length<8){er.textContent='Use at least 8 characters.';return}if(a!==b){er.textContent='The two passwords do not match.';return}
+  $('#g-save').disabled=true;const r=await sb.auth.updateUser({password:a,data:{pw_set:true}});$('#g-save').disabled=false;
+  if(r.error){er.textContent=/same/i.test(r.error.message)?'Choose a different password from your old one.':r.error.message;return}
+  $('#gate').hidden=true;toast('Password created. Use it with your email next time.');start()});
 $('#setpw').addEventListener('click',async()=>{const a=$('#np1').value,b=$('#np2').value,m=$('#pw-msg');
   if(a.length<8){m.textContent='Use at least 8 characters.';return}if(a!==b){m.textContent='The two passwords do not match.';return}
-  const r=await sb.auth.updateUser({password:a});if(r.error){m.textContent=r.error.message;return}
-  m.textContent='Password saved. Use it with your email next time.';$('#np1').value=$('#np2').value='';$('#pwnote').hidden=true;
-  const u=(await sb.auth.getUser()).data.user;if(u)store.set('cp-pw-'+u.id,'1')});
+  const r=await sb.auth.updateUser({password:a,data:{pw_set:true}});if(r.error){m.textContent=r.error.message;return}
+  m.textContent='Password saved. Use it with your email next time.';$('#np1').value=$('#np2').value=''});
 
 /* ---------- Excel report ---------- */
 $('#xlsx').addEventListener('click',()=>{const f=$('#from').value,t=$('#to').value,show=$('#show').value,m=$('#rep-msg');
