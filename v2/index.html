@@ -1705,6 +1705,12 @@ boot=async function(){await _boot();if(S.db)S.db.doc('orgs/storage').onSnapshot(
    sku_docs (= clients/<id>/skus/<chunk>). Photos: bucket "photos",
    path <company_id>/<photo id>. Row level security does the access control.
    ===================================================================== */
+
+/* the invite / sign-in link leaves a one-time code in the address; never reload with it */
+const AUTH_HASH=/access_token|refresh_token|error_description|error_code|type=(invite|magiclink|recovery|signup)/;
+const LINK_ERR=(()=>{try{const h=new URLSearchParams(location.hash.slice(1));const d=h.get('error_description');return d?d.replace(/\+/g,' '):''}catch(e){return''}})();
+function cleanAddress(){if(AUTH_HASH.test(location.hash)||location.search)history.replaceState(null,'',location.pathname)}
+function cleanReload(){location.replace(location.origin+location.pathname)}
 const GH=(()=>{
   const URL_='https://khaqoynnxnbeeuwqbgkh.supabase.co',KEY='sb_publishable_q6RkKGPvAITnCx1TBs3cbQ_WDQMNmSV';
   const sb=window.supabase.createClient(URL_,KEY,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true,storageKey:'rd-sb'}});
@@ -1802,14 +1808,15 @@ const GH=(()=>{
     return me}
   async function start(){
     let m=null;try{m=await loadMe()}catch(e){console.error(e)}
+    cleanAddress();
     if(m&&!m.pwSet){render();showGate('',false,true);return}
     if(m&&m.company_id&&m.role!=='viewer'){boot();return}
     render();
-    if(!m){showGate();return}
+    if(!m){showGate(LINK_ERR?(/expired|invalid/i.test(LINK_ERR)?'That email link has expired or was already used. Sign in with your email and password, or ask for a new link.':LINK_ERR):'');return}
     if(!m.company_id){let ex=true;try{ex=(await sb.rpc('company_exists')).data!==false}catch(e){}
       if(ex){showGate('You are signed in as '+m.email+', but this account has not been given access yet. Ask your manager to add you in Settings → Staff access.');return}
       showGate('',true);return}
-    location.replace(location.pathname.replace(/(v2\/)?(index\.html)?$/,'')+'portal/'+location.hash);
+    location.replace(location.pathname.replace(/(v2\/)?(index\.html)?$/,'')+'portal/');
   }
   async function signIn(email,password){
     email=(email||'').trim().toLowerCase();if(!email)throw new Error('Type your email.');if(!password)throw new Error('Type your password.');
@@ -1824,8 +1831,8 @@ const GH=(()=>{
   }
   async function setPassword(p){if(!p||p.length<8)throw new Error('Use at least 8 characters.');const r=await sb.auth.updateUser({password:p,data:{pw_set:true}});if(r.error)throw new Error(r.error.message)}
   async function createCompany(name){name=(name||'').trim();if(!name)throw new Error('Type the company name.');ok(await sb.rpc('create_company',{company_name:name}))}
-  async function signOut(){await sb.auth.signOut();location.reload()}
-  sb.auth.onAuthStateChange(ev=>{if(ev==='SIGNED_OUT'&&me)location.reload()});
+  async function signOut(){await sb.auth.signOut();cleanReload()}
+  sb.auth.onAuthStateChange(ev=>{if(ev==='SIGNED_OUT'&&me)cleanReload()});
   return{use,start,signIn,sendLink,setPassword,createCompany,signOut,blobUrl,img,me:()=>me,sb,onAuth:f=>onAuthFail=f};
 })();
 function showGate(msg,needCompany,needPw){
@@ -1838,17 +1845,17 @@ function showGate(msg,needCompany,needPw){
 Object.assign(ACT,{
   connect:async(v,b)=>{const er=$('#gate-err');er.textContent='';b.disabled=true;b.textContent='Signing in…';
     try{const i=$('#sb-initials').value.trim();if(i)try{localStorage.setItem('rd-initials',i.toUpperCase())}catch(e){}
-      await GH.signIn($('#sb-email').value,$('#sb-pass').value);location.reload()}
+      await GH.signIn($('#sb-email').value,$('#sb-pass').value);cleanReload()}
     catch(e){er.textContent=e.message;b.disabled=false;b.textContent='Sign in'}},
   sendLink:async(v,b)=>{const er=$('#gate-err');er.textContent='';b.disabled=true;
     try{await GH.sendLink($('#sb-email').value);er.textContent='Check your email for a sign-in link.'}catch(e){er.textContent=e.message}b.disabled=false},
   makeCompany:async(v,b)=>{const er=$('#gate-err');er.textContent='';b.disabled=true;
-    try{await GH.createCompany($('#sb-company').value);location.reload()}catch(e){er.textContent=e.message;b.disabled=false}},
+    try{await GH.createCompany($('#sb-company').value);cleanReload()}catch(e){er.textContent=e.message;b.disabled=false}},
   setPass:async(v,b)=>{try{await GH.setPassword($('#sb-newpass').value);toast('Password saved');$('#sb-newpass').value=''}catch(e){toast(e.message)}},
   firstPass:async(v,b)=>{const er=$('#gate-err'),a=$('#sb-np1').value,c=$('#sb-np2').value,i=$('#sb-ini2').value.trim();er.textContent='';
     if(a.length<8){er.textContent='Use at least 8 characters.';return}if(a!==c){er.textContent='The two passwords do not match.';return}
     if(i)try{localStorage.setItem('rd-initials',i.toUpperCase())}catch(e){}
-    b.disabled=true;try{await GH.setPassword(a);location.reload()}catch(e){er.textContent=/same/i.test(e.message)?'Choose a different password from your old one.':e.message;b.disabled=false}},
+    b.disabled=true;try{await GH.setPassword(a);cleanReload()}catch(e){er.textContent=/same/i.test(e.message)?'Choose a different password from your old one.':e.message;b.disabled=false}},
   signOut:(v,b)=>twice(b,()=>GH.signOut())
 });
 GH.panel=()=>{const m=GH.me();return'<div class="panel"><h3>This device</h3><p class="note">Signed in as <strong>'+esc(m.email)+'</strong> ('+esc(m.initials)+', '+esc(m.role)+') for <strong>'+esc(m.company||'')+'</strong> · account '+esc(m.account||'')+'. Data is saved in Supabase (Sydney). Other devices pick up changes within about 20 seconds.</p>'+
