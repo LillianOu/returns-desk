@@ -437,7 +437,7 @@ const Benji=(()=>{
   const KEY='benji-chat';
   const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   function fmt(t){
-    const lines=esc(t).replace(/\*\*(.+?)\*\*/g,'<b>$1</b>').split(/\n/);let h='',l=null;
+    const lines=esc(String(t).replace(/\\([*_#`])/g,'$1')).replace(/\*\*(.+?)\*\*/g,'<b>$1</b>').split(/\n/);let h='',l=null;
     for(const ln of lines){const n=ln.match(/^\s*\d+[.)]\s+(.*)/),b=ln.match(/^\s*[-•*]\s+(.*)/);const want=n?'ol':b?'ul':null;
       if(want!==l){if(l)h+='</'+l+'>';if(want)h+='<'+want+'>';l=want}
       if(want)h+='<li>'+(n||b)[1]+'</li>';else if(ln.trim())h+='<p>'+ln+'</p>'}
@@ -497,7 +497,7 @@ const Benji=(()=>{
     if(busy)h+='<div class="bj-m">'+img('working','bj-bob','Benji is looking that up')+'<div class="bj-b bj-dots" aria-label="Benji is typing"><span></span><span></span><span></span></div></div>';
     list.innerHTML=h;list.scrollTop=list.scrollHeight}
   async function ask(q){
-    q=(q||'').trim();if(!q||busy)return;
+    q=(q||'').trim();if(!q||busy)return;micDetach();
     msgs.push({role:'user',content:q});busy=true;input.value='';grow();sendBtn.disabled=true;head('working');draw();save();
     let reply='',mood='sorry',act=null;
     try{
@@ -508,16 +508,17 @@ const Benji=(()=>{
     if(panel.hidden){unread++;badge()}
     msgs.push(act?{role:'assistant',content:reply,mood,action:act}:{role:'assistant',content:reply,mood});busy=false;sendBtn.disabled=false;head(mood);draw();save();input.focus();idle()}
   function micStop(){try{rec&&rec.stop()}catch(e){}}
+  function micReset(){rec=null;heard='';if(micBtn){micBtn.setAttribute('aria-pressed','false');micBtn.setAttribute('aria-label','Speak your question')}if(input&&!/blocked/.test(input.placeholder))input.placeholder='Ask Benji…'}
+  function micDetach(){if(!rec)return;const r=rec;r.onresult=null;r.onend=null;r.onerror=null;try{r.abort?r.abort():r.stop()}catch(e){}micReset()}
   function micToggle(){
     if(rec){micStop();return}
     try{rec=new SR()}catch(e){rec=null;return}
-    rec.lang=(navigator.language&&/^en/i.test(navigator.language))?navigator.language:'en-AU';rec.interimResults=true;rec.continuous=false;
+    rec.lang=(navigator.language&&/^en/i.test(navigator.language))?navigator.language:'en-AU';rec.interimResults=true;rec.continuous=true;
     const base=input.value?input.value.replace(/\s*$/,' '):'';heard='';
-    micBtn.setAttribute('aria-pressed','true');micBtn.setAttribute('aria-label','Stop listening');input.placeholder='Listening… speak now';
+    micBtn.setAttribute('aria-pressed','true');micBtn.setAttribute('aria-label','Stop listening');input.placeholder='Listening… press Enter to send';
     rec.onresult=e=>{let t='';for(let i=0;i<e.results.length;i++)t+=e.results[i][0].transcript;heard=t;input.value=base+t;grow()};
     rec.onerror=e=>{if(e.error==='not-allowed'||e.error==='service-not-allowed')input.placeholder='Microphone blocked. Allow it in your browser settings.'};
-    rec.onend=()=>{rec=null;micBtn.setAttribute('aria-pressed','false');micBtn.setAttribute('aria-label','Speak your question');if(!/blocked/.test(input.placeholder))input.placeholder='Ask Benji…';
-      if(heard.trim()&&!busy)ask(input.value);else input.focus()};
+    rec.onend=()=>{micReset();input.focus();grow()};
     try{rec.start()}catch(e){rec=null;micBtn.setAttribute('aria-pressed','false')}
   }
   function idle(){clearTimeout(sleepT);sleepT=setTimeout(()=>{if(panel&&!panel.hidden&&!busy)head('sleep')},600000)}
