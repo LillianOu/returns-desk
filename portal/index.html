@@ -157,7 +157,7 @@ h2.mono{font-family:var(--mono);font-weight:500}
       <p class="sub">Sign in with the email your Fulfilment Australia contact invited.</p>
       <label for="g-email">Email<input id="g-email" type="email" autocomplete="username" autocapitalize="none" spellcheck="false"></label>
       <label for="g-pass">Password<input id="g-pass" type="password" autocomplete="current-password"></label>
-      <div class="btns"><button class="btn pri" id="g-in" type="submit">Sign in</button><button class="btn" id="g-link" type="button">Email me a sign-in link</button></div>
+      <div class="btns"><button class="btn pri" id="g-in" type="submit">Sign in</button></div>
     </div>
     <div id="g-pw" class="form" hidden>
       <h2 style="font-family:var(--display);font-weight:500;margin:0">Create your password</h2>
@@ -309,7 +309,7 @@ $('#g-in').addEventListener('click',async()=>{const e=$('#g-email').value.trim()
   if(r.error){$('#g-err').textContent=/invalid/i.test(r.error.message)?'That email and password do not match.':r.error.message;return}
   if(!(((r.data&&r.data.user)||{}).user_metadata||{}).pw_set){try{await sb.auth.updateUser({data:{pw_set:true}})}catch(e){}}
   cleanReload()});
-$('#g-link').addEventListener('click',async()=>{const e=$('#g-email').value.trim().toLowerCase();if(!e){$('#g-err').textContent='Type your email first.';return}
+$('#g-link')&&$('#g-link').addEventListener('click',async()=>{const e=$('#g-email').value.trim().toLowerCase();if(!e){$('#g-err').textContent='Type your email first.';return}
   const r=await sb.auth.signInWithOtp({email:e,options:{shouldCreateUser:false,emailRedirectTo:location.origin+location.pathname}});
   $('#g-err').textContent=r.error?r.error.message:'Check your email for a sign-in link.'});
 $('#out').addEventListener('click',async()=>{await sb.auth.signOut();cleanReload()});
