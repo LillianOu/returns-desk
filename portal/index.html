@@ -445,7 +445,11 @@ const Benji=(()=>{
   const KEY='benji-chat';
   const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   function fmt(t){
-    const lines=esc(String(t).replace(/\\([*_#`])/g,'$1')).replace(/\*\*(.+?)\*\*/g,'<b>$1</b>').split(/\n/);let h='',l=null;
+    const lines=esc(String(t).replace(/\\([*_#`])/g,'$1'))
+      .replace(/`([^`\n]{1,40})`/g,(m,x)=>'<span class="bj-ref">'+x.replace(/\*/g,'&#42;')+'</span>')
+      .replace(/\*\*(.+?)\*\*/g,'<b>$1</b>')
+      .replace(/(^|[\s(>])((?:[A-Z]{2,4}-\d{3,})|(?:#\d{4,})|(?:\*\d{4,}))(?=[\s.,;:)<]|$)/g,(m,p,x)=>p+'<span class="bj-ref">'+x.replace(/\*/g,'&#42;')+'</span>')
+      .split(/\n/);let h='',l=null;
     for(const ln of lines){const n=ln.match(/^\s*\d+[.)]\s+(.*)/),b=ln.match(/^\s*[-•*]\s+(.*)/);const want=n?'ol':b?'ul':null;
       if(want!==l){if(l)h+='</'+l+'>';if(want)h+='<'+want+'>';l=want}
       if(want)h+='<li>'+(n||b)[1]+'</li>';else if(ln.trim())h+='<p>'+ln+'</p>'}
@@ -459,16 +463,18 @@ const Benji=(()=>{
 .bj-badge{position:absolute;top:-3px;right:-3px;min-width:22px;height:22px;padding:0 6px;border-radius:999px;background:#E5484D;color:#fff;font:700 12px/22px var(--body,system-ui,sans-serif);text-align:center;box-shadow:0 0 0 2px var(--bg,#fff);animation:bj-pop .35s cubic-bezier(.2,.9,.3,1.4)}
 .bj-tip{position:absolute;right:72px;bottom:16px;white-space:nowrap;background:#0E0E0E;color:#fff;font:600 13px/1 var(--body,system-ui,sans-serif);padding:8px 12px;border-radius:999px;opacity:0;pointer-events:none;transition:opacity .2s}
 .bj-btn:hover .bj-tip{opacity:1}
-.bj-p{position:fixed;right:max(20px,env(safe-area-inset-right,0px));bottom:calc(var(--bj-b,20px) + 74px + env(safe-area-inset-bottom,0px));z-index:61;width:min(400px,calc(100vw - 32px));height:min(620px,calc(100vh - 140px));background:linear-gradient(var(--surface,#fff),var(--surface,#fff)) var(--bg,#fff);-webkit-backdrop-filter:blur(28px);backdrop-filter:blur(28px);color:var(--ink,#141A2E);border-radius:20px;box-shadow:0 24px 60px rgba(0,0,0,.28),0 0 0 1px rgba(0,0,0,.06);display:flex;flex-direction:column;overflow:hidden;font-family:var(--body,system-ui,sans-serif);font-size:14.5px;line-height:1.45;transform-origin:bottom right;animation:bj-in .22s cubic-bezier(.2,.9,.3,1.15)}
+.bj-p{position:fixed;right:max(20px,env(safe-area-inset-right,0px));bottom:calc(var(--bj-b,20px) + 74px + env(safe-area-inset-bottom,0px));z-index:61;width:min(400px,calc(100vw - 32px));height:min(620px,calc(100vh - 140px));background:linear-gradient(var(--surface,#fff),var(--surface,#fff)) var(--bg,#fff);-webkit-backdrop-filter:blur(28px);backdrop-filter:blur(28px);color:var(--ink,#141A2E);border-radius:20px;box-shadow:0 24px 60px rgba(0,0,0,.28),0 0 0 1px rgba(0,0,0,.06);display:flex;flex-direction:column;overflow:hidden;font-family:var(--body,system-ui,sans-serif);font-size:16px;line-height:1.5;transform-origin:bottom right;animation:bj-in .22s cubic-bezier(.2,.9,.3,1.15)}
 @keyframes bj-in{from{opacity:0;transform:translateY(10px) scale(.96)}to{opacity:1;transform:none}}
 .bj-h{background:#0E0E0E;color:#fff;padding:12px 14px;display:flex;align-items:center;gap:12px}
 .bj-h img{width:46px;height:46px}.bj-h b{display:block;font-family:var(--display,inherit);font-weight:500;font-size:16px}.bj-h small{color:#BDBDBD;font-size:12px}
 .bj-x{margin-left:auto;width:40px;height:40px;border-radius:12px;border:0;background:rgba(255,255,255,.1);color:#fff;cursor:pointer;display:grid;place-items:center}
 .bj-l{flex:1;overflow-y:auto;padding:16px 14px;display:flex;flex-direction:column;gap:12px;overscroll-behavior:contain}
 .bj-m{display:flex;gap:8px;align-items:flex-end}.bj-m img{width:40px;height:40px;flex:none}
-.bj-b{background:var(--sunk,#F2F3F6);padding:9px 13px;border-radius:16px 16px 16px 4px;max-width:290px;overflow-wrap:anywhere}
-.bj-b p{margin:0 0 6px}.bj-b p:last-child{margin:0}.bj-b ol,.bj-b ul{margin:4px 0 6px;padding-left:20px}.bj-b li{margin:2px 0}
-.bj-u{align-self:flex-end;background:var(--accent,#2148F2);color:var(--accent-ink,#fff);padding:9px 13px;border-radius:16px 16px 4px 16px;max-width:280px;white-space:pre-wrap;overflow-wrap:anywhere}
+.bj-b{background:var(--sunk,#F2F3F6);padding:11px 15px;border-radius:18px 18px 18px 4px;max-width:300px;overflow-wrap:anywhere}
+.bj-b p{margin:0 0 8px}.bj-b li{margin:4px 0}.bj-b ul,.bj-b ol{padding-left:22px}
+.bj-ref{font-family:var(--mono,"IBM Plex Mono",ui-monospace,Menlo,monospace);font-size:.92em;font-weight:500;letter-spacing:.01em;background:rgba(33,72,242,.1);color:#1A3FD6;border:1px solid rgba(33,72,242,.35);border-radius:6px;padding:1px 7px;white-space:nowrap}
+.bj-p[data-tone="dark"] .bj-ref{background:rgba(91,123,255,.13);color:#7FF0FF;border-color:rgba(91,123,255,.42)}.bj-b p:last-child{margin:0}.bj-b ol,.bj-b ul{margin:4px 0 6px;padding-left:20px}.bj-b li{margin:2px 0}
+.bj-u{align-self:flex-end;background:var(--accent,#2148F2);color:var(--accent-ink,#fff);padding:11px 15px;border-radius:18px 18px 4px 18px;max-width:290px;white-space:pre-wrap;overflow-wrap:anywhere}
 .bj-hero{display:flex;flex-direction:column;align-items:center;text-align:center;gap:6px;padding:6px 8px 2px}
 .bj-hero img{width:120px;height:120px}.bj-hero b{font-family:var(--display,inherit);font-weight:500;font-size:17px}
 .bj-s{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-top:6px}
@@ -498,7 +504,7 @@ const Benji=(()=>{
 .bj-mic[aria-pressed="true"]{background:#E5484D;border-color:#E5484D;color:#fff;animation:bj-rec 1.2s ease-in-out infinite}
 @keyframes bj-rec{50%{box-shadow:0 0 0 6px rgba(229,72,77,.25)}}
 .bj-f small{font-size:11.5px;color:var(--muted,#6B7390)}
-@media (max-width:560px){.bj-p{right:0;left:0;bottom:0;width:100%;height:100%;height:100dvh;border-radius:0;padding-top:env(safe-area-inset-top,0px)}}
+@media (max-width:560px){.bj-p{font-size:17px;}.bj-b,.bj-u{max-width:82vw}.bj-p{right:0;left:0;bottom:0;width:100%;height:100%;height:100dvh;border-radius:0;padding-top:env(safe-area-inset-top,0px)}}
 @media (prefers-reduced-motion:reduce){.bj-p,.bj-pop,.bj-bob,.bj-dots span,.bj-mic{animation:none!important}.bj-btn{transition:none}}
 `;
   const img=(m,cls,alt)=>'<img src="'+(POSE[MOOD[m]||m]||POSE.idle)+'" alt="'+esc(alt||'')+'"'+(cls?' class="'+cls+'"':'')+'>';
@@ -520,7 +526,8 @@ const Benji=(()=>{
       if(r.error){reply='Sorry, that didn\'t work. Nothing was sent.'}else{reply=r.data&&r.data.reply||'';mood=r.data&&r.data.mood||'happy';st=r.data&&r.data.email_status||(what==='send'?'sent':'cancelled')}}
     catch(e){reply='I can\'t reach the internet right now. Nothing was sent.'}
     m.action.status=st;if(reply)msgs.push({role:'assistant',content:reply,mood});head(mood);draw();save()}
-  function draw(){
+  function tone(){try{const c=getComputedStyle(document.body).backgroundColor.match(/\d+(\.\d+)?/g)||[255,255,255];const L=(.2126*c[0]+.7152*c[1]+.0722*c[2])/255;panel.dataset.tone=L<.5?'dark':'light'}catch(e){}}
+  function draw(){tone();
     let h='';
     if(!msgs.length)h='<div class="bj-hero">'+img('hello','bj-pop','Benji waving')+'<b>Hi, I\'m Benji</b><div>Returns Bench\'s AI helper. Ask me about your returns, or how to use '+(o.surface==='portal'?'the portal':'the app')+'.</div><div class="bj-s">'+SUGGEST[o.surface].map(s=>'<button type="button" data-q="'+esc(s)+'">'+esc(s)+'</button>').join('')+'</div></div>';
     msgs.forEach((m,i)=>{h+=m.role==='user'?'<div class="bj-u">'+esc(m.content)+'</div>':'<div class="bj-m">'+img(m.mood||'happy','','')+'<div class="bj-b">'+fmt(m.content)+(m.action&&m.action.type==='email'?mailCard(m.action,i):'')+(m.action&&m.action.type==='report'&&o.onReport?'<button type="button" class="bj-act" data-rep="'+i+'"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v11M7 10l5 5 5-5M5 20h14"/></svg>Download Excel report</button>':'')+'</div></div>'});
