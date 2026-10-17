@@ -2189,7 +2189,7 @@ const Benji=(()=>{
       const d=new Date();try{if(localStorage.getItem(nKey(slot,d)))return;localStorage.setItem(nKey(slot,d),'1')}catch(e){}
       // afternoon notes are occasional, not every day
       if(slot==='afternoon'&&Math.random()<.4)return}
-    const line=n.lines[nPick(slot,n.lines.length)];
+    const line=n.lines[nPick(slot==='hello'?'hello-'+o.surface:slot,n.lines.length)];
     nudgeEl=document.createElement('div');nudgeEl.className='bj-n';nudgeEl.setAttribute('role','status');
     nudgeEl.innerHTML=img(n.pose,'','')+'<div><b>'+esc(who&&n.titleN?hiName(n.titleN):n.title)+'</b><span>'+esc(hiName(line))+'</span></div><button type="button" class="bj-nx" aria-label="Dismiss">'+svg.x.replace(/width="\d+"/,'width="13"').replace(/height="\d+"/,'height="13"')+'</button>';
     root.appendChild(nudgeEl);
@@ -2200,19 +2200,23 @@ const Benji=(()=>{
   function nudgeHide(){if(!nudgeEl)return;const el=nudgeEl;nudgeEl=null;clearTimeout(nudgeT);el.classList.add('bj-out');setTimeout(()=>el.remove(),260)}
   function nudgeTick(){const s=nudgeSlot(new Date());if(s)nudgeShow(s)}
   function nudgeStart(){setTimeout(nudgeTick,8000);setInterval(nudgeTick,60000);document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')setTimeout(nudgeTick,3000)})}
-  const HELLO={
-    morning:["Good morning! How are you today?","Morning! Ready when you are.","Good morning! Coffee first, then returns?","Morning! Hope you slept well.","Rise and shine! I've got the bench warmed up."],
-    afternoon:["Good afternoon! How's your day going?","Nice to see you again.","How are things this afternoon?","Afternoon! Shout if you need anything."],
-    evening:["Good evening! Hope your day went well.","Working late? I'm here if you need me.","Evening! Let's make this quick so you can relax."]};
-  const HELLO_PORTAL=["Welcome back! Ask me anything about your returns.","Need a report or a quick look at a return? Just ask.","Welcome back! I can find any of your returns in a second."];
+  // Sign-in greeting: every time someone signs in or opens the app (once per visit), with a different line each time.
+  const HELLO_APP=["I'm Benji, here to help with anything you need. Got a question? Just ask me.", "Benji here! If you need a hand with returns or reports, I'm right here.", "I'm Benji, your returns sidekick. Ask me anything, any time.", "Benji reporting for duty! Questions, reports, lookups: just talk to me.", "It's Benji! Need to find a return or pull a report? I'm here for you.", "I'm Benji. Whatever you need today, I'm here to help.", "Benji at your service! If anything's confusing, ask me first.", "Benji here. Stuck on something? I'm one tap away.", "I'm Benji, and I've got your back today. Ask me anything.", "Benji here, ready when you are. Need a report? Just say the word.", "I'm Benji! Happy to help with returns, reports or how-tos.", "Your friendly Benji is here. If you have a question, just talk to me.", "I'm Benji. Tap me whenever you need help. No question is too small.", "Benji on the bench! Let me know if there's anything I can do for you."];
+  const HELLO_PORTAL=["I'm Benji, here to help with your returns. Ask me anything, any time.", "Benji here! Need a report or a quick look at a return? Just ask.", "I'm Benji. If you have any questions about your returns, talk to me.", "It's Benji! I can find any of your returns in seconds.", "I'm Benji, your returns helper. Need a report? Just say the word.", "Benji at your service! Ask me about any return or RTS parcel.", "Benji here. Any questions about your returns? I'm one tap away.", "I'm Benji. Whatever you need to know about your returns, just ask.", "I'm Benji! Happy to pull a report or check a return for you.", "Benji here, ready to help. Just tap me if you have a question."];
+  function helloTitle(){const h=new Date().getHours();
+    const t=['Hey {n}!','Hi {n}!','Hello {n}!','Welcome back, {n}!',"G'day {n}!",'Nice to see you, {n}!'].concat(h<12?['Good morning, {n}!','Morning, {n}!']:h<17?['Good afternoon, {n}!']:['Good evening, {n}!']);
+    let last='';try{last=localStorage.getItem('benji-hi-last')||''}catch(e){}
+    let pick=t[Math.floor(Math.random()*t.length)];if(pick===last)pick=t[(t.indexOf(pick)+1)%t.length];
+    try{localStorage.setItem('benji-hi-last',pick)}catch(e){}return pick}
   async function greet(){
     if(o.greet===false)return;await loadWho();
-    const d=new Date();const key='benji-hi-'+d.getFullYear()+'-'+(d.getMonth()+1)+'-'+d.getDate();
-    try{if(localStorage.getItem(key))return}catch(e){}
-    if(document.visibilityState!=='visible'||!panel.hidden||nudgeEl)return;
-    try{localStorage.setItem(key,'1')}catch(e){}
-    const h=d.getHours();const pool=o.surface==='portal'?HELLO_PORTAL:HELLO[h<12?'morning':h<17?'afternoon':'evening'];
-    NUDGE.hello={pose:'wave',title:'Hello!',titleN:'Hey {n}!',lines:pool};nudgeShow('hello',true)}
+    try{if(sessionStorage.getItem('benji-hi'))return}catch(e){}
+    if(document.visibilityState!=='visible'||!panel.hidden){setTimeout(greet,5000);return}
+    if(nudgeEl)nudgeHide();
+    try{sessionStorage.setItem('benji-hi','1')}catch(e){}
+    const tt=helloTitle();
+    NUDGE.hello={pose:'wave',title:tt.replace(/,? ?\{n\}/,''),titleN:tt,lines:o.surface==='portal'?HELLO_PORTAL:HELLO_APP};
+    setTimeout(()=>nudgeShow('hello',true),nudgeEl?300:0)}
   function mount(opts){
     if(o)return;o=Object.assign({surface:'app'},opts);msgs=load();
     const st=document.createElement('style');st.textContent=css;document.head.appendChild(st);
@@ -2238,7 +2242,7 @@ const Benji=(()=>{
     try{o.client.auth.onAuthStateChange((ev)=>{if(ev==='SIGNED_IN'){loadWho().then(()=>{if(!panel.hidden)draw()});setTimeout(greet,3000)}})}catch(e){}
     list.addEventListener('submit',e=>{const f=e.target.closest('.bj-name');if(!f)return;e.preventDefault();saveWho(f.n.value)});
   }
-  return{mount,open,ask,nudge:s=>nudgeShow(s,true),greet:()=>{try{Object.keys(localStorage).filter(k=>k.startsWith('benji-hi-')).forEach(k=>localStorage.removeItem(k))}catch(e){}return greet()}};
+  return{mount,open,ask,nudge:s=>nudgeShow(s,true),greet:()=>{try{sessionStorage.removeItem('benji-hi')}catch(e){}return greet()}};
 })();
 
 /* Benji -> staff app report download */
