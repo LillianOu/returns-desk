@@ -526,6 +526,10 @@ const Benji=(()=>{
 .bj-n.bj-out{animation:bj-nout .25s ease-in forwards}
 @keyframes bj-nin{from{opacity:0;transform:translateY(14px) scale(.9)}to{opacity:1;transform:none}}
 @keyframes bj-nout{to{opacity:0;transform:translateY(8px) scale(.96)}}
+.bj-who{border:0;background:none;color:inherit;opacity:.6;font:inherit;font-size:12.5px;text-decoration:underline;cursor:pointer;padding:0;margin-top:-4px}
+.bj-name{display:flex;flex-direction:column;gap:6px;align-items:center;margin:4px 0 6px}.bj-name label{font-size:14px;opacity:.85}
+.bj-name div{display:flex;gap:6px}.bj-name input{width:170px;font:inherit;font-size:16px;padding:8px 12px;border-radius:10px;border:1px solid var(--line,#D5DAE8);background:var(--surface,#fff);color:inherit}
+.bj-name button{border:0;border-radius:10px;padding:8px 14px;font:inherit;font-weight:600;background:#111;color:#fff;cursor:pointer}.bj-p[data-tone="dark"] .bj-name button{background:#fff;color:#111}
 @media (max-width:560px){.bj-p{font-size:17px;}.bj-b,.bj-u{max-width:82vw}.bj-p{right:0;left:0;bottom:0;width:100%;height:100%;height:100dvh;border-radius:0;padding-top:env(safe-area-inset-top,0px)}}
 @media (prefers-reduced-motion:reduce){.bj-p,.bj-pop,.bj-bob,.bj-dots span,.bj-mic{animation:none!important}.bj-btn{transition:none}}
 `;
@@ -551,7 +555,7 @@ const Benji=(()=>{
   function tone(){try{const c=getComputedStyle(document.body).backgroundColor.match(/\d+(\.\d+)?/g)||[255,255,255];const L=(.2126*c[0]+.7152*c[1]+.0722*c[2])/255;panel.dataset.tone=L<.5?'dark':'light'}catch(e){}}
   function draw(){tone();
     let h='';
-    if(!msgs.length)h='<div class="bj-hero">'+img('working','bj-pop','Benji at his Returns Bench laptop')+'<b>Hi, I\'m Benji</b><div>Returns Bench\'s AI helper. Ask me about your returns, or how to use '+(o.surface==='portal'?'the portal':'the app')+'.</div><div class="bj-s">'+SUGGEST[o.surface].map(s=>'<button type="button" data-q="'+esc(s)+'">'+esc(s)+'</button>').join('')+'</div></div>';
+    if(!msgs.length)h='<div class="bj-hero">'+img('working','bj-pop','Benji at his Returns Bench laptop')+'<b>'+(who?'Hi '+esc(who)+'! I\'m Benji':'Hi, I\'m Benji')+'</b>'+(who?'<button type="button" class="bj-who" data-who="1">Not '+esc(who)+'?</button>':'<form class="bj-name"><label>What should I call you?</label><div><input name="n" maxlength="30" autocomplete="given-name" placeholder="Your first name"><button type="submit">Save</button></div></form>')+'<div>Returns Bench\'s AI helper. Ask me about your returns, or how to use '+(o.surface==='portal'?'the portal':'the app')+'.</div><div class="bj-s">'+SUGGEST[o.surface].map(s=>'<button type="button" data-q="'+esc(s)+'">'+esc(s)+'</button>').join('')+'</div></div>';
     msgs.forEach((m,i)=>{h+=m.role==='user'?'<div class="bj-u">'+esc(m.content)+'</div>':'<div class="bj-m">'+img(m.mood||'happy','','')+'<div class="bj-b">'+fmt(m.content)+(m.action&&m.action.type==='email'?mailCard(m.action,i):'')+(m.action&&m.action.type==='report'&&o.onReport?'<button type="button" class="bj-act" data-rep="'+i+'"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v11M7 10l5 5 5-5M5 20h14"/></svg>Download Excel report</button>':'')+'</div></div>'});
     if(busy)h+='<div class="bj-m">'+img('run','bj-bob','Benji is looking that up')+'<div class="bj-b bj-dots" aria-label="Benji is typing"><span></span><span></span><span></span></div></div>';
     list.innerHTML=h;list.scrollTop=list.scrollHeight}
@@ -560,7 +564,7 @@ const Benji=(()=>{
     msgs.push({role:'user',content:q});busy=true;input.value='';grow();sendBtn.disabled=true;head('working');draw();save();
     let reply='',mood='sorry',act=null;
     try{
-      const r=await o.client.functions.invoke('benji',{body:{surface:o.surface,messages:msgs.map(m=>({role:m.role,content:m.content}))}});
+      const r=await o.client.functions.invoke('benji',{body:{surface:o.surface,name:who||undefined,messages:msgs.map(m=>({role:m.role,content:m.content}))}});
       if(r.error){const s=r.error.context&&r.error.context.status;reply=s===401?'Please sign in again, then ask me once more.':'Sorry, I couldn\'t answer just now. Please try again in a moment.'}
       else{reply=(r.data&&(r.data.reply||r.data.error))||'Sorry, I\'m not sure about that one.';mood=(r.data&&r.data.mood)||'happy';act=(r.data&&r.data.action)||null}
     }catch(e){reply='I can\'t reach the internet right now. Check your connection and try again.'}
@@ -596,15 +600,26 @@ const Benji=(()=>{
   }
   function idle(){clearTimeout(sleepT);sleepT=setTimeout(()=>{if(panel&&!panel.hidden&&!busy)head('sleep')},600000)}
   function grow(){input.style.height='auto';input.style.height=Math.min(120,input.scrollHeight)+'px'}
-  function open(){nudgeHide();panel.hidden=false;unread=0;badge();btn.setAttribute('aria-expanded','true');head(msgs.length?(msgs[msgs.length-1].mood||'happy'):'hello');draw();setTimeout(()=>input.focus(),50);idle()}
+  function open(){nudgeHide();if(!who)loadWho().then(()=>{if(who&&!msgs.length)draw()});panel.hidden=false;unread=0;badge();btn.setAttribute('aria-expanded','true');head(msgs.length?(msgs[msgs.length-1].mood||'happy'):'hello');draw();setTimeout(()=>input.focus(),50);idle()}
   function close(){micStop();panel.hidden=true;btn.setAttribute('aria-expanded','false');btn.focus()}
+  // ---- Who is signed in: first name from their saved name, else a guess from the email, else ask ----
+  let who='',whoAsked=false;
+  const GENERIC=new Set(['info','admin','returns','return','sales','accounts','account','support','hello','hi','office','warehouse','ops','operations','team','enquiries','enquiry','contact','orders','order','cs','csr','customerservice','service','billing','noreply','mail','reception','manager','staff','dispatch','logistics','shop','store','test','user','benji']);
+  function guessName(email){const l=String(email||'').split('@')[0].toLowerCase();const parts=l.split(/[._-]+/);const f=parts[0];
+    if(!/^[a-z]{2,12}$/.test(f)||GENERIC.has(f))return'';if(parts.length===1&&f.length>9)return'';return f[0].toUpperCase()+f.slice(1)}
+  async function loadWho(){try{const r=await o.client.auth.getSession();const u=r&&r.data&&r.data.session&&r.data.session.user;if(!u)return'';
+    const m=u.user_metadata||{};const n=String(m.first_name||m.name||m.full_name||'').trim().split(/\s+/)[0];
+    who=n?n[0].toUpperCase()+n.slice(1):guessName(u.email);whoAsked=!!m.first_name;return who}catch(e){return''}}
+  async function saveWho(v){v=String(v||'').trim().split(/\s+/)[0].slice(0,30);if(!v)return;who=v[0].toUpperCase()+v.slice(1);whoAsked=true;draw();
+    try{await o.client.auth.updateUser({data:{first_name:who}})}catch(e){}}
+  const hiName=t=>who?t.replace(/\{n\}/g,who):t.replace(/,? ?\{n\}/g,'');
   // ---- Friendly nudges: only while the app is open and visible, at most once per moment per day ----
   const NUDGE={
-    afternoon:{pose:"wave",title:"Afternoon check-in",lines:["Have you had some water lately? Grab a glass, I'll watch the bench.", "Quick stretch? Those returns aren't going anywhere.", "Halfway through the afternoon. You're doing great.", "Don't work too hard. I'm keeping an eye on things.", "Eyes off the screen for 20 seconds. Look at something far away.", "Roll those shoulders back. Ahh, better.", "Tea or coffee time? I won't tell anyone.", "You've been busy. Nice work so far today.", "Stand up, wiggle your toes, sit back down. Trust me.", "Little reminder: you're doing better than you think.", "Snack o'clock? A banana counts as a break.", "Deep breath in... and out. Okay, carry on, superstar.", "Is your chair still comfy? Adjust it, your back will thank you.", "If something's been bugging you, ask me. That's what I'm here for.", "Hey, just checking in. How's your afternoon going?", "Remember to blink! Screens make us forget.", "Afternoon slump? A short walk to the window helps.", "One box at a time. You've got this."]},
-    evening:{pose:"sleep",title:"It's after five",lines:["You're not going home yet? Don't work too hard.", "The returns will still be here tomorrow, promise. Time to head home.", "Still here? Go on, I'll mind the bench tonight.", "Big day. Get home safe and have a good night.", "Clock says it's past five. Your couch is missing you.", "Hey, overtime hero. Remember to rest too.", "Whatever's left can wait till tomorrow. Really.", "Dinner's not going to cook itself. Off you go!", "You've done enough for today. Be proud of it.", "Night shift? Don't forget to eat something.", "I'll keep the bench warm. Go home and recharge.", "Late one tonight? Take it easy on the drive home.", "The best work happens after a good night's sleep.", "Wrap up the last thing, then call it a day. Deal?", "Still going? You're amazing, but please rest soon."]},
-    friday:{pose:"success",title:"It's Friday!",lines:["Take a deep breath and slow it down a notch.", "Friday feels. Put some music on and pace yourself.", "You made it to Friday! Grab a snack, you deserve it.", "Shoulders down, jaw unclenched. It's Friday.", "Easy does it this afternoon. Relax and chill out a little.", "Friday mode: on. Go gently.", "It's Friday! Treat yourself to something nice today.", "Look at you, crushing it all week. Time to breathe.", "Friday afternoons are for smiling. Just saying.", "Happy Friday! Do a little dance at your desk, nobody's watching.", "It's been a week, hasn't it? Be kind to yourself.", "Friday reminder: you've done a great job.", "Slow and steady this afternoon. You've earned an easy one."]},
-    fridayLate:{pose:"sleep",title:"Friday evening",lines:["Time to relax and chill out. The bench can wait.", "Still at it? Go easy on yourself, it's Friday.", "Big week. Time to put your feet up when you can.", "Friday night calls for a chill-out. You've done plenty.", "Pop the lid down when you can. You deserve a rest.", "It's Friday evening. Whatever's left can wait.", "You worked hard this week. Time to unwind.", "Friday night! Go and do something that makes you happy.", "Log off soon? Your favourite show is waiting.", "Still here on a Friday night? You legend. Now rest!"]},
-    weekend:{pose:"idle",title:"Working on the weekend?",lines:["Thanks for keeping things moving. Don't forget to rest too.", "Weekend shift? Take it easy and take a break.", "You're a star for being here today. Go gently.", "Quick one today? I'll help you get it done fast.", "Weekend work deserves a treat afterwards.", "Don't stay too long. Some sunshine is calling you.", "Just you and me today. Let's keep it short and sweet.", "Remember to switch off properly after this one."]}};
+    afternoon:{titleN:"Hey {n}, quick check-in",pose:"wave",title:"Afternoon check-in",lines:["Have you had some water lately? Grab a glass, I'll watch the bench.", "Quick stretch? Those returns aren't going anywhere.", "Halfway through the afternoon. You're doing great.", "Don't work too hard. I'm keeping an eye on things.", "Eyes off the screen for 20 seconds. Look at something far away.", "Roll those shoulders back. Ahh, better.", "Tea or coffee time? I won't tell anyone.", "You've been busy. Nice work so far today.", "Stand up, wiggle your toes, sit back down. Trust me.", "Little reminder: you're doing better than you think.", "Snack o'clock? A banana counts as a break.", "Deep breath in... and out. Okay, carry on, superstar.", "Is your chair still comfy? Adjust it, your back will thank you.", "If something's been bugging you, ask me. That's what I'm here for.", "Hey, just checking in. How's your afternoon going?", "Remember to blink! Screens make us forget.", "Afternoon slump? A short walk to the window helps.", "One box at a time. You've got this."]},
+    evening:{titleN:"{n}, it's after five",pose:"sleep",title:"It's after five",lines:["You're not going home yet? Don't work too hard.", "The returns will still be here tomorrow, promise. Time to head home.", "Still here? Go on, I'll mind the bench tonight.", "Big day. Get home safe and have a good night.", "Clock says it's past five. Your couch is missing you.", "Hey, overtime hero. Remember to rest too.", "Whatever's left can wait till tomorrow. Really.", "Dinner's not going to cook itself. Off you go!", "You've done enough for today. Be proud of it.", "Night shift? Don't forget to eat something.", "I'll keep the bench warm. Go home and recharge.", "Late one tonight? Take it easy on the drive home.", "The best work happens after a good night's sleep.", "Wrap up the last thing, then call it a day. Deal?", "Still going? You're amazing, but please rest soon."]},
+    friday:{titleN:"It's Friday, {n}!",pose:"success",title:"It's Friday!",lines:["Take a deep breath and slow it down a notch.", "Friday feels. Put some music on and pace yourself.", "You made it to Friday! Grab a snack, you deserve it.", "Shoulders down, jaw unclenched. It's Friday.", "Easy does it this afternoon. Relax and chill out a little.", "Friday mode: on. Go gently.", "It's Friday! Treat yourself to something nice today.", "Look at you, crushing it all week. Time to breathe.", "Friday afternoons are for smiling. Just saying.", "Happy Friday! Do a little dance at your desk, nobody's watching.", "It's been a week, hasn't it? Be kind to yourself.", "Friday reminder: you've done a great job.", "Slow and steady this afternoon. You've earned an easy one."]},
+    fridayLate:{titleN:"Friday evening, {n}",pose:"sleep",title:"Friday evening",lines:["Time to relax and chill out. The bench can wait.", "Still at it? Go easy on yourself, it's Friday.", "Big week. Time to put your feet up when you can.", "Friday night calls for a chill-out. You've done plenty.", "Pop the lid down when you can. You deserve a rest.", "It's Friday evening. Whatever's left can wait.", "You worked hard this week. Time to unwind.", "Friday night! Go and do something that makes you happy.", "Log off soon? Your favourite show is waiting.", "Still here on a Friday night? You legend. Now rest!"]},
+    weekend:{titleN:"Weekend shift, {n}?",pose:"idle",title:"Working on the weekend?",lines:["Thanks for keeping things moving. Don't forget to rest too.", "Weekend shift? Take it easy and take a break.", "You're a star for being here today. Go gently.", "Quick one today? I'll help you get it done fast.", "Weekend work deserves a treat afterwards.", "Don't stay too long. Some sunshine is calling you.", "Just you and me today. Let's keep it short and sweet.", "Remember to switch off properly after this one."]}};
   let nudgeEl=null,nudgeT=null;
   function nudgeSlot(d){const day=d.getDay(),m=d.getHours()*60+d.getMinutes();
     if(day===0||day===6)return m>=600&&m<1200?'weekend':null;
@@ -620,7 +635,7 @@ const Benji=(()=>{
       if(slot==='afternoon'&&Math.random()<.4)return}
     const line=n.lines[nPick(slot,n.lines.length)];
     nudgeEl=document.createElement('div');nudgeEl.className='bj-n';nudgeEl.setAttribute('role','status');
-    nudgeEl.innerHTML=img(n.pose,'','')+'<div><b>'+esc(n.title)+'</b><span>'+esc(line)+'</span></div><button type="button" class="bj-nx" aria-label="Dismiss">'+svg.x.replace(/width="\d+"/,'width="13"').replace(/height="\d+"/,'height="13"')+'</button>';
+    nudgeEl.innerHTML=img(n.pose,'','')+'<div><b>'+esc(who&&n.titleN?hiName(n.titleN):n.title)+'</b><span>'+esc(hiName(line))+'</span></div><button type="button" class="bj-nx" aria-label="Dismiss">'+svg.x.replace(/width="\d+"/,'width="13"').replace(/height="\d+"/,'height="13"')+'</button>';
     root.appendChild(nudgeEl);
     nudgeEl.addEventListener('click',e=>{const x=e.target.closest('.bj-nx');nudgeHide();if(!x)open()});
     clearTimeout(nudgeT);nudgeT=setTimeout(nudgeHide,25000)}
@@ -629,6 +644,19 @@ const Benji=(()=>{
   function nudgeHide(){if(!nudgeEl)return;const el=nudgeEl;nudgeEl=null;clearTimeout(nudgeT);el.classList.add('bj-out');setTimeout(()=>el.remove(),260)}
   function nudgeTick(){const s=nudgeSlot(new Date());if(s)nudgeShow(s)}
   function nudgeStart(){setTimeout(nudgeTick,8000);setInterval(nudgeTick,60000);document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')setTimeout(nudgeTick,3000)})}
+  const HELLO={
+    morning:["Good morning! How are you today?","Morning! Ready when you are.","Good morning! Coffee first, then returns?","Morning! Hope you slept well.","Rise and shine! I've got the bench warmed up."],
+    afternoon:["Good afternoon! How's your day going?","Nice to see you again.","How are things this afternoon?","Afternoon! Shout if you need anything."],
+    evening:["Good evening! Hope your day went well.","Working late? I'm here if you need me.","Evening! Let's make this quick so you can relax."]};
+  const HELLO_PORTAL=["Welcome back! Ask me anything about your returns.","Need a report or a quick look at a return? Just ask.","Welcome back! I can find any of your returns in a second."];
+  async function greet(){
+    if(o.greet===false)return;await loadWho();
+    const d=new Date();const key='benji-hi-'+d.getFullYear()+'-'+(d.getMonth()+1)+'-'+d.getDate();
+    try{if(localStorage.getItem(key))return}catch(e){}
+    if(document.visibilityState!=='visible'||!panel.hidden||nudgeEl)return;
+    try{localStorage.setItem(key,'1')}catch(e){}
+    const h=d.getHours();const pool=o.surface==='portal'?HELLO_PORTAL:HELLO[h<12?'morning':h<17?'afternoon':'evening'];
+    NUDGE.hello={pose:'wave',title:'Hello!',titleN:'Hey {n}!',lines:pool};nudgeShow('hello',true)}
   function mount(opts){
     if(o)return;o=Object.assign({surface:'app'},opts);msgs=load();
     const st=document.createElement('style');st.textContent=css;document.head.appendChild(st);
@@ -647,11 +675,14 @@ const Benji=(()=>{
     input.addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey&&!e.isComposing){e.preventDefault();ask(input.value)}});
     input.addEventListener('input',grow);
     panel.addEventListener('keydown',e=>{if(e.key==='Escape')close()});
-    list.addEventListener('click',e=>{const b=e.target.closest('[data-q]');if(b)ask(b.dataset.q);const mb=e.target.closest('[data-mail]');if(mb){mailAct(+mb.dataset.i,mb.dataset.mail);return}const rb=e.target.closest('[data-rep]');if(rb){const m=msgs[+rb.dataset.rep];if(m&&m.action)try{o.onReport(m.action);if(matchMedia('(max-width:560px)').matches)close()}catch(err){console.error(err)}}});
+    list.addEventListener('click',e=>{if(e.target.closest('[data-who]')){who='';whoAsked=false;draw();const i=list.querySelector('.bj-name input');if(i)i.focus();return}const b=e.target.closest('[data-q]');if(b)ask(b.dataset.q);const mb=e.target.closest('[data-mail]');if(mb){mailAct(+mb.dataset.i,mb.dataset.mail);return}const rb=e.target.closest('[data-rep]');if(rb){const m=msgs[+rb.dataset.rep];if(m&&m.action)try{o.onReport(m.action);if(matchMedia('(max-width:560px)').matches)close()}catch(err){console.error(err)}}});
     root.addEventListener('click',e=>{if(e.target.closest('.bj-clear')){e.preventDefault();msgs=[];save();head('hello');draw();input.focus()}});
     if(o.nudges!==false&&o.surface==='app')nudgeStart();
+    loadWho();setTimeout(greet,4000);
+    try{o.client.auth.onAuthStateChange((ev)=>{if(ev==='SIGNED_IN'){loadWho().then(()=>{if(!panel.hidden)draw()});setTimeout(greet,3000)}})}catch(e){}
+    list.addEventListener('submit',e=>{const f=e.target.closest('.bj-name');if(!f)return;e.preventDefault();saveWho(f.n.value)});
   }
-  return{mount,open,ask,nudge:s=>nudgeShow(s,true)};
+  return{mount,open,ask,nudge:s=>nudgeShow(s,true),greet:()=>{try{Object.keys(localStorage).filter(k=>k.startsWith('benji-hi-')).forEach(k=>localStorage.removeItem(k))}catch(e){}return greet()}};
 })();
 
 /* Benji -> client portal report download */
