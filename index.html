@@ -858,6 +858,7 @@ const RM=()=>matchMedia('(prefers-reduced-motion: reduce)').matches;
 const P={text:'M5 8V5h14v3M12 5v14M9 19h6',mic:'M12 3a3 3 0 00-3 3v6a3 3 0 006 0V6a3 3 0 00-3-3zM6 11a6 6 0 0012 0M12 17v4M9 21h6',arrow:'M5 12h14M13 6l6 6-6 6',x:'M6 6l12 12M18 6L6 18',grip:'M9 6h.01M15 6h.01M9 12h.01M15 12h.01M9 18h.01M15 18h.01',check:'M5 12.5l4.5 4.5L19 7.5',minus:'M5 12h14',plus:'M12 5v14M5 12h14',chev:'M6 9l6 6 6-6',filter:'M4 6h16M7 12h10M10 18h4',scan:'M4 8V5h3M17 5h3v3M20 16v3h-3M7 19H4v-3M8 9v6M12 9v6M16 9v6',pen:'M4 20h4L19 9l-4-4L4 16zM14 6l4 4'};
 const ic=(n,c)=>'<svg class="ic'+(c?' '+c:'')+'" viewBox="0 0 24 24" aria-hidden="true"><path d="'+P[n]+'"/></svg>';
 const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+const PHONE_DICT=/iPhone|iPad|iPod|Android/i.test(navigator.userAgent)||(/Macintosh/.test(navigator.userAgent)&&navigator.maxTouchPoints>1);
 const NUMW={zero:0,oh:0,o:0,one:1,won:1,two:2,to:2,too:2,three:3,four:4,for:4,five:5,six:6,seven:7,eight:8,ate:8,nine:9};
 function spokenCode(t){
   return String(t||'').toLowerCase().replace(/number sign|hashtag|hash tag|hash|pound sign|pound/g,' # ').replace(/\b(reference|ref|order|job|number|no|is)\b/g,' ').replace(/\b(dash|hyphen|minus)\b/g,' - ').replace(/\b(slash|stroke)\b/g,' / ')
@@ -910,7 +911,7 @@ async function onOcr(file){
   if(p)p.innerHTML='<span class="note">Found several. Tap the right one:</span>'+codes.map(c=>'<button type="button" class="btn" data-act="ocrPick" data-v="'+esc(c)+'">'+esc(c)+'</button>').join('');
   toast('Found '+codes.length+' possible numbers. Tap the right one.');
 }
-const micBtn=(target,label)=>SR?'<button type="button" class="btn mic" data-act="mic" data-v="'+target+'" aria-label="Say the '+label+'">'+ic('mic')+'</button>':'';
+const micBtn=(target,label)=>(SR||PHONE_DICT)?'<button type="button" class="btn mic" data-act="mic" data-v="'+target+'" aria-label="Say the '+label+'">'+ic('mic')+'</button>':'';
 const cap=s=>s?s[0].toUpperCase()+s.slice(1):'';
 STATUS.splice(0,STATUS.length,'open','shelf','discarded','resent');
 const SLAB={open:'Open',shelf:'Back to stock',discarded:'Discarded',resent:'Resent to customer'},SL=s=>SLAB[s]||cap(s);
@@ -1571,6 +1572,7 @@ async function liveScan(t){
 /* ---------- events ---------- */
 Object.assign(ACT,{
   mic:(v,b)=>{
+    if(PHONE_DICT){const f=$({notes:'#f-notes',jobNo:'#f-job',orderNo:'#f-order',search:'#q'}[v]||'#f-notes');if(f){f.focus();try{const n=f.value.length;f.setSelectionRange(n,n)}catch(e){}}return toast('Tap the 🎤 on your keyboard and speak')}
     if(S.rec){try{S.rec.stop()}catch(e){}return}
     const r=new SR();r.lang='en-AU';r.interimResults=false;r.maxAlternatives=1;S.rec=r;b.classList.add('rec');
     r.onresult=e=>{const heard=e.results[0][0].transcript;
