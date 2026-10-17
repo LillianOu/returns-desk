@@ -608,7 +608,7 @@ const clientName=id=>(S.clients.find(c=>c.id===id)||{}).name||'Unknown client';
 
 /* ---------- boot ---------- */
 async function boot(){
-  try{const h=location.hash.slice(1);if(TABS.includes(h))S.tab=h;else{const t=localStorage.getItem('rd-tab');if(TABS.includes(t))S.tab=t}}catch(e){}
+  S.tab='dash';
   newDraft();render();
   const use=n=>GH.use(n);
   const [db,assets,dl,user]=await Promise.all(['db','assets','downloads','user'].map(use));
