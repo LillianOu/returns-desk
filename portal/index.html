@@ -544,19 +544,33 @@ const Benji=(()=>{
     }catch(e){reply='I can\'t reach the internet right now. Check your connection and try again.'}
     if(panel.hidden){unread++;badge()}
     msgs.push(act?{role:'assistant',content:reply,mood,action:act}:{role:'assistant',content:reply,mood});busy=false;sendBtn.disabled=false;head(mood);draw();save();input.focus();idle()}
-  function micStop(){try{rec&&rec.stop()}catch(e){}}
-  function micReset(){rec=null;heard='';if(micBtn){micBtn.setAttribute('aria-pressed','false');micBtn.setAttribute('aria-label','Speak your question')}if(input&&!/blocked/.test(input.placeholder))input.placeholder='Ask Benji…'}
-  function micDetach(){if(!rec)return;const r=rec;r.onresult=null;r.onend=null;r.onerror=null;try{r.abort?r.abort():r.stop()}catch(e){}micReset()}
+  // Mic: one recogniser at a time. A new one only starts after the old one has fully closed
+  // (browsers give a silent "Listening…" session if the old one is still shutting down).
+  let micWant=false,micEnding=null,micKeep='',micQuick=0,micDog=null,micRetry=0;
+  function micUI(on){if(!micBtn)return;micBtn.setAttribute('aria-pressed',on?'true':'false');micBtn.setAttribute('aria-label',on?'Stop listening':'Speak your question');if(input&&!/blocked/.test(input.placeholder))input.placeholder=on?'Listening… press Enter to send':'Ask Benji…'}
+  function micKill(r){if(!r)return Promise.resolve();r.onresult=null;r.onerror=null;
+    const p=new Promise(res=>{let done=false;const fin=()=>{if(!done){done=true;res()}};r.onend=fin;setTimeout(fin,1200)});
+    try{r.abort?r.abort():r.stop()}catch(e){}return p}
+  function micReset(){rec=null;heard='';micUI(false)}
+  function micStop(){micWant=false;clearTimeout(micDog);micRetry=0;if(rec){const r=rec;rec=null;micEnding=micKill(r).then(()=>{micEnding=null})}micReset()}
+  function micDetach(){micStop()}
+  function micStart(){
+    if(!micWant||rec)return;
+    let r;try{r=new SR()}catch(e){micWant=false;micUI(false);return}
+    const t0=Date.now();rec=r;r.lang=(navigator.language&&/^en/i.test(navigator.language))?navigator.language:'en-AU';r.interimResults=true;r.continuous=true;r.maxAlternatives=1;
+    micKeep=input.value?input.value.replace(/\s*$/,' '):'';
+    // Watchdog: a session that says Listening but never hears anything gets replaced (max twice).
+    clearTimeout(micDog);micDog=setTimeout(()=>{if(rec===r&&micWant&&!r.got&&micRetry<2){micRetry++;rec=null;micEnding=micKill(r).then(()=>{micEnding=null;micStart()})}},4500);
+    r.onresult=e=>{if(rec!==r)return;r.got=true;micRetry=0;clearTimeout(micDog);let t='';for(let i=0;i<e.results.length;i++)t+=e.results[i][0].transcript;heard=t;input.value=micKeep+t;grow()};
+    r.onerror=e=>{if(e.error==='not-allowed'||e.error==='service-not-allowed'){micWant=false;input.placeholder='Microphone blocked. Allow it in your browser settings.'}};
+    // Some browsers end a session after a pause even in continuous mode: carry on listening until the person stops it.
+    r.onend=()=>{if(rec!==r)return;rec=null;micQuick=Date.now()-t0<1500?micQuick+1:0;if(micQuick>=3){micWant=false;micQuick=0}if(micWant){setTimeout(micStart,150)}else{micReset();input.focus();grow()}};
+    try{r.start();micUI(true)}catch(e){rec=null;if(micWant)setTimeout(micStart,300)}
+  }
   function micToggle(){
-    if(rec){micStop();return}
-    try{rec=new SR()}catch(e){rec=null;return}
-    rec.lang=(navigator.language&&/^en/i.test(navigator.language))?navigator.language:'en-AU';rec.interimResults=true;rec.continuous=true;
-    const base=input.value?input.value.replace(/\s*$/,' '):'';heard='';
-    micBtn.setAttribute('aria-pressed','true');micBtn.setAttribute('aria-label','Stop listening');input.placeholder='Listening… press Enter to send';
-    rec.onresult=e=>{let t='';for(let i=0;i<e.results.length;i++)t+=e.results[i][0].transcript;heard=t;input.value=base+t;grow()};
-    rec.onerror=e=>{if(e.error==='not-allowed'||e.error==='service-not-allowed')input.placeholder='Microphone blocked. Allow it in your browser settings.'};
-    rec.onend=()=>{micReset();input.focus();grow()};
-    try{rec.start()}catch(e){rec=null;micBtn.setAttribute('aria-pressed','false')}
+    if(micWant){micStop();input.focus();return}
+    micWant=true;micUI(true);
+    if(micEnding)micEnding.then(micStart);else micStart();
   }
   function idle(){clearTimeout(sleepT);sleepT=setTimeout(()=>{if(panel&&!panel.hidden&&!busy)head('sleep')},600000)}
   function grow(){input.style.height='auto';input.style.height=Math.min(120,input.scrollHeight)+'px'}
