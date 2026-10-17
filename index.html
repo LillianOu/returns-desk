@@ -2098,33 +2098,51 @@ const Benji=(()=>{
     }catch(e){reply='I can\'t reach the internet right now. Check your connection and try again.'}
     if(panel.hidden){unread++;badge()}
     msgs.push(act?{role:'assistant',content:reply,mood,action:act}:{role:'assistant',content:reply,mood});busy=false;sendBtn.disabled=false;head(mood);draw();save();input.focus();idle()}
-  // Mic: one recogniser at a time. A new one only starts after the old one has fully closed
-  // (browsers give a silent "Listening…" session if the old one is still shutting down).
-  let micWant=false,micEnding=null,micKeep='',micQuick=0,micDog=null,micRetry=0;
-  function micUI(on){if(!micBtn)return;micBtn.setAttribute('aria-pressed',on?'true':'false');micBtn.setAttribute('aria-label',on?'Stop listening':'Speak your question');if(input&&!/blocked/.test(input.placeholder))input.placeholder=on?'Listening… press Enter to send':'Ask Benji…'}
-  function micKill(r){if(!r)return Promise.resolve();r.onresult=null;r.onerror=null;
-    const p=new Promise(res=>{let done=false;const fin=()=>{if(!done){done=true;res()}};r.onend=fin;setTimeout(fin,1200)});
-    try{r.abort?r.abort():r.stop()}catch(e){}return p}
-  function micReset(){rec=null;heard='';micUI(false)}
-  function micStop(){micWant=false;clearTimeout(micDog);micRetry=0;if(rec){const r=rec;rec=null;micEnding=micKill(r).then(()=>{micEnding=null})}micReset()}
+  // Mic. Two rules that make it work on iPhone/Safari as well as Chrome:
+  // 1) start() is always called directly inside the tap (Safari ignores a start that happens later),
+  // 2) on Safari one recogniser is reused for the whole visit; it is stopped as soon as a question is sent.
+  const UA=navigator.userAgent||'';
+  const STRICT=/iP(hone|ad|od)/.test(UA)||(/Macintosh/.test(UA)&&navigator.maxTouchPoints>1)||(/AppleWebKit/.test(UA)&&!/Chrome|Chromium|CriOS|Edg|OPR|Android/.test(UA));
+  let micWant=false,micKeep='',micDog=null,micSess=0,micOne=null,micQuick=0,micEnding=null,micRetry=0;
+  function micUI(on,msg){if(!micBtn)return;micBtn.setAttribute('aria-pressed',on?'true':'false');micBtn.setAttribute('aria-label',on?'Stop listening':'Speak your question');if(input&&!/blocked/.test(input.placeholder))input.placeholder=msg||(on?'Listening… press Enter to send':'Ask Benji…')}
+  function micReset(msg){rec=null;heard='';clearTimeout(micDog);micUI(false,msg)}
+  function micHalt(r){if(!r)return;try{STRICT?r.stop():(r.abort?r.abort():r.stop())}catch(e){}}
+  function micStop(msg){micWant=false;micRetry=0;micSess++;const r=rec;rec=null;if(r){if(!STRICT){r.onresult=null;r.onerror=null;
+    // Chrome: remember when the old session has really closed, so the next one doesn't start deaf.
+    micEnding=new Promise(res=>{let d=false;const f=()=>{if(!d){d=true;micEnding=null;res()}};r.onend=f;setTimeout(f,1200)})}micHalt(r)}micReset(msg)}
   function micDetach(){micStop()}
+  function micMake(){
+    if(STRICT&&micOne)return micOne;
+    let r;try{r=new SR()}catch(e){return null}
+    r.lang=(navigator.language&&/^en/i.test(navigator.language))?navigator.language:'en-AU';r.interimResults=true;r.continuous=!STRICT;r.maxAlternatives=1;
+    if(STRICT)micOne=r;return r}
   function micStart(){
-    if(!micWant||rec)return;
-    let r;try{r=new SR()}catch(e){micWant=false;micUI(false);return}
-    const t0=Date.now();rec=r;r.lang=(navigator.language&&/^en/i.test(navigator.language))?navigator.language:'en-AU';r.interimResults=true;r.continuous=true;r.maxAlternatives=1;
+    const r=micMake();if(!r){micWant=false;micUI(false);return false}
+    const id=++micSess,t0=Date.now();rec=r;r.got=false;
     micKeep=input.value?input.value.replace(/\s*$/,' '):'';
-    // Watchdog: a session that says Listening but never hears anything gets replaced (max twice).
-    clearTimeout(micDog);micDog=setTimeout(()=>{if(rec===r&&micWant&&!r.got&&micRetry<2){micRetry++;rec=null;micEnding=micKill(r).then(()=>{micEnding=null;micStart()})}},4500);
-    r.onresult=e=>{if(rec!==r)return;r.got=true;micRetry=0;clearTimeout(micDog);let t='';for(let i=0;i<e.results.length;i++)t+=e.results[i][0].transcript;heard=t;input.value=micKeep+t;grow()};
-    r.onerror=e=>{if(e.error==='not-allowed'||e.error==='service-not-allowed'){micWant=false;input.placeholder='Microphone blocked. Allow it in your browser settings.'}};
-    // Some browsers end a session after a pause even in continuous mode: carry on listening until the person stops it.
-    r.onend=()=>{if(rec!==r)return;rec=null;micQuick=Date.now()-t0<1500?micQuick+1:0;if(micQuick>=3){micWant=false;micQuick=0}if(micWant){setTimeout(micStart,150)}else{micReset();input.focus();grow()}};
-    try{r.start();micUI(true)}catch(e){rec=null;if(micWant)setTimeout(micStart,300)}
-  }
+    r.onresult=e=>{if(micSess!==id)return;r.got=true;micRetry=0;clearTimeout(micDog);let t='';for(let i=0;i<e.results.length;i++)t+=e.results[i][0].transcript;heard=t;input.value=micKeep+t;grow()};
+    r.onerror=e=>{if(micSess!==id)return;if(e.error==='not-allowed'||e.error==='service-not-allowed'){micStop('Microphone blocked. Allow it in your browser settings.')}};
+    r.onend=()=>{if(micSess!==id)return;rec=null;
+      // Chrome may end a long session by itself: carry on listening until the person stops it.
+      if(micWant&&!STRICT){micQuick=Date.now()-t0<1500?micQuick+1:0;if(micQuick<3){setTimeout(()=>{if(micWant&&!rec)micStart()},150);return}}
+      micWant=false;micReset(r.got?'':'Didn\'t catch that. Tap the mic and try again.');input.focus();grow()};
+    try{r.start()}catch(e){
+      // Still finishing the last one: stop it; on Safari ask for one more tap (it needs a fresh tap to start).
+      micHalt(r);if(STRICT){micWant=false;micReset('One sec… tap the mic again.');return false}
+      setTimeout(()=>{if(micWant&&micSess===id){try{r.start()}catch(e2){micStop('Tap the mic again.')}}},400)}
+    micUI(true);
+    // If nothing is heard for a while, stop cleanly so the next tap starts fresh.
+    clearTimeout(micDog);micDog=setTimeout(()=>{if(micSess!==id||rec!==r||r.got)return;
+      // Chrome: a session that says Listening but hears nothing is replaced once, automatically.
+      if(!STRICT&&micRetry<1){micRetry++;micSess++;rec=null;r.onresult=null;r.onerror=null;micEnding=new Promise(res=>{let d=false;const f=()=>{if(!d){d=true;micEnding=null;res()}};r.onend=f;setTimeout(f,1200)});micHalt(r);micEnding.then(()=>{if(micWant&&!rec)micStart()});return}
+      micStop('Didn\'t hear anything. Tap the mic to try again.')},STRICT?8000:4500);
+    return true}
   function micToggle(){
     if(micWant){micStop();input.focus();return}
-    micWant=true;micUI(true);
-    if(micEnding)micEnding.then(micStart);else micStart();
+    if(rec){micStop()}
+    micWant=true;
+    if(!STRICT&&micEnding){micUI(true);micEnding.then(()=>{if(micWant&&!rec)micStart()});return}
+    micStart();
   }
   function idle(){clearTimeout(sleepT);sleepT=setTimeout(()=>{if(panel&&!panel.hidden&&!busy)head('sleep')},600000)}
   function grow(){input.style.height='auto';input.style.height=Math.min(120,input.scrollHeight)+'px'}
