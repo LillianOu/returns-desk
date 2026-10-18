@@ -539,6 +539,7 @@ html[data-theme="light"] .shell .stg.stg-open,html[data-theme="light"] .shell .s
 .gate-p{width:100%;max-width:440px;display:flex;flex-direction:column;gap:14px;padding:28px 24px;border-radius:26px;border:1px solid var(--line);background:linear-gradient(180deg,rgba(111,141,255,.14),rgba(33,72,242,.07));box-shadow:inset 0 1px 0 rgba(255,255,255,.3),0 30px 90px -30px #6F8DFF}
 .gate-p h2{font-family:var(--funk);font-weight:800;font-size:34px;letter-spacing:-.04em}
 .gate-p h2 span{background:linear-gradient(120deg,#A9BEFF,#2F57F5);-webkit-background-clip:text;background-clip:text;color:transparent}
+.gate-forgot{align-self:center;border:0;background:none;color:var(--muted);font:inherit;font-size:15px;text-decoration:underline;text-underline-offset:3px;cursor:pointer;padding:6px}.gate-forgot:hover{color:var(--ink)}
 .gate-err{color:var(--bad);font-size:15px;min-height:1.3em;margin:0}
 .gate details{font-size:15px;color:var(--muted)} .gate summary{cursor:pointer;padding:4px 0}
 </style>
@@ -549,7 +550,8 @@ html[data-theme="light"] .shell .stg.stg-open,html[data-theme="light"] .shell .s
     <label class="fld"><span>Email</span><input id="sb-email" type="email" autocomplete="username" autocapitalize="none" spellcheck="false" placeholder=" "></label>
     <label class="fld"><span>Password</span><input id="sb-pass" type="password" autocomplete="current-password" placeholder=" "></label>
     <label class="fld"><span>Your initials (on every return you touch)</span><input id="sb-initials" maxlength="4" autocapitalize="characters" autocomplete="off" placeholder=" "></label>
-    <button class="btn pri big" data-act="connect" type="submit">Sign in</button></div>
+    <button class="btn pri big" data-act="connect" type="submit">Sign in</button>
+    <button class="gate-forgot" data-act="forgotPass" type="button">Forgot password?</button></div>
     <div id="gate-pw" hidden style="display:flex;flex-direction:column;gap:14px"><p class="note" id="sb-pw-sub">Welcome. Create a password for your account. You'll use it with your email to sign in next time.</p>
     <label class="fld"><span>New password (at least 8 characters)</span><input id="sb-np1" type="password" autocomplete="new-password" placeholder=" "></label>
     <label class="fld"><span>Type it again</span><input id="sb-np2" type="password" autocomplete="new-password" placeholder=" "></label>
@@ -1718,6 +1720,7 @@ boot=async function(){await _boot();if(S.db)S.db.doc('orgs/storage').onSnapshot(
 /* the invite / sign-in link leaves a one-time code in the address; never reload with it */
 const AUTH_HASH=/access_token|refresh_token|error_description|error_code|type=(invite|magiclink|recovery|signup)/;
 const LINK_ERR=(()=>{try{const h=new URLSearchParams(location.hash.slice(1));const d=h.get('error_description');return d?d.replace(/\+/g,' '):''}catch(e){return''}})();
+const RECOVERY=/type=recovery/.test(location.hash);
 function cleanAddress(){if(AUTH_HASH.test(location.hash)||location.search)history.replaceState(null,'',location.pathname)}
 function cleanReload(){location.replace(location.origin+location.pathname)}
 const GH=(()=>{
@@ -1818,7 +1821,7 @@ const GH=(()=>{
   async function start(){
     let m=null;try{m=await loadMe()}catch(e){console.error(e)}
     cleanAddress();
-    if(m&&!m.pwSet){render();showGate('',false,true);return}
+    if(m&&(!m.pwSet||RECOVERY||window.__rbRec)){render();showGate('',false,true,RECOVERY||window.__rbRec);return}
     if(m&&m.company_id&&m.role!=='viewer'){boot();try{Benji.mount({client:sb,surface:'app',mobileBottom:'84px',onReport:benjiReportApp})}catch(e){console.error(e)}return}
     render();
     if(!m){showGate(LINK_ERR?(/expired|invalid/i.test(LINK_ERR)?'That email link has expired or was already used. Sign in with your email and password, or ask for a new link.':LINK_ERR):'');return}
@@ -1841,21 +1844,25 @@ const GH=(()=>{
   async function setPassword(p){if(!p||p.length<8)throw new Error('Use at least 8 characters.');const r=await sb.auth.updateUser({password:p,data:{pw_set:true}});if(r.error)throw new Error(r.error.message)}
   async function createCompany(name){name=(name||'').trim();if(!name)throw new Error('Type the company name.');ok(await sb.rpc('create_company',{company_name:name}))}
   async function signOut(){await sb.auth.signOut();cleanReload()}
-  sb.auth.onAuthStateChange(ev=>{if(ev==='SIGNED_OUT'&&me)cleanReload()});
-  return{use,start,signIn,sendLink,setPassword,createCompany,signOut,blobUrl,img,me:()=>me,sb,onAuth:f=>onAuthFail=f};
+  sb.auth.onAuthStateChange(ev=>{if(ev==='PASSWORD_RECOVERY')window.__rbRec=true;if(ev==='SIGNED_OUT'&&me)cleanReload()});
+  async function forgot(email){email=(email||'').trim().toLowerCase();if(!email)throw new Error('Type your email first, then tap Forgot password.');
+    const r=await sb.auth.resetPasswordForEmail(email,{redirectTo:location.origin+location.pathname});if(r.error&&!/not found|user/i.test(r.error.message))throw new Error(/rate/i.test(r.error.message)?'Too many requests. Wait a few minutes and try again.':r.error.message)}
+  return{use,start,signIn,forgot,sendLink,setPassword,createCompany,signOut,blobUrl,img,me:()=>me,sb,onAuth:f=>onAuthFail=f};
 })();
-function showGate(msg,needCompany,needPw){
+function showGate(msg,needCompany,needPw,recovery){
   const g=$('#gate');g.hidden=false;$('#shell').inert=true;
   $("#gate-login").hidden=!!(needCompany||needPw);$("#gate-company").hidden=!needCompany;$("#gate-pw").hidden=!needPw;
-  if(needPw){const m=GH.me();$("#sb-pw-sub").textContent="Welcome, "+m.email+". Create a password for your account. You'll use it with your email to sign in next time."}
+  if(needPw){const m=GH.me();$("#sb-pw-sub").textContent=recovery?"Choose a new password for "+m.email+". You'll use it to sign in from now on.":"Welcome, "+m.email+". Create a password for your account. You'll use it with your email to sign in next time.";const bb=document.querySelector('[data-act=firstPass]');if(bb)bb.textContent=recovery?"Save new password and continue":"Create password and continue"}
   const m=GH.me();if(m)$('#sb-email').value=m.email||'';
   $('#gate-err').textContent=msg||'';enhance(g);
 }
 Object.assign(ACT,{
-  connect:async(v,b)=>{const er=$('#gate-err');er.textContent='';b.disabled=true;b.textContent='Signing in…';
+  connect:async(v,b)=>{const er=$('#gate-err');er.textContent='';er.style.color='';b.disabled=true;b.textContent='Signing in…';
     try{const i=$('#sb-initials').value.trim();if(i)try{localStorage.setItem('rd-initials',i.toUpperCase())}catch(e){}
       await GH.signIn($('#sb-email').value,$('#sb-pass').value);cleanReload()}
     catch(e){er.textContent=e.message;b.disabled=false;b.textContent='Sign in'}},
+  forgotPass:async(v,b)=>{const er=$('#gate-err');er.textContent='';er.style.color='';b.disabled=true;
+    try{await GH.forgot($('#sb-email').value);er.style.color='var(--muted)';er.textContent='If that email has an account, a link to reset your password is on its way. Check your inbox and spam folder.'}catch(e){er.textContent=e.message}b.disabled=false},
   sendLink:async(v,b)=>{const er=$('#gate-err');er.textContent='';b.disabled=true;
     try{await GH.sendLink($('#sb-email').value);er.textContent='Check your email for a sign-in link.'}catch(e){er.textContent=e.message}b.disabled=false},
   makeCompany:async(v,b)=>{const er=$('#gate-err');er.textContent='';b.disabled=true;
@@ -2270,6 +2277,59 @@ GH.about=()=>'<div class="panel" id="about"><h3>About &amp; legal</h3>'+
  '<p><strong>Confidentiality.</strong> Please treat the app, its features and any trial pricing as confidential.</p>'+
  '<p><strong>Contact.</strong> Questions about these terms or your data: <a href="mailto:info@returnsbench.com">info@returnsbench.com</a>. These terms are governed by the laws of New South Wales, Australia.</p>'+
  '<p>Last updated '+RB_RELEASED+'.</p></div></details></div>';
+
+/* ---- Team & clients (admin only): invite by email from inside the app ---- */
+GH.teamCss=GH.teamCss||(document.head.insertAdjacentHTML('beforeend','<style>'+
+ '.tm-form{display:grid;grid-template-columns:minmax(0,2fr) minmax(0,1.1fr) minmax(0,1.3fr) auto;gap:10px;align-items:end}'+
+ '.tm-form .btn{min-height:46px}.tm-form .tm-brand[hidden]{display:none}'+
+ '@media (max-width:760px){.tm-form{grid-template-columns:1fr 1fr}.tm-form .tm-email{grid-column:1/-1}.tm-form .btn{grid-column:1/-1}}'+
+ '.tm-h{display:flex;align-items:baseline;justify-content:space-between;gap:10px;margin:18px 0 6px}.tm-h h4{margin:0;font-size:15px}.tm-h span{font-size:13px;color:var(--muted)}'+
+ '.tm-list{display:flex;flex-direction:column;border:1px solid var(--line);border-radius:12px;overflow:hidden}'+
+ '.tm-row{display:grid;grid-template-columns:minmax(0,1fr) auto auto;gap:10px;align-items:center;padding:10px 12px;border-top:1px solid var(--line)}.tm-row:first-child{border-top:0}'+
+ '.tm-who{min-width:0}.tm-who b{display:block;font-weight:600;overflow-wrap:anywhere}.tm-who small{color:var(--muted);font-size:13px}'+
+ '.tm-pill{font:600 12px/1 var(--body);padding:5px 9px;border-radius:999px;white-space:nowrap;border:1px solid var(--line)}'+
+ '.tm-pill.wait{color:#B86A00;border-color:rgba(255,150,40,.45);background:rgba(255,150,40,.10)}.tm-pill.on{color:#1E8A55;border-color:rgba(40,170,100,.4);background:rgba(40,170,100,.10)}'+
+ 'html:not([data-theme=light]) .tm-pill.wait{color:#FFB765}html:not([data-theme=light]) .tm-pill.on{color:#6BE0A2}'+
+ '.tm-act{display:flex;gap:6px}.tm-act .btn{min-height:36px;padding:6px 10px;font-size:13px}'+
+ '@media (max-width:560px){.tm-row{grid-template-columns:1fr auto}.tm-act{grid-column:1/-1}}'+
+ '.tm-act .btn.danger{color:#C0392B}html:not([data-theme=light]) .tm-act .btn.danger{color:#FF8A8A}'+
+ '.tm-empty{padding:14px 12px;color:var(--muted);font-size:14px}'+
+ '</style>'),1);
+GH.staffPanel=()=>(setTimeout(GH.teamList,60),'')+'<div class="panel" id="team"><h3>Team &amp; clients</h3>'+
+ '<p class="note">Invite people by email. They get an email from Returns Bench, click the link and create their own password. Only admins can invite or remove people.</p>'+
+ '<div class="tm-form"><label class="fld tm-email"><span>Email</span><input id="tm-email" type="email" autocapitalize="none" spellcheck="false" placeholder=" "></label>'+
+ '<label class="fld"><span>Access</span><select id="tm-access"><option value="staff">Staff</option><option value="admin">Admin</option><option value="client">Client portal</option></select></label>'+
+ '<label class="fld tm-brand" hidden><span>Brand</span><select id="tm-brand"><option value="">Choose a brand…</option>'+S.clients.map(c=>'<option value="'+esc(c.id)+'">'+esc(c.name)+'</option>').join('')+'</select></label>'+
+ '<button class="btn pri" data-act="teamInvite">Send invite</button></div>'+
+ '<p class="note" id="tm-log" aria-live="polite"></p>'+
+ '<p class="note" style="margin-top:-4px"><strong>Staff</strong> log returns, scan and run reports. <strong>Admins</strong> can also invite people and change settings. <strong>Clients</strong> only see their own brand in the portal.</p>'+
+ '<div class="tm-h"><h4>Staff team</h4><span id="tm-sc"></span></div><div class="tm-list" id="tm-staff"><div class="tm-empty">Loading…</div></div>'+
+ '<div class="tm-h"><h4>Clients</h4><span id="tm-cc"></span></div><div class="tm-list" id="tm-clients"><div class="tm-empty">Loading…</div></div>'+
+ '<div class="row" style="margin-top:12px"><a class="btn" href="'+esc(GH.portalUrl())+'" target="_blank" rel="noopener">Open the client portal (preview)</a></div></div>';
+GH.portalPanel=()=>'';
+GH.teamPill=d=>d?'<span class="tm-pill on" title="Last signed in '+esc(new Date(d).toLocaleString('en-AU'))+'">Active</span>':'<span class="tm-pill wait">Invite sent</span>';
+GH.teamRow=(u,sub,kind)=>{const you=u.email===GH.me().email;
+ return'<div class="tm-row"><div class="tm-who"><b>'+esc(u.email)+(you?' (you)':'')+'</b><small>'+esc(sub)+(u.last_sign_in?' · last signed in '+new Date(u.last_sign_in).toLocaleDateString('en-AU'):'')+'</small></div>'+GH.teamPill(u.last_sign_in)+
+ '<div class="tm-act">'+(you?'':'<button class="btn" data-act="teamResend" data-v="'+esc(u.email)+'">'+(u.last_sign_in?'Reset password':'Resend')+'</button><button class="btn danger" data-act="teamRemove" data-v="'+esc(kind+'|'+u.email)+'">Remove</button>')+'</div></div>'};
+GH.teamList=async()=>{const se=$('#tm-staff'),ce=$('#tm-clients');if(!se)return;
+ const [a,b]=await Promise.all([GH.sb.rpc('staff_users'),GH.sb.rpc('portal_users')]);
+ if(a.error)se.innerHTML='<div class="tm-empty">'+esc(a.error.message)+'</div>';
+ else{se.innerHTML=(a.data||[]).map(u=>GH.teamRow(u,u.role==='admin'?'Admin':'Staff','staff')).join('')||'<div class="tm-empty">No staff yet.</div>';$('#tm-sc').textContent=(a.data||[]).length+' people'}
+ if(b.error)ce.innerHTML='<div class="tm-empty">'+esc(b.error.message)+'</div>';
+ else{ce.innerHTML=(b.data||[]).map(u=>GH.teamRow(u,'Client · '+(u.tenant_name||''),'client')).join('')||'<div class="tm-empty">No clients have portal access yet.</div>';$('#tm-cc').textContent=(b.data||[]).length+' clients'}};
+document.addEventListener('change',e=>{if(e.target&&e.target.id==='tm-access'){const b=document.querySelector('.tm-brand');if(b)b.hidden=e.target.value!=='client'}});
+GH.teamCall=async body=>{try{const r=await GH.sb.functions.invoke('invite',{body});if(r.error){let m=r.error.message;try{const j=await r.error.context.json();m=j.message||m}catch(e){}if(/Failed to send|404|not found|fetch/i.test(m))m='Invites aren\'t switched on yet. Lillian needs to finish one setup step in Supabase.';return{ok:false,message:m}}return r.data}catch(e){return{ok:false,message:e.message||'Network error'}}};
+Object.assign(ACT,{
+ teamInvite:async(v,b)=>{const log=$('#tm-log'),email=($('#tm-email').value||'').trim(),access=$('#tm-access').value,tenant=$('#tm-brand').value;
+  if(!email){log.textContent='Type their email.';return}
+  if(access==='client'&&!tenant){log.textContent='Choose which brand this client belongs to.';return}
+  b.disabled=true;const old=b.textContent;b.textContent='Sending…';const r=await GH.teamCall({action:'invite',email,access,tenant});b.disabled=false;b.textContent=old;
+  log.textContent=r.message||(r.ok?'Done.':'Something went wrong.');if(r.ok){$('#tm-email').value='';GH.teamList()}},
+ teamResend:(v,b)=>twice(b,async()=>{const r=await GH.teamCall({action:'resend',email:v});toast(r.message||(r.ok?'Sent.':'Could not send.'))}),
+ teamRemove:(v,b)=>twice(b,async()=>{const i=v.indexOf('|'),kind=v.slice(0,i),email=v.slice(i+1);
+  const r=await GH.sb.rpc(kind==='client'?'portal_revoke':'staff_revoke',{p_email:email});
+  if(r.error)toast(r.error.message);else{toast(r.data==='self'?'You can\'t remove yourself.':'Access removed for '+email);GH.teamList()}})
+});
 
 GH.start();
 
