@@ -1874,8 +1874,8 @@ Object.assign(ACT,{
     b.disabled=true;try{await GH.setPassword(a);cleanReload()}catch(e){er.textContent=/same/i.test(e.message)?'Choose a different password from your old one.':e.message;b.disabled=false}},
   signOut:(v,b)=>twice(b,()=>GH.signOut())
 });
-GH.panel=()=>{const m=GH.me();return'<div class="panel"><h3>This device</h3><p class="note">Signed in as <strong>'+esc(m.email)+'</strong> ('+esc(m.initials)+', '+esc(m.role)+') for <strong>'+esc(m.company||'')+'</strong> · account '+esc(m.account||'')+'. Data is saved in Supabase (Sydney). Other devices pick up changes within about 20 seconds.</p>'+
-  '<label class="fld"><span>New password</span><input id="sb-newpass" type="password" autocomplete="new-password" placeholder=" "></label><div class="row"><button class="btn" data-act="setPass">Set password</button> <button class="btn danger" data-act="signOut">Sign out of this device</button></div>'+(GH.importPanel?GH.importPanel():'')+'</div>'+(m.role==='admin'?GH.staffPanel()+GH.portalPanel():'')};
+GH.panel=()=>{const m=GH.me(),role=m.role==='admin'?'Admin':m.role==='viewer'?'Client':'Staff';return'<div class="panel"><h3>Your account</h3><p class="note">Signed in as <strong>'+esc(m.email)+'</strong> · '+role+(m.initials?' · initials <strong>'+esc(m.initials)+'</strong> on the returns you log':'')+'.<br>Everything saves automatically and shows on your other devices within seconds.</p>'+
+  '<label class="fld"><span>New password</span><input id="sb-newpass" type="password" autocomplete="new-password" placeholder=" "></label><div class="row"><button class="btn" data-act="setPass">Change password</button> <button class="btn danger" data-act="signOut">Sign out</button></div></div>'+(m.role==='admin'?GH.staffPanel()+GH.portalPanel():'')};
 GH.onAuth(()=>{if($('#gate').hidden)showGate('Your sign-in has expired. Sign in again to carry on.')});
 
 /* ---- Client portal access (admin) ---- */
