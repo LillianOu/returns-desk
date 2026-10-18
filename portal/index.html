@@ -135,6 +135,7 @@ tr:last-child td{border-bottom:0}
 .gate-p{width:100%;max-width:420px;display:flex;flex-direction:column;gap:16px;box-shadow:var(--shadow)}
 .gate-p .brand b{font-family:var(--display);font-weight:500}.gate-p .brand small{color:var(--muted)}
 .gate-err{color:var(--bad);min-height:1.2em;margin:0;font-size:14px}
+.g-forgot{align-self:center;border:0;background:none;color:var(--muted);font:inherit;font-size:15px;text-decoration:underline;text-underline-offset:3px;cursor:pointer;padding:6px;margin:4px auto 0;display:block}
 .form input,.form select{width:100%}
 .note-card{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:18px;background:var(--accent-soft);border-color:transparent}
 .rts-i{appearance:none;border:0;font:inherit;color:inherit;text-align:left;width:100%;cursor:pointer}
@@ -158,6 +159,7 @@ h2.mono{font-family:var(--mono);font-weight:500}
       <label for="g-email">Email<input id="g-email" type="email" autocomplete="username" autocapitalize="none" spellcheck="false"></label>
       <label for="g-pass">Password<input id="g-pass" type="password" autocomplete="current-password"></label>
       <div class="btns"><button class="btn pri" id="g-in" type="submit">Sign in</button></div>
+      <button class="g-forgot" id="g-forgot" type="button">Forgot password?</button>
     </div>
     <div id="g-pw" class="form" hidden>
       <h2 style="font-family:var(--display);font-weight:500;margin:0">Create your password</h2>
@@ -284,6 +286,7 @@ const P={me:null,tenant:null,rows:[],urls:{}};
 /* the invite / sign-in link leaves a one-time code in the address; never reload with it */
 const AUTH_HASH=/access_token|refresh_token|error_description|error_code|type=(invite|magiclink|recovery|signup)/;
 const LINK_ERR=(()=>{try{const h=new URLSearchParams(location.hash.slice(1));const d=h.get('error_description');return d?d.replace(/\+/g,' '):''}catch(e){return''}})();
+const RECOVERY=/type=recovery/.test(location.hash);
 function cleanAddress(){if(AUTH_HASH.test(location.hash)||location.search)history.replaceState(null,'',location.pathname)}
 function cleanReload(){location.replace(location.origin+location.pathname)}
 
@@ -303,7 +306,7 @@ const packL={sealed:'New box, unopened',damaged:'Damaged box',opened:'Opened'};
 
 /* ---------- sign in ---------- */
 function gate(msg,pw){$('#gate').hidden=false;$('#g-login').hidden=!!pw;$('#g-pw').hidden=!pw;$('#g-err').textContent=msg||''}
-$('#g-in').addEventListener('click',async()=>{const e=$('#g-email').value.trim().toLowerCase(),p=$('#g-pass').value;$('#g-err').textContent='';
+$('#g-in').addEventListener('click',async()=>{const e=$('#g-email').value.trim().toLowerCase(),p=$('#g-pass').value;$('#g-err').textContent='';$('#g-err').style.color='';
   if(!e||!p){$('#g-err').textContent='Type your email and password.';return}
   const r=await sb.auth.signInWithPassword({email:e,password:p});
   if(r.error){$('#g-err').textContent=/invalid/i.test(r.error.message)?'That email and password do not match.':r.error.message;return}
@@ -312,13 +315,18 @@ $('#g-in').addEventListener('click',async()=>{const e=$('#g-email').value.trim()
 $('#g-link')&&$('#g-link').addEventListener('click',async()=>{const e=$('#g-email').value.trim().toLowerCase();if(!e){$('#g-err').textContent='Type your email first.';return}
   const r=await sb.auth.signInWithOtp({email:e,options:{shouldCreateUser:false,emailRedirectTo:location.origin+location.pathname}});
   $('#g-err').textContent=r.error?r.error.message:'Check your email for a sign-in link.'});
+try{sb.auth.onAuthStateChange(ev=>{if(ev==='PASSWORD_RECOVERY')window.__rbRec=true})}catch(e){}
+$('#g-forgot').addEventListener('click',async()=>{const e=$('#g-email').value.trim().toLowerCase(),er=$('#g-err');er.textContent='';
+  er.style.color='';if(!e){er.textContent='Type your email first, then tap Forgot password.';return}
+  $('#g-forgot').disabled=true;const r=await sb.auth.resetPasswordForEmail(e,{redirectTo:location.origin+location.pathname});$('#g-forgot').disabled=false;
+  if(!(r.error&&/rate/i.test(r.error.message)))er.style.color='var(--muted)';er.textContent=r.error&&/rate/i.test(r.error.message)?'Too many requests. Wait a few minutes and try again.':'If that email has portal access, a link to reset your password is on its way. Check your inbox and spam folder.'});
 $('#out').addEventListener('click',async()=>{await sb.auth.signOut();cleanReload()});
 
 /* ---------- start ---------- */
 async function start(){
   const s=(await sb.auth.getSession()).data.session;cleanAddress();if(!s){gate(LINK_ERR?(/expired|invalid/i.test(LINK_ERR)?'That email link has expired or was already used. Sign in with your email and password, or ask for a new link.':LINK_ERR):'');return}
   let fresh=null;try{fresh=(await sb.auth.getUser()).data.user}catch(e){}
-  if(!(((fresh||s.user).user_metadata)||{}).pw_set){gate('',true);$('#g-pw-sub').textContent='Welcome, '+s.user.email+'. Choose a password for your account. You\'ll use it with your email to sign in next time.';$('#g-np1').focus();return}
+  if(RECOVERY||window.__rbRec||!(((fresh||s.user).user_metadata)||{}).pw_set){gate('',true);$('#g-pw-sub').textContent=(RECOVERY||window.__rbRec)?'Choose a new password for '+s.user.email+'. You\'ll use it to sign in from now on.':'Welcome, '+s.user.email+'. Choose a password for your account. You\'ll use it with your email to sign in next time.';if(RECOVERY||window.__rbRec)$('#g-save').textContent='Save new password and continue';$('#g-np1').focus();return}
   const me=await sb.rpc('portal_me');
   if(me.error||!me.data||!me.data.length){gate('This email does not have portal access yet. Ask your Fulfilment Australia contact.');return}
   P.me=Object.assign({email:s.user.email},me.data[0]);
@@ -514,7 +522,7 @@ const Benji=(()=>{
 .bj-p[data-tone="dark"]{box-shadow:0 30px 80px rgba(0,0,0,.6),0 0 0 1px rgba(255,255,255,.16)}
 /* Staff app: glass panel */
 .bj-p[data-surface="app"]{background:rgba(255,255,255,.62);-webkit-backdrop-filter:blur(30px) saturate(1.5);backdrop-filter:blur(30px) saturate(1.5);box-shadow:0 30px 80px rgba(10,20,60,.32),0 0 0 1px rgba(255,255,255,.7),inset 0 1px 0 rgba(255,255,255,.8)}
-.bj-p[data-surface="app"][data-tone="dark"]{background:rgba(14,26,69,.55);color:#fff;box-shadow:0 30px 80px rgba(0,0,0,.6),0 0 0 1px rgba(255,255,255,.18),inset 0 1px 0 rgba(255,255,255,.12)}
+.bj-p[data-surface="app"][data-tone="dark"]{background:rgba(40,41,45,.62);color:#fff;box-shadow:0 30px 80px rgba(0,0,0,.6),0 0 0 1px rgba(255,255,255,.18),inset 0 1px 0 rgba(255,255,255,.12)}
 .bj-p[data-surface="app"] .bj-h{background:rgba(0,0,0,.88)}.bj-p[data-surface="app"] .bj-f{background:#000}
 .bj-p[data-surface="app"][data-tone="light"] .bj-b{background:#fff;box-shadow:0 1px 2px rgba(10,20,60,.08)}
 /* Friendly pop-up notes from Benji (staff app only) */
