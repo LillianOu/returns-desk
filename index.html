@@ -2450,5 +2450,15 @@ ACT.photosZip=async v=>{const r=S.returns.find(x=>x.id===v);if(!r)return;const l
   try{await loadZip();const z=new JSZip();for(const [id,n] of list)z.file(n,await photoBlob(id));const blob=await z.generateAsync({type:'blob'});
     await saveFile(String(r.jobNo||'return').replace(/[^A-Za-z0-9-]+/g,'')+'-photos.zip',blob)}catch(e){console.error(e);toast('The photos could not be zipped. Check the connection and try again.')}};
 </script>
+<style id="tone-oct18">
+/* 18 Oct: dark mode 20% darker, return detail in neutral charcoal (not navy), dashboard cards without coloured borders */
+html:not([data-theme=light]):root:root{--bg:#121315}
+html:not([data-theme=light]) body{background:radial-gradient(1000px 700px at 12% -10%,rgba(255,255,255,.08),transparent 60%),radial-gradient(900px 640px at 95% 6%,rgba(90,120,230,.13),transparent 60%),radial-gradient(900px 700px at 50% 112%,rgba(70,100,210,.08),transparent 62%),linear-gradient(180deg,#212327 0%,#18191D 38%,#111215 100%)!important;background-color:#19191D!important;background-attachment:fixed!important}
+html:not([data-theme=light])[data-kind=rts] body{background:radial-gradient(900px 620px at 10% -8%,rgba(255,120,40,.11),transparent 62%),radial-gradient(900px 700px at 55% 110%,rgba(255,106,0,.08),transparent 62%),linear-gradient(180deg,#22211E 0%,#1A1918 38%,#121111 100%)!important;background-color:#1A1918!important;background-attachment:fixed!important}
+html:not([data-theme=light]) .sheet-p{background:rgba(22,23,26,.94)!important;border:1px solid rgba(255,255,255,.12)!important;box-shadow:0 30px 80px rgba(0,0,0,.6),inset 0 1px 0 rgba(255,255,255,.06)!important}
+html:not([data-theme=light]) .sheet-p .btn:not(.pri){background:rgba(255,255,255,.06)}
+#shell .stgs .stg{border-color:rgba(255,255,255,.14)!important}
+html[data-theme=light] #shell .stgs .stg{border-color:rgba(0,0,0,.08)!important}
+</style>
 </body>
 </html>
