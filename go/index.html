@@ -2984,6 +2984,12 @@ html.rb .btn,html.rb .seg button,html.rb .nav button,html.rb .pill,html.rb .tbtn
 html.rb h3,html.rb .shell .stg-t,html.rb .rb-type legend,html.rb .fld>span:first-child,html.rb .rb-logo.empty{font-weight:500!important}
 html.rb b,html.rb strong,html.rb .rb-tc b{font-weight:600!important}
 html.rb{-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale}
+
+/* theme toggle sits right next to the name on desktop, centred on its line (21 Oct) */
+@media (min-width:900px){
+  html.rb .brand .theme-tg{margin-left:4px!important;margin-top:-2px!important;width:30px!important;height:30px!important;align-self:flex-start!important;flex:none!important}
+  html.rb .brand .theme-tg svg{width:15px!important;height:15px!important}
+}
 </style>
 </body>
 </html>
