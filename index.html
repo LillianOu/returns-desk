@@ -2473,6 +2473,183 @@ ACT.photosZip=async v=>{const r=S.returns.find(x=>x.id===v);if(!r)return;const l
   toast('Preparing '+list.length+' photo'+(list.length===1?'':'s')+'…');
   try{await loadZip();const z=new JSZip();for(const [id,n] of list)z.file(n,await photoBlob(id));const blob=await z.generateAsync({type:'blob'});
     await saveFile(String(r.jobNo||'return').replace(/[^A-Za-z0-9-]+/g,'')+'-photos.zip',blob)}catch(e){console.error(e);toast('The photos could not be zipped. Check the connection and try again.')}};
+
+/* =====================================================================
+   Camera and photos, 20 Oct 2026 (after hours)
+   - Barcode reading uses the phone's own reader where the browser has one
+     (Android Chrome), and the modern zxing-cpp reader everywhere else
+     (iPhone Safari), instead of the old ZXing JavaScript library.
+   - Live camera asks for a sharper stream, reads only the scan box, and offers
+     torch and 2x zoom where the phone allows it. The camera stays ready for
+     30 seconds after a scan, so scanning several items in a row does not keep
+     asking for permission.
+   - A label photo now also reads the product barcode and a printed SKU, and
+     fills the first empty item line.
+   - Item photos are saved at 1280 px on the long side, about 150-250 KB each,
+     instead of 1400 px at high quality.
+   ===================================================================== */
+const BD_URL='https://fastly.jsdelivr.net/npm/barcode-detector@3.2.2/dist/iife/ponyfill.js';
+const RETAIL=['ean_13','ean_8','upc_a','upc_e'];
+const ALL_FORMATS=['ean_13','ean_8','upc_a','upc_e','code_128','code_39','code_93','itf','codabar','qr_code','data_matrix','pdf417'];
+function loadScriptOnce(src){loadScriptOnce.m=loadScriptOnce.m||{};return loadScriptOnce.m[src]||(loadScriptOnce.m[src]=new Promise((res,rej)=>{const s=document.createElement('script');s.src=src;s.async=true;s.onload=res;s.onerror=()=>{delete loadScriptOnce.m[src];rej(new Error('load'))};document.head.appendChild(s)}))}
+async function detectorClass(){
+  if(detectorClass.c)return detectorClass.c;
+  if('BarcodeDetector' in window){try{const f=await window.BarcodeDetector.getSupportedFormats();if(f&&f.includes('ean_13'))return detectorClass.c=window.BarcodeDetector}catch(e){}}
+  await loadScriptOnce(BD_URL);
+  return detectorClass.c=window.BarcodeDetectionAPI.BarcodeDetector;
+}
+async function makeDetector(formats){
+  const C=await detectorClass();let use=formats;
+  try{const sup=await C.getSupportedFormats();use=formats.filter(f=>sup.includes(f))}catch(e){}
+  return new C(use.length?{formats:use}:undefined);
+}
+/* every barcode in a picture (canvas, image or video frame), retail product codes first */
+async function readCodes(src,formats){
+  const det=await makeDetector(formats||ALL_FORMATS);
+  const r=await det.detect(src)||[],out=[],seen={};
+  r.forEach(x=>{const v=String(x.rawValue||'').replace(/^\][A-Za-z]\d/,'').replace(/[\x00-\x1f]+/g,' ').trim();if(v&&!seen[v]){seen[v]=1;out.push({value:v,format:x.format})}});
+  return out.sort((a,b)=>(RETAIL.includes(b.format)?1:0)-(RETAIL.includes(a.format)?1:0));
+}
+/* photo of a barcode: try a normal size first, then the full photo for tiny barcodes */
+async function decode(file){
+  try{let r=await readCodes(await fileToImg(file,1600));if(!r.length)r=await readCodes(await fileToImg(file,3000));if(r.length)return r[0].value}catch(e){console.error(e)}
+  if(window.ZXing){try{const c=await fileToImg(file,1600),hints=new Map();hints.set(ZXing.DecodeHintType.TRY_HARDER,true);const rd=new ZXing.BrowserMultiFormatReader(hints);const im=new Image();await new Promise((a,b)=>{im.onload=a;im.onerror=b;im.src=c.toDataURL('image/jpeg',.92)});return (await rd.decodeFromImageElement(im)).getText()}catch(e){}}
+  return null;
+}
+
+/* ---------- item photos: big enough to see clearly, small enough to store ---------- */
+const PHOTO_MAX=1280,PHOTO_TARGET=250*1024;
+async function smallPhoto(file){
+  let c=await fileToImg(file,PHOTO_MAX),q=.72,blob=await new Promise(r=>c.toBlob(r,'image/jpeg',q));
+  while(blob&&blob.size>PHOTO_TARGET&&q>.5){q-=.08;blob=await new Promise(r=>c.toBlob(r,'image/jpeg',q))}
+  if(blob&&blob.size>PHOTO_TARGET){c=await fileToImg(file,1024);blob=await new Promise(r=>c.toBlob(r,'image/jpeg',.6))}
+  return blob;
+}
+async function onPhotos(files){
+  const i=+S.target,l=S.draft.lines[i];if(!l||!S.assets)return;
+  for(const f of files){S.uploading++;toast('Uploading photo…');
+    try{const blob=await smallPhoto(f);const up=await S.assets.upload(blob,{type:'image/jpeg'});l.photos.push(up.id)}
+    catch(e){console.error(e);toast(e&&e.code==='quota_or_state'?'Photo storage is full.':'That photo didn\'t upload. Try again.')}
+    S.uploading--}
+  if(S.tab==='new')render();
+}
+
+/* ---------- live camera ---------- */
+const SCAN_KEEP_MS=30000;
+function scanButtons(track){
+  const row=document.querySelector('#scanner .scan-ui .row');if(!row)return;
+  row.querySelectorAll('[data-scanx]').forEach(b=>b.remove());
+  let cap={};try{cap=track.getCapabilities?track.getCapabilities():{}}catch(e){}
+  const add=(label,fn)=>{const b=document.createElement('button');b.type='button';b.className='btn';b.dataset.scanx='1';b.textContent=label;b.addEventListener('click',e=>{e.preventDefault();e.stopPropagation();fn(b)});row.insertBefore(b,row.firstChild)};
+  if(cap.torch){let on=false;add('Torch',async b=>{on=!on;try{await track.applyConstraints({advanced:[{torch:on}]});b.textContent=on?'Torch off':'Torch'}catch(e){on=!on}})}
+  if(cap.zoom&&cap.zoom.max>=2){let z=false;add('Zoom 2×',async b=>{z=!z;try{await track.applyConstraints({advanced:[{zoom:z?Math.min(2,cap.zoom.max):(cap.zoom.min||1)}]});b.textContent=z?'Zoom 1×':'Zoom 2×'}catch(e){z=!z}})}
+}
+function releaseCamera(){clearTimeout(SC.keep);SC.keep=null;if(SC.stream){SC.stream.getTracks().forEach(t=>t.stop());SC.stream=null}}
+function stopScan(){
+  clearInterval(SC.timer);SC.timer=null;
+  if(SC.reader){try{SC.reader.reset()}catch(e){}SC.reader=null}
+  const v=$('#scanVid');if(v){try{v.pause()}catch(e){}v.srcObject=null}
+  $('#scanner').hidden=true;
+  /* keep the camera ready briefly for the next scan, then let it go */
+  clearTimeout(SC.keep);if(SC.stream)SC.keep=setTimeout(releaseCamera,SCAN_KEEP_MS);
+}
+document.addEventListener('visibilitychange',()=>{if(document.hidden&&$('#scanner').hidden)releaseCamera()});
+const CAM_BLOCKED=/iPhone|iPad|iPod/.test(navigator.userAgent)
+  ?'The camera is blocked for this site. Tap aA in the address bar, then Website Settings, then Camera, and choose Allow. Or use a photo instead.'
+  :'The camera is blocked for this site. Tap the lock icon next to the address, then Permissions, then Camera, and choose Allow. Or use a photo instead.';
+async function liveScan(t){
+  SC.target=t;
+  if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia)return photoScan(t);
+  const box=$('#scanner'),v=$('#scanVid'),msg=$('#scanMsg');box.hidden=false;msg.textContent='Starting the camera…';
+  const isTrack=t==='tracking',formats=isTrack?['qr_code','data_matrix','code_128','code_39','pdf417']:ALL_FORMATS;
+  let det=null;const detP=makeDetector(formats).then(d=>det=d).catch(e=>{console.error(e)});
+  clearTimeout(SC.keep);SC.keep=null;
+  const live=SC.stream&&SC.stream.getVideoTracks().some(x=>x.readyState==='live');
+  if(!live){
+    try{SC.stream=await navigator.mediaDevices.getUserMedia({audio:false,video:{facingMode:{ideal:'environment'},width:{ideal:1920},height:{ideal:1080}}})}
+    catch(e){console.error(e);msg.textContent=e&&(e.name==='NotAllowedError'||e.name==='SecurityError')?CAM_BLOCKED:'No camera could be started on this device. Use a photo instead.';return}
+  }
+  if(box.hidden){stopScan();return}
+  const track=SC.stream.getVideoTracks()[0];
+  try{const cap=track.getCapabilities?track.getCapabilities():{},adv={};if(cap.focusMode&&cap.focusMode.includes('continuous'))adv.focusMode='continuous';if(Object.keys(adv).length)await track.applyConstraints({advanced:[adv]})}catch(e){}
+  scanButtons(track);
+  v.srcObject=SC.stream;try{await v.play()}catch(e){}
+  msg.textContent=isTrack?'Point at the tracking barcode or the square code on the label. Hold it about 20 cm away.':'Fit the barcode inside the box. Hold it about 15–20 cm away.';
+  const done=code=>{if(box.hidden)return;stopScan();if(navigator.vibrate)try{navigator.vibrate(40)}catch(e){}applyScan(t,code)};
+  await detP;
+  if(!det){msg.textContent='The scanner could not start. Use a photo instead.';return}
+  /* read only the middle of the picture, where the scan box is: sharper and faster */
+  const cv=document.createElement('canvas'),cx=cv.getContext('2d',{willReadFrequently:true});let busy=false;
+  SC.timer=setInterval(async()=>{
+    if(busy||v.readyState<2||box.hidden)return;busy=true;
+    try{const W=v.videoWidth,H=v.videoHeight;if(W&&H){const cw=Math.round(W*.86),ch=Math.round(H*(W>H?.62:.42));cv.width=cw;cv.height=ch;cx.drawImage(v,(W-cw)/2,(H-ch)/2,cw,ch,0,0,cw,ch);
+      const r=await det.detect(cv);if(r&&r[0]){const pick=r.find(x=>RETAIL.includes(x.format))||r[0];done(pick.rawValue)}}}
+    catch(e){}busy=false},130);
+  setTimeout(()=>{if(!box.hidden&&SC.target===t)msg.textContent='Still looking… move a little further back, add light (Torch), or tap "Use a photo instead".'},9000);
+}
+
+/* ---------- label photo: reference number plus product barcode and SKU ---------- */
+const SKU_RE=/\b(?:SKU|ITEM(?:\s*CODE)?|PRODUCT\s*CODE|ART(?:ICLE)?\.?\s*NO)\s*[:#.\-]?\s*([A-Z0-9][A-Z0-9\-_.\/]{2,24})/i;
+function targetLine(){const ls=S.draft.lines;let i=ls.findIndex(l=>!l.barcode&&!l.sku);if(i<0)i=0;return i}
+async function labelProducts(file,text){
+  const got=[];let codes=[];
+  try{codes=await readCodes(await fileToImg(file,2200))}catch(e){console.error(e)}
+  const i=targetLine(),l=S.draft.lines[i];if(!l)return got;
+  const prod=codes.find(c=>RETAIL.includes(c.format));
+  if(prod&&!l.barcode){l.barcode=prod.value;const e=$('#l'+i+'-barcode');if(e){e.value=prod.value;e.classList.remove('hit');void e.offsetWidth;e.classList.add('hit')}got.push('barcode');lookup(i,'barcode')}
+  let sm=null;const re=new RegExp(SKU_RE.source,'gi');let m;while((m=re.exec(String(text||''))))if(/\d/.test(m[1])){sm=m;break}
+  if(sm&&!l.sku){const sku=sm[1].toUpperCase().replace(/[.\-]+$/,'');l.sku=sku;const e=$('#l'+i+'-sku');if(e){e.value=sku;e.classList.remove('hit');void e.offsetWidth;e.classList.add('hit')}got.push('SKU');if(!prod)lookup(i,'sku')}
+  const ship=codes.find(c=>!RETAIL.includes(c.format)&&c.value.replace(/\W/g,'').length>=10);
+  if(ship&&!S.draft.tracking){S.draft.tracking=ship.value;const f=$('#f-track');if(f)f.value=ship.value;got.push('tracking')}
+  return got;
+}
+async function onOcr(file){
+  if(!file)return;toast('Reading the photo… this takes a few seconds');
+  let text='';
+  try{const c=await fileToImg(file,2200);await loadOcr();const r=await Tesseract.recognize(ocrPrep(c),'eng');text=r.data.text;
+    if(!jobCands(text).length){const r2=await Tesseract.recognize(await fileToImg(file,1600),'eng');text+='\n'+r2.data.text}}
+  catch(e){console.error(e);return toast('Could not read text on this device. Type or scan the number instead.')}
+  const extra=labelExtras(text).concat(await labelProducts(file,text)).filter((x,i,a)=>a.indexOf(x)===i);
+  const also=extra.length?' Also filled: '+extra.join(', ')+'.':'';
+  const cands=jobCands(text).map(asJob),ref=cands[0],p0=$('#ocrPick-'+(S.ocrTarget||'orderNo'));
+  if(ref){setOrder(ref);
+    if(cands.length>1&&p0)p0.innerHTML='<span class="note">Not right? Tap the correct one:</span>'+cands.slice(1).map(c=>'<button type="button" class="btn" data-act="ocrPick" data-v="'+esc(c)+'">'+esc(c)+'</button>').join('');
+    return toast((S.ocrTarget==='jobNo'?'Reference number ':'Order number ')+ref+' read from the label.'+also+' Check they are right.')}
+  const codes=findCodes(text),p=$('#ocrPick-'+(S.ocrTarget||'orderNo'));
+  if(!codes.length)return toast((extra.length?'No reference number found, but'+also.replace(' Also','')+' ':'No reference or job number found. ')+'Get closer to the label and try again.');
+  if(codes.length===1){setOrder(codes[0]);return toast('Read '+codes[0]+'.'+also+' Check they are right.')}
+  if(p)p.innerHTML='<span class="note">Found several. Tap the right one:</span>'+codes.map(c=>'<button type="button" class="btn" data-act="ocrPick" data-v="'+esc(c)+'">'+esc(c)+'</button>').join('');
+  toast('Found '+codes.length+' possible numbers. Tap the right one.'+also);
+}
+/* warm up the reader in the background so the first scan is quick */
+setTimeout(()=>{detectorClass().catch(()=>{})},4000);
+
+
+/* ---------- Settings: download every photo for a month as one ZIP (admins) ---------- */
+function photoMonths(){
+  const m={};S.returns.forEach(r=>{const n=photoIds(r).length;if(!n||!r.dateReceived)return;const k=String(r.dateReceived).slice(0,7);m[k]=(m[k]||0)+n});
+  return Object.entries(m).sort((a,b)=>b[0].localeCompare(a[0]));
+}
+const monthName=k=>{const[y,mo]=k.split('-');return new Date(+y,+mo-1,1).toLocaleDateString('en-AU',{month:'long',year:'numeric'})};
+const _vSettingsPhotos=vSettings;
+vSettings=function(){
+  const base=_vSettingsPhotos(),me=GH.me&&GH.me();if(!me||me.role!=='admin')return base;
+  const ms=photoMonths(),total=ms.reduce((a,x)=>a+x[1],0);
+  return base+'<div class="panel"><h3>Download photos</h3><p class="note">Every item photo for one month in a single ZIP file, with a folder for each reference number. '+total+' photo'+(total===1?'':'s')+' stored in total.</p>'
+   +(ms.length?'<div class="row" style="align-items:flex-end"><label class="fld" style="flex:1 1 240px"><span>Month received</span><select id="pzMonth">'+ms.map(x=>'<option value="'+x[0]+'">'+esc(monthName(x[0]))+' · '+x[1]+' photo'+(x[1]===1?'':'s')+'</option>').join('')+'</select></label><button class="btn pri" data-act="photosMonth">Download ZIP</button></div><p class="note" id="pzLog" aria-live="polite"></p>':'<p class="note">No photos stored yet.</p>')+'</div>';
+};
+ACT.photosMonth=async(v,b)=>{
+  const k=($('#pzMonth')||{}).value,log=$('#pzLog');if(!k)return;
+  const list=[];S.returns.filter(r=>String(r.dateReceived||'').slice(0,7)===k).forEach(r=>{const ref=String(r.jobNo||'return').replace(/[^A-Za-z0-9-]+/g,'')||'return';(r.lines||[]).forEach(l=>(l.photos||[]).forEach((p,j)=>list.push([p,ref+'/'+photoName(r,l,j)])))});
+  if(!list.length)return;b.disabled=true;
+  try{await loadZip();const z=new JSZip();let n=0;
+    for(const[id,name]of list){try{z.file(name,await photoBlob(id))}catch(e){console.error(e)}n++;if(log)log.textContent='Adding photos… '+n+' of '+list.length}
+    if(log)log.textContent='Making the ZIP file…';
+    const blob=await z.generateAsync({type:'blob'});await saveFile('returns-photos-'+k+'.zip',blob);if(log)log.textContent='Done: '+list.length+' photos.'}
+  catch(e){console.error(e);if(log)log.textContent='The ZIP could not be made. Check the connection and try again.'}
+  b.disabled=false;
+};
+
 </script>
 <style id="tone-oct18">
 /* 18 Oct: dark mode 20% darker, return detail in neutral charcoal (not navy), dashboard cards without coloured borders */
