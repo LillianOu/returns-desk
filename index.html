@@ -8,7 +8,7 @@
 <link rel="manifest" href="manifest.webmanifest">
 <meta name="apple-mobile-web-app-title" content="Returns Bench">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#060B22">
+<meta name="theme-color" content="#121315">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="robots" content="noindex">
@@ -2434,7 +2434,7 @@ async function liveScan(t){
 }
 
 /* light / dark mode, remembered on this device */
-function setTheme(t){document.documentElement.setAttribute('data-theme',t);try{localStorage.setItem('rd-theme',t)}catch(e){}const m=document.querySelector('meta[name=theme-color]');if(m)m.content=t==='light'?'#F8FAFD':'#060B22'}
+function setTheme(t){document.documentElement.setAttribute('data-theme',t);try{localStorage.setItem('rd-theme',t)}catch(e){}const m=document.querySelector('meta[name=theme-color]');if(m)m.content=t==='light'?'#F8FAFD':'#121315'}
 (function(){let t='dark';try{t=localStorage.getItem('rd-theme')||'dark'}catch(e){}setTheme(t)})();
 ACT.theme=()=>{setTheme(document.documentElement.getAttribute('data-theme')==='light'?'dark':'light')};
 
@@ -2649,6 +2649,18 @@ ACT.photosMonth=async(v,b)=>{
   catch(e){console.error(e);if(log)log.textContent='The ZIP could not be made. Check the connection and try again.'}
   b.disabled=false;
 };
+
+
+/* Hawk Inspector, 21 Oct 2026: code fields are never autocorrected, spell-checked or auto-filled by the phone */
+function enhance(root){
+  root.querySelectorAll('img[data-blob]').forEach(i=>GH.img(i,i.dataset.blob));
+  root.querySelectorAll('.fld input:not([type=date]):not([type=color]):not([placeholder]),.fld textarea:not([placeholder])').forEach(e=>e.placeholder=' ');
+  root.querySelectorAll('input.mono,input[data-f="barcode"],input[data-f="sku"],input[data-f="jobNo"],input[data-f="orderNo"],input[data-f="tracking"],input#q').forEach(e=>{
+    if(!e.hasAttribute('autocomplete'))e.setAttribute('autocomplete','off');
+    e.setAttribute('autocorrect','off');e.setAttribute('spellcheck','false');
+    if(e.getAttribute('inputmode')!=='numeric'&&e.id!=='q')e.setAttribute('autocapitalize','characters');
+  });
+}
 
 </script>
 <style id="tone-oct18">
