@@ -2771,7 +2771,7 @@ html[data-theme=light] #shell .stgs .stg{border-color:rgba(0,0,0,.08)!important}
 /* ---------- tokens: dark (default) ---------- */
 html.rb:not([data-theme=light]):root:root:root:root:root{
   --bg:#0A0A0A!important;--surface:rgba(20,20,20,.62)!important;--sunk:rgba(255,255,255,.06)!important;--solid:#141414!important;
-  --ink:#F2F2F2!important;--muted:#8F8F8F!important;--line:#2A2A2A!important;
+  --ink:#F2F2F2!important;--muted:#B3B3B3!important;--line:#2A2A2A!important;
   --accent:#FF6B1A!important;--accent-ink:#0A0A0A!important;--ok:#F2F2F2!important;--warn:#F5B544!important;--bad:#F0705F!important;
   --tape:#FF6B1A!important;--tape-ink:#0A0A0A!important;
   --s-received:#FF7A2E!important;--s-inspected:#F5B544!important;--s-processed:#A8A29E!important;--s-closed:#F2F2F2!important;--s-waiting:#F5B544!important;--s-action:#FF7A2E!important;
@@ -2787,7 +2787,7 @@ html.rb:not([data-theme=light]):root:root:root:root:root{
 /* ---------- tokens: light ---------- */
 html.rb[data-theme=light]:root:root:root:root:root{
   --bg:#FFFFFF!important;--surface:rgba(255,255,255,.78)!important;--sunk:#F4F4F2!important;--solid:#FFFFFF!important;
-  --ink:#0A0A0A!important;--muted:#6B6B6B!important;--line:#E2E2DF!important;
+  --ink:#0A0A0A!important;--muted:#757575!important;--line:#E2E2DF!important;
   --accent:#FF6B1A!important;--accent-ink:#0A0A0A!important;--ok:#0A0A0A!important;--warn:#A15C07!important;--bad:#B42318!important;
   --tape:#FF6B1A!important;--tape-ink:#0A0A0A!important;
   --s-received:#C2410C!important;--s-inspected:#A15C07!important;--s-processed:#78716C!important;--s-closed:#0A0A0A!important;--s-waiting:#A15C07!important;--s-action:#C2410C!important;
@@ -2951,7 +2951,7 @@ html.rb .rb-lgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240p
 html.rb .rb-lcard{border:1px solid var(--line);border-radius:22px;padding:24px;display:flex;flex-direction:column;gap:8px}
 html.rb .rb-lprev{height:88px;border-radius:14px;display:grid;place-items:center;padding:16px;box-sizing:border-box}
 html.rb .rb-lprev img{max-width:100%;max-height:40px;width:auto;height:40px;object-fit:contain}
-html.rb .rb-lprev span{font-size:13px;color:#8F8F8F}
+html.rb .rb-lprev span{font-size:13px;color:#B3B3B3}
 html.rb .rb-lcard-dark .rb-lprev{background:#0A0A0A;border:1px solid #2A2A2A}
 html.rb .rb-lcard-light .rb-lprev{background:#FFFFFF;border:1px solid #E2E2DF}
 html.rb .fld:has(#orgC){display:none!important}
@@ -2977,6 +2977,13 @@ html.rb .rb-plan-a{margin-left:auto;color:#0A0A0A;background:#FF6B1A;border-radi
 /* Solo: hide tenant pickers and tenant-only panels */
 html.solo .fld:has(#f-client),html.solo .fld:has(#fc),html.solo .fld:has(#rc){display:none!important}
 html.rb-ro [data-act=save],html.rb-ro [data-act=addClient]{opacity:.45;pointer-events:none}
+
+/* lighter type weights (21 Oct, Lillian: a bit thinner) */
+html.rb body,html.rb input,html.rb select,html.rb textarea,html.rb p,html.rb .note{font-weight:400!important}
+html.rb .btn,html.rb .seg button,html.rb .nav button,html.rb .pill,html.rb .tbtn,html.rb .badge,html.rb .rb-plan-a{font-weight:500!important}
+html.rb h3,html.rb .shell .stg-t,html.rb .rb-type legend,html.rb .fld>span:first-child,html.rb .rb-logo.empty{font-weight:500!important}
+html.rb b,html.rb strong,html.rb .rb-tc b{font-weight:600!important}
+html.rb{-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale}
 </style>
 </body>
 </html>
