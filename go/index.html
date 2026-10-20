@@ -546,19 +546,19 @@ html[data-theme="light"] .shell .stg.stg-open,html[data-theme="light"] .shell .s
 <div id="gate" class="gate" hidden>
   <form class="gate-p" onsubmit="return false" aria-labelledby="gate-t">
     <h2 id="gate-t">Returns <span>Bench</span></h2>
-    <div id="gate-login" style="display:flex;flex-direction:column;gap:14px"><p class="note">Sign in with the email your manager invited.</p>
+    <div id="gate-login" style="display:flex;flex-direction:column;gap:14px"><p class="note">Sign in to your Returns Bench, or start a 14-day free trial.</p>
     <label class="fld"><span>Email</span><input id="sb-email" type="email" autocomplete="username" autocapitalize="none" spellcheck="false" placeholder=" "></label>
     <label class="fld"><span>Password</span><input id="sb-pass" type="password" autocomplete="current-password" placeholder=" "></label>
     <label class="fld"><span>Your initials (on every return you touch)</span><input id="sb-initials" maxlength="4" autocapitalize="characters" autocomplete="off" placeholder=" "></label>
     <button class="btn pri big" data-act="connect" type="submit">Sign in</button>
-    <button class="gate-forgot" data-act="forgotPass" type="button">Forgot password?</button></div>
+    <button class="gate-forgot" data-act="forgotPass" type="button">Forgot password?</button><button class="btn big" data-act="showSignup" type="button">Start a 14-day free trial</button></div>
     <div id="gate-pw" hidden style="display:flex;flex-direction:column;gap:14px"><p class="note" id="sb-pw-sub">Welcome. Create a password for your account. You'll use it with your email to sign in next time.</p>
     <label class="fld"><span>New password (at least 8 characters)</span><input id="sb-np1" type="password" autocomplete="new-password" placeholder=" "></label>
     <label class="fld"><span>Type it again</span><input id="sb-np2" type="password" autocomplete="new-password" placeholder=" "></label>
     <label class="fld"><span>Your initials (on every return you touch)</span><input id="sb-ini2" maxlength="4" autocapitalize="characters" autocomplete="off" placeholder=" "></label>
     <button class="btn pri big" data-act="firstPass" type="button">Create password and continue</button></div>
-    <div id="gate-company" hidden style="display:flex;flex-direction:column;gap:14px"><p class="note">You're signed in. Name your company to finish setting up. You become its admin.</p>
-    <label class="fld"><span>Company name</span><input id="sb-company" autocomplete="organization" placeholder=" "></label>
+    <div id="gate-signup" hidden style="display:flex;flex-direction:column;gap:14px"><p class="note">14 days free. No card needed. Benji included.</p><fieldset class="rb-type"><legend>Which describes you?</legend><label class="rb-tc"><input type="radio" name="sb-type" value="3pl" checked><b>I run a 3PL or warehouse</b><span>Returns for the brands you store</span></label><label class="rb-tc"><input type="radio" name="sb-type" value="solo"><b>I sell online myself</b><span>Shopify, eBay or my own shop</span></label></fieldset><label class="fld"><span>Business name</span><input id="su-company" autocomplete="organization" placeholder=" "></label><label class="fld"><span>Email</span><input id="su-email" type="email" autocomplete="email" autocapitalize="none" spellcheck="false" placeholder=" "></label><label class="fld"><span>Password (8+ characters)</span><input id="su-pass" type="password" autocomplete="new-password" placeholder=" "></label><button class="btn pri big" data-act="signUp" type="button">Start my free trial</button><p class="note rb-fine">By starting a trial you agree to the <a href="https://returnsbench.com/terms" target="_blank" rel="noopener">Terms</a> and <a href="https://returnsbench.com/privacy" target="_blank" rel="noopener">Privacy policy</a>.</p><button class="gate-forgot" data-act="showLogin" type="button">I already have an account</button></div><div id="gate-company" hidden style="display:flex;flex-direction:column;gap:14px"><p class="note">You're signed in. Tell us about your business to finish setting up. You become its admin.</p><fieldset class="rb-type"><legend>Which describes you?</legend><label class="rb-tc"><input type="radio" name="sb-type2" value="3pl" checked><b>I run a 3PL or warehouse</b><span>Returns for the brands you store</span></label><label class="rb-tc"><input type="radio" name="sb-type2" value="solo"><b>I sell online myself</b><span>Shopify, eBay or my own shop</span></label></fieldset>
+    <label class="fld"><span>Business name</span><input id="sb-company" autocomplete="organization" placeholder=" "></label>
     <button class="btn pri big" data-act="makeCompany" type="button">Create company</button></div>
     <p class="gate-err" id="gate-err" role="alert"></p>
       </form>
@@ -1819,7 +1819,7 @@ const GH=(()=>{
     let fresh=null;try{fresh=(await sb.auth.getUser()).data.user}catch(e){}
     const meta=((fresh||s.user).user_metadata)||{};
     me={email:s.user.email,company_id:m&&m.company_id,role:m&&m.role,company:m&&m.name,account:m&&m.account_no,
-        initials:(localStorage.getItem('rd-initials')||meta.initials||s.user.email.slice(0,2)).toUpperCase(),pwSet:!!meta.pw_set};
+        initials:(localStorage.getItem('rd-initials')||meta.initials||s.user.email.slice(0,2)).toUpperCase(),pwSet:!!meta.pw_set,pendingCompany:meta.pending_company||'',pendingPlan:meta.pending_plan||''};
     return me}
   async function start(){
     let m=null;try{m=await loadMe()}catch(e){console.error(e)}
@@ -1828,8 +1828,10 @@ const GH=(()=>{
     if(m&&m.company_id&&m.role!=='viewer'){boot();try{Benji.mount({client:sb,surface:'app',mobileBottom:'84px',onReport:benjiReportApp})}catch(e){console.error(e)}return}
     render();
     if(!m){showGate(LINK_ERR?(/expired|invalid/i.test(LINK_ERR)?'That email link has expired or was already used. Sign in with your email and password, or ask for a new link.':LINK_ERR):'');return}
-    if(!m.company_id){let ex=true;try{ex=(await sb.rpc('company_exists')).data!==false}catch(e){}
-      if(ex){showGate('You are signed in as '+m.email+', but this account has not been given access yet. Ask your manager to add you in Settings → Staff access.');return}
+    if(!m.company_id){let can=null;try{const q=await sb.rpc('can_create_company');if(!q.error)can=q.data===true}catch(e){}
+      if(can===null){let ex=true;try{ex=(await sb.rpc('company_exists')).data!==false}catch(e){}can=!ex}
+      if(!can){showGate('You are signed in as '+m.email+', but this account has not been given access yet. Ask your manager to add you in Settings → Team & clients.');return}
+      if(m.pendingCompany){try{await createCompany(m.pendingCompany,m.pendingPlan==='solo'?'solo':'starter');try{await sb.auth.updateUser({data:{pending_company:null,pending_plan:null}})}catch(e){}cleanReload();return}catch(e){console.error(e)}}
       showGate('',true);return}
     location.replace(location.pathname.replace(/(v2\/)?(index\.html)?$/,'')+'portal/');
   }
@@ -1845,16 +1847,21 @@ const GH=(()=>{
     if(r.error)throw new Error(r.error.message);
   }
   async function setPassword(p){if(!p||p.length<8)throw new Error('Use at least 8 characters.');const r=await sb.auth.updateUser({password:p,data:{pw_set:true}});if(r.error)throw new Error(r.error.message)}
-  async function createCompany(name){name=(name||'').trim();if(!name)throw new Error('Type the company name.');ok(await sb.rpc('create_company',{company_name:name}))}
+  async function createCompany(name,plan){name=(name||'').trim();if(!name)throw new Error('Type your business name.');ok(await sb.rpc('create_company',{company_name:name,chosen_plan:plan||'starter'}))}
+  async function signUp(email,password,company,plan){email=(email||'').trim().toLowerCase();company=(company||'').trim();
+    if(!company)throw new Error('Type your business name.');if(!/^[^\s@]+@[^\s@]+\.[a-z]{2,}$/i.test(email))throw new Error('Type a valid email.');if(!password||password.length<8)throw new Error('Use at least 8 characters for the password.');
+    const r=await sb.auth.signUp({email,password,options:{emailRedirectTo:location.origin+location.pathname,data:{pw_set:true,pending_company:company,pending_plan:plan}}});
+    if(r.error)throw new Error(/registered|exists/i.test(r.error.message)?'That email already has an account. Sign in instead.':/rate/i.test(r.error.message)?'Too many tries. Wait a few minutes and try again.':r.error.message);
+    return !!(r.data&&r.data.session)}
   async function signOut(){await sb.auth.signOut();cleanReload()}
   sb.auth.onAuthStateChange(ev=>{if(ev==='PASSWORD_RECOVERY')window.__rbRec=true;if(ev==='SIGNED_OUT'&&me)cleanReload()});
   async function forgot(email){email=(email||'').trim().toLowerCase();if(!email)throw new Error('Type your email first, then tap Forgot password.');
     const r=await sb.auth.resetPasswordForEmail(email,{redirectTo:location.origin+location.pathname});if(r.error&&!/not found|user/i.test(r.error.message))throw new Error(/rate/i.test(r.error.message)?'Too many requests. Wait a few minutes and try again.':r.error.message)}
-  return{use,start,signIn,forgot,sendLink,setPassword,createCompany,signOut,blobUrl,img,me:()=>me,sb,onAuth:f=>onAuthFail=f};
+  return{use,start,signIn,signUp,forgot,sendLink,setPassword,createCompany,signOut,blobUrl,img,me:()=>me,sb,onAuth:f=>onAuthFail=f};
 })();
 function showGate(msg,needCompany,needPw,recovery){
   const g=$('#gate');g.hidden=false;$('#shell').inert=true;
-  $("#gate-login").hidden=!!(needCompany||needPw);$("#gate-company").hidden=!needCompany;$("#gate-pw").hidden=!needPw;
+  $("#gate-login").hidden=!!(needCompany||needPw);{const su=$("#gate-signup");if(su)su.hidden=true}$("#gate-company").hidden=!needCompany;$("#gate-pw").hidden=!needPw;
   if(needPw){const m=GH.me();$("#sb-pw-sub").textContent=recovery?"Choose a new password for "+m.email+". You'll use it to sign in from now on.":"Welcome, "+m.email+". Create a password for your account. You'll use it with your email to sign in next time.";const bb=document.querySelector('[data-act=firstPass]');if(bb)bb.textContent=recovery?"Save new password and continue":"Create password and continue"}
   const m=GH.me();if(m)$('#sb-email').value=m.email||'';
   $('#gate-err').textContent=msg||'';enhance(g);
@@ -1869,7 +1876,7 @@ Object.assign(ACT,{
   sendLink:async(v,b)=>{const er=$('#gate-err');er.textContent='';b.disabled=true;
     try{await GH.sendLink($('#sb-email').value);er.textContent='Check your email for a sign-in link.'}catch(e){er.textContent=e.message}b.disabled=false},
   makeCompany:async(v,b)=>{const er=$('#gate-err');er.textContent='';b.disabled=true;
-    try{await GH.createCompany($('#sb-company').value);cleanReload()}catch(e){er.textContent=e.message;b.disabled=false}},
+    try{const t=document.querySelector('input[name=sb-type2]:checked');await GH.createCompany($('#sb-company').value,t&&t.value==='solo'?'solo':'starter');cleanReload()}catch(e){er.textContent=e.message;b.disabled=false}},
   setPass:async(v,b)=>{try{await GH.setPassword($('#sb-newpass').value);toast('Password saved');$('#sb-newpass').value=''}catch(e){toast(e.message)}},
   firstPass:async(v,b)=>{const er=$('#gate-err'),a=$('#sb-np1').value,c=$('#sb-np2').value,i=$('#sb-ini2').value.trim();er.textContent='';
     if(a.length<8){er.textContent='Use at least 8 characters.';return}if(a!==c){er.textContent='The two passwords do not match.';return}
@@ -2703,6 +2710,43 @@ vSettings=function(){
 /* generic trial wording for the product build */
 if(typeof GH.about==='function'){const _ab=GH.about;GH.about=()=>_ab().replace(/provided to Fulfilment Australia as a free trial \(pilot\) until 31 December 2026/,'provided as a 14-day free trial').replace(/entered by Fulfilment Australia and its clients/,'entered by your business and your clients')}
 
+/* ===== Trials, plans, read-only and Solo mode (21 Oct 2026) =====
+   Reads my_plan() from Supabase (step 8 SQL). If that SQL isn't in yet, nothing changes. */
+Object.assign(ACT,{
+  showSignup:()=>{$('#gate-login').hidden=true;$('#gate-signup').hidden=false;$('#gate-err').textContent='';const e=$('#sb-email').value;if(e)$('#su-email').value=e;$('#su-company').focus()},
+  showLogin:()=>{$('#gate-signup').hidden=true;$('#gate-login').hidden=false;$('#gate-err').textContent=''},
+  signUp:async(v,b)=>{const er=$('#gate-err');er.textContent='';er.style.color='';const t=document.querySelector('input[name=sb-type]:checked'),plan=t&&t.value==='solo'?'solo':'starter';
+    b.disabled=true;b.textContent='Starting your trial…';
+    try{const live=await GH.signUp($('#su-email').value,$('#su-pass').value,$('#su-company').value,plan);
+      if(live){cleanReload();return}
+      er.style.color='var(--muted)';er.textContent='Nearly there. We sent a link to '+$('#su-email').value.trim()+'. Open it to confirm your email and your trial starts straight away. Check spam too.';b.textContent='Email sent'}
+    catch(e){er.textContent=e.message;b.disabled=false;b.textContent='Start my free trial'}}
+});
+S.plan=null;
+async function rbLoadPlan(){try{const sb=GH.sb;if(!sb)return;const r=await sb.rpc('my_plan');if(r.error||!r.data)return;S.plan=r.data;rbApplyPlan();render()}catch(e){}}
+function rbApplyPlan(){const p=S.plan||{},h=document.documentElement;
+  h.classList.toggle('rb',p.theme!=='fa');          /* FA keeps its navy look */
+  h.classList.toggle('solo',p.plan==='solo');
+  h.classList.toggle('rb-ro',p.writable===false)}
+const _bootRB=boot;
+boot=async function(){await _bootRB.apply(this,arguments);rbLoadPlan()};
+const _renderRB=render;
+render=function(){_renderRB.apply(this,arguments);const p=S.plan,m=$('#main');if(!p||!m)return;
+  const me=GH.me&&GH.me(),admin=me&&me.role==='admin';let msg='';
+  if(p.writable===false)msg='<b>Your account is read-only.</b> '+(p.status==='trial'?'Your free trial has ended.':'Your plan has ended.')+' You can still view and export everything. '+(admin?'Choose a plan to keep logging returns.':'Ask your admin to choose a plan.');
+  else if(p.status==='trial'&&admin)msg='<b>'+p.days_left+(p.days_left===1?' day':' days')+' left in your free trial.</b> Everything is included, Benji too.';
+  if(msg)m.insertAdjacentHTML('afterbegin','<div class="banner rb-plan'+(p.writable===false?' ro':'')+'" role="status">'+msg+(admin?' <a class="rb-plan-a" href="mailto:info@returnsbench.com?subject=Choose%20a%20plan">Choose a plan</a>':'')+'</div>');
+  if(p.plan==='solo')rbSolo()};
+/* Solo: one business, no tenants. A hidden tenant named after the business holds every return. */
+let rbSoloBusy=false;
+async function rbSolo(){if(!S.gotClients)return;
+  if(!S.clients.length){if(rbSoloBusy||(S.plan&&S.plan.writable===false))return;rbSoloBusy=true;
+    try{await S.db.collection('clients').add({name:(GH.me()&&GH.me().company)||'My shop',code:'',email:'',skuCount:0})}catch(e){console.error(e)}rbSoloBusy=false;return}
+  const sel=$('#f-client');if(sel&&!sel.value&&S.clients[0]){sel.value=S.clients[0].id;sel.dispatchEvent(new Event('change',{bubbles:true}))}}
+/* friendlier errors from the plan limits */
+const _failRB=typeof fail==='function'?fail:null;
+if(_failRB)fail=function(e,what){const t=String((e&&e.message)||e||'');if(/Your plan includes|part of the Portal plan|row-level security/i.test(t)){toast(/row-level/i.test(t)?'Your account is read-only, so this can\'t be saved. Choose a plan to keep going.':t);return}return _failRB.apply(this,arguments)};
+
 </script>
 <style id="tone-oct18">
 /* 18 Oct: dark mode 20% darker, return detail in neutral charcoal (not navy), dashboard cards without coloured borders */
@@ -2903,6 +2947,26 @@ html.rb .rb-lcard-light .rb-lprev{background:#FFFFFF;border:1px solid #E2E2DF}
 html.rb .fld:has(#orgC){display:none!important}
 html.rb .rb-logo #rbLogoName{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;padding:0 8px}
 html.rb .rb-logo:not(.empty) #rbLogoName{display:none}
+
+/* sign-up and plans */
+html.rb .rb-type{border:0;margin:0;padding:0;display:grid;grid-template-columns:1fr 1fr;gap:10px}
+html.rb .rb-type legend{font-size:12px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-bottom:8px;padding:0}
+html.rb .rb-tc{position:relative;display:flex;flex-direction:column;gap:4px;padding:16px;border-radius:14px;border:1px solid var(--rb-field-line);background:var(--rb-field);cursor:pointer;min-height:52px;transition:border-color 160ms cubic-bezier(.23,1,.32,1),box-shadow 160ms cubic-bezier(.23,1,.32,1)}
+html.rb .rb-tc input{position:absolute;opacity:0;pointer-events:none}
+html.rb .rb-tc b{font-size:15px;font-weight:600;color:var(--ink)}
+html.rb .rb-tc span{font-size:13px;color:var(--muted)}
+html.rb .rb-tc:has(input:checked){border-color:#FF6B1A;box-shadow:0 0 0 3px rgba(255,107,26,.22)}
+html.rb .rb-tc:has(input:focus-visible){outline:2px solid #FF6B1A;outline-offset:2px}
+@media (max-width:420px){html.rb .rb-type{grid-template-columns:1fr}}
+html.rb .rb-fine{font-size:12px!important}
+@media (max-width:520px){html.rb .seg button{padding:0 12px!important;min-height:40px!important}html.rb .seg{flex-wrap:nowrap!important}}
+html.rb .rb-fine a{color:var(--rb-orange-text)}
+html.rb .rb-plan{display:flex;flex-wrap:wrap;align-items:center;gap:6px 12px}
+html.rb .rb-plan.ro{background:var(--rb-amber-soft)!important;border-color:rgba(245,181,68,.4)!important}
+html.rb .rb-plan-a{margin-left:auto;color:#0A0A0A;background:#FF6B1A;border-radius:999px;padding:8px 16px;font-weight:600;text-decoration:none;white-space:nowrap}
+/* Solo: hide tenant pickers and tenant-only panels */
+html.solo .fld:has(#f-client),html.solo .fld:has(#fc),html.solo .fld:has(#rc){display:none!important}
+html.rb-ro [data-act=save],html.rb-ro [data-act=addClient]{opacity:.45;pointer-events:none}
 </style>
 </body>
 </html>
