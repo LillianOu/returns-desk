@@ -670,7 +670,7 @@ async function saveReturn(){
   const body={jobNo:d.jobNo.trim(),clientId:d.clientId,orderNo:d.orderNo.trim(),tracking:d.tracking.trim(),carrier:d.carrier,dateReceived:d.dateReceived||today(),dateProcessed:d.dateProcessed||'',status:d.status,notes:d.notes.trim(),
     lines:d.lines.filter(l=>l.barcode||l.sku||l.name||l.photos.length).map(l=>({barcode:l.barcode.trim(),sku:l.sku.trim(),name:l.name.trim(),qtyExp:+l.qtyExp||0,qtyRecv:+l.qtyRecv||0,reason:l.reason,grade:l.grade,disposition:l.disposition,photos:l.photos})),
     createdAt:(prev&&prev.createdAt)||now,createdBy:(prev&&prev.createdBy)||by,updatedAt:now,history:hist};
-  if(prev&&prev.example)body.example=true;if(prev&&prev.decision)body.decision=prev.decision;
+  if(prev&&prev.decision)body.decision=prev.decision;if(prev&&prev.example)body.example=true;if(prev&&prev.decision)body.decision=prev.decision;
   if(body.status==='closed'&&!body.dateProcessed)body.dateProcessed=today();
   const btn=$('#saveBtn');if(btn)btn.disabled=true;
   try{const ref=S.editId?db.collection('returns').doc(S.editId):db.collection('returns').doc();await ref.set(body);learn(body);afterSave(body,ref.id)}
@@ -1165,7 +1165,7 @@ async function saveReturn(){
   const body={jobNo:d.jobNo.trim(),clientId:d.clientId,kind:d.kind==='rts'?'rts':'return',pack:d.kind==='rts'?(d.pack||''):'',location:d.kind==='rts'?(d.location||''):'',orderNo:(d.orderNo||'').trim(),tracking:(d.tracking||'').trim(),carrier:d.carrier||'',dateReceived:d.dateReceived||today(),dateProcessed:d.dateProcessed||'',status:d.status,notes:(d.notes||'').trim(),clientNote:(d.clientNote||'').trim(),cor:(GH.isCor&&GH.isCor(d.clientId)&&d.cor)?d.cor:undefined,
     lines:d.lines.filter(l=>l.barcode||l.sku||l.name||l.photos.length).map(l=>({barcode:l.barcode.trim(),sku:l.sku.trim(),name:l.name.trim(),qtyGood:+l.qtyGood||0,qtyDamaged:+l.qtyDamaged||0,reason:l.reason||'',photos:l.photos})),
     createdAt:(prev&&prev.createdAt)||now,createdBy:(prev&&prev.createdBy)||by,updatedAt:now,history:hist};
-  if(prev&&prev.example)body.example=true;if(prev&&prev.rts)body.rts=prev.rts;if(prev&&prev.emailedAt)body.emailedAt=prev.emailedAt;
+  if(prev&&prev.decision)body.decision=prev.decision;if(prev&&prev.example)body.example=true;if(prev&&prev.rts)body.rts=prev.rts;if(prev&&prev.emailedAt)body.emailedAt=prev.emailedAt;
   if(body.status==='open')body.dateProcessed='';else if(!body.dateProcessed)body.dateProcessed=today();
   const btn=$('#saveBtn');if(btn)btn.disabled=true;
   try{const ref=S.editId?db.collection('returns').doc(S.editId):db.collection('returns').doc();await ref.set(body);learn(body);afterSave(body,ref.id)}
@@ -1277,7 +1277,7 @@ function drawRows(){
     return'<li class="rw'+(S.fresh===r.id?' fresh':'')+'" data-id="'+r.id+'">'
      +(act2?'<div class="rw-under" aria-hidden="true"><span>'+ic('check')+lab+'</span></div>':'')
      +'<div class="rw-card"><button class="rw-main" data-act="open" data-v="'+r.id+'" aria-label="Open '+esc(r.jobNo)+', '+esc(clientName(r.clientId))+', '+esc(STG[sg2][0])+'">'
-     +'<span class="job">'+esc(r.jobNo)+'</span><span class="rw-cl">'+esc(clientName(r.clientId))+'</span>'
+     +'<span class="job">'+esc(r.jobNo)+'</span><span class="rw-cl">'+esc(clientName(r.clientId))+(GH.decChip?GH.decChip(r):'')+'</span>'
      +'<span class="rw-meta"><span>'+fmtD(r.dateReceived)+'</span><span class="mono">'+esc(r.orderNo||'no reference')+'</span><span class="rw-q">'+esc(qtyText(r))+'</span>'+(isRts(r)&&r.location?'<span class="tag mono">Loc '+esc(r.location)+'</span>':'')+'</span>'
      +pill(sg2,ch)+'</button>'
      +(act2?'<button class="adv" data-act="advance" data-v="'+r.id+'" aria-label="'+lab+' for '+esc(r.jobNo)+'" title="'+lab+'">'+ic('arrow')+'</button>':'')
@@ -1355,7 +1355,7 @@ function renderSheet(){
   const sg=stage(r),busy=!!S.busy[r.id],n=(r.lines||[]).length,dis=busy?' disabled':'',ta=$('#rts-note');if(ta)S.rtsNote=ta.value;
   let h='<div class="sh-grab" data-shgrab aria-hidden="true"><i></i></div>'
    +'<header class="sh-h" data-shgrab><div class="sh-ht"><span class="job big">'+esc(r.jobNo)+'</span><h2 id="sh-t">'+esc(clientName(r.clientId))+'</h2><p class="note">'+(isRts(r)?'Return to sender':'Customer return')+' · received '+fmtD(r.dateReceived)+' · '+esc(qtyText(r))+'</p>'+pill(sg,S.sheetStatus&&S.sheetStatus!==sg)+'</div>'
-   +'<button class="icb" data-act="closeSheet" aria-label="Close">'+ic('x')+'</button></header><div class="sh-b">'
+   +'<button class="icb" data-act="closeSheet" aria-label="Close">'+ic('x')+'</button></header><div class="sh-b">'+(GH.decBox?GH.decBox(r):'')
    +'<dl class="kv">'+(isRts(r)?'<div><dt>Storage location</dt><dd class="mono loc-big">'+esc(r.location||'—')+'</dd></div>':'')+'<div><dt>Reference</dt><dd class="mono">'+esc(r.orderNo||'—')+'</dd></div><div><dt>Tracking</dt><dd class="mono">'+esc(r.tracking||'—')+'</dd></div><div><dt>Carrier</dt><dd>'+esc(r.carrier||'—')+'</dd></div><div><dt>Closed on</dt><dd>'+fmtD(r.dateProcessed)+'</dd></div></dl>';
   if(sg==='rts'){prepFiles(r);
     h+='<div class="dec"><h3>Waiting on the tenant</h3><p class="note">'+(r.emailedAt?'Tenant emailed '+esc(new Date(r.emailedAt).toLocaleDateString('en-AU'))+'. ':'')+'Record their answer when it arrives: resend to a corrected address, put it back to stock, or discard it.</p>'
@@ -2745,7 +2745,10 @@ GH.corRows=()=>{const r=S.rep;const rs=S.returns.filter(x=>!x.example&&GH.isCor(
     const sku=l=>{const v=String(l.sku||l.barcode||'').trim();return/^\d{1,12}$/.test(v)?+v:v};
     const qty=l=>(+l.qtyGood||0)+(+l.qtyDamaged||0);
     const first=ls[0]||{};
-    out.push(['',GH.corD(x.createdAt?ymd(new Date(x.createdAt)):x.dateReceived)||GH.corD(x.dateReceived),'Warehouse',x.orderNo||'',c.name||'',c.po?(/^\d{1,15}$/.test(c.po)?+c.po:c.po):'',c.country||'',courier,'',x.tracking||'',ls.length?sku(first):'',ls.length?qty(first):'',GH.corD(x.dateReceived),'',reason,cond,'',wms,'',comment,'']);
+    const dc=x.decision||{},df=dc.fields||{};
+    const stA=df.status||(x.status!=='open'?'Closed':(dc.action?'Pending Warehouse':''));
+    const cmtC=[df.comments,dc.note].filter(Boolean).join(' · ');
+    out.push([stA,GH.corD(x.createdAt?ymd(new Date(x.createdAt)):x.dateReceived)||GH.corD(x.dateReceived),'Warehouse',x.orderNo||'',c.name||'',c.po?(/^\d{1,15}$/.test(c.po)?+c.po:c.po):'',c.country||'',courier,'',x.tracking||'',ls.length?sku(first):'',ls.length?qty(first):'',GH.corD(x.dateReceived),df.reason||'',reason,cond,df.gp||'',wms,cmtC,comment,df.status==='Closed'&&dc.at?GH.corD(ymd(new Date(dc.at))):'']);
     ls.slice(1).forEach(l=>{const row=Array(21).fill('');row[10]=sku(l);row[11]=qty(l);out.push(row)})});
   return{rs,out}};
 GH.corXlsx=async()=>{const{rs,out}=GH.corRows();if(!rs.length)return toast('No Coravin returns in this date range.');
@@ -2757,6 +2760,24 @@ GH.corXlsx=async()=>{const{rs,out}=GH.corRows();if(!rs.length)return toast('No C
   const buf=XLSX.write(wb,{bookType:'xlsx',type:'array'});
   saveFile('Coravin_APAC_AU_Returns_'+GH.corD(S.rep.from)+'_to_'+GH.corD(S.rep.to)+'.xlsx',new Blob([buf],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'}))};
 GH.corBtn=r=>S.dl&&r&&r.client&&GH.isCor(r.client)?'<button class="btn pri big" data-act="corXlsx">Download Coravin Excel</button>':'';
+
+/* ---- Client decisions (sent from the client portal; used by Coravin): flags, filter and detail in the staff app ---- */
+GH.DEC_L={shelf:'Back to stock',resend:'Resend to customer',discard:'Discard',hold:'Hold, they will confirm'};
+GH.hasDec=r=>!!(r&&r.decision&&r.decision.action&&r.status==='open');
+GH.decChip=r=>{if(!r||!r.decision||!r.decision.action)return'';const done=r.status!=='open';
+  return'<span class="dec-chip'+(done?' done':'')+'" title="'+esc((r.decision.by||'')+' · '+(r.decision.at?new Date(r.decision.at).toLocaleString('en-AU'):''))+'">'+esc(clientName(r.clientId).split(' ')[0])+': '+esc(GH.DEC_L[r.decision.action]||r.decision.action)+(done?' ✓':'')+'</span>'};
+GH.decBox=r=>{const d=r&&r.decision;if(!d||(!d.action&&!d.fields))return'';const f=d.fields||{};
+  const rows=[['Asked for',GH.DEC_L[d.action]||'—'],['Their note',d.note],['Their status',f.status],['GP Return #',f.gp],['Their reason code',f.reason],['Their comments',f.comments],['Sent by',(d.by||'')+(d.at?' · '+new Date(d.at).toLocaleString('en-AU',{day:'numeric',month:'short',hour:'numeric',minute:'2-digit'}):'')]].filter(x=>x[1]);
+  return'<div class="dec dec-client"><h3>'+esc(clientName(r.clientId))+'\'s decision</h3><dl class="kv">'+rows.map(x=>'<div><dt>'+esc(x[0])+'</dt><dd>'+esc(x[1])+'</dd></div>').join('')+'</dl>'
+   +(r.status==='open'&&d.action&&d.action!=='hold'?'<p class="note">When it\'s done, use the matching button below so the client sees it in their portal.</p>':'')+'</div>'};
+document.head.insertAdjacentHTML('beforeend','<style>.dec-chip{display:inline-block;margin-left:8px;padding:3px 9px;border-radius:999px;font:600 12px/1.3 var(--body,system-ui);background:#FFB020;color:#1A1200;vertical-align:middle;white-space:nowrap}.dec-chip.done{background:transparent;color:var(--muted);border:1px solid var(--line)}.dec-client{border:1.5px solid #FFB020!important;border-radius:14px;padding:12px 14px;margin:12px 0}.dec-bar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:8px 0 4px;padding:10px 14px;border-radius:14px;background:rgba(255,176,32,.14);border:1px solid rgba(255,176,32,.5)}.dec-bar b{font-weight:600}</style>');
+const _fltRowsDec=fltRows;
+fltRows=function(skip){const rs=_fltRowsDec(skip);return S.flt.dec?rs.filter(GH.hasDec):rs};
+const _vListDec=vList;
+vList=function(){const h=_vListDec();const n=S.returns.filter(GH.hasDec).length;if(!n&&!S.flt.dec)return h;
+  const bar='<div class="dec-bar"><span><b>'+n+' client decision'+(n===1?'':'s')+'</b> waiting for the team</span><button class="btn" data-act="decFlt">'+(S.flt.dec?'Show all returns':'Show them')+'</button></div>';
+  return h.replace('<div id="storeBox"></div>',bar+'<div id="storeBox"></div>')};
+Object.assign(ACT,{decFlt:()=>{S.flt.dec=!S.flt.dec;render()}});
 </script>
 </body>
 </html>
