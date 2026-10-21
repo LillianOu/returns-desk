@@ -771,7 +771,7 @@ function benjiReportPortal(a){
   document.querySelector('[data-tab=reports]').click();
   document.getElementById('from').value=a.from;document.getElementById('to').value=a.to;
   document.getElementById('show').value=a.show==='damaged'?'dmg':a.show==='no_reference'?'noref':'';
-  setTimeout(()=>document.getElementById('xlsx').click(),wait);
+  setTimeout(()=>(document.getElementById('cvx')||document.getElementById('xlsx')).click(),wait);
 }
 
 </script>
@@ -861,15 +861,15 @@ CV.xlsx=()=>{const f=$('#from').value,t=$('#to').value,m=$('#rep-msg');
   if(!window.XLSX){m.textContent='The report tool did not load. Reload the page and try again.';return}
   const rs=P.rows.filter(r=>(!f||r.date_received>=f)&&(!t||r.date_received<=t)).slice().sort((a,b)=>String(a.date_received).localeCompare(b.date_received));
   if(!rs.length){m.textContent='No returns in that range.';return}
-  const head=['Status','Create Date','Created by','Order Number','Customer Name','Customer PO #','Customer Country','Courier','Label Generated?','Tracking Number','Item(s) Received','Qty','Date Rec.','Reason Code (Coravin)','Reason Code (Fulfilment Australia)','Condition','GP Return # (Coravin)','Stock Returned in WMS','Comments CORAVIN','Comments Fulfilment Australia','Date Closed'];
+  const head=['Status','Create Date','Created by','Order Number','Customer Name','Customer PO #','Customer Country','Courier','Label Generated?','Tracking Number','Item(s) Received','Qty','Date Rec.','Reason Code (Coravin)','Reason Code (Fulfilment Australia)','Condition','GP Return # (Coravin)','Stock Returned in WMS','Comments CORAVIN','Comments Fulfilment Australia','Date Closed','Customer Address'];
   const num=v=>{v=String(v||'').trim();return/^\d{1,15}$/.test(v)?+v:v};
   const out=[head];rs.forEach(r=>{const c=r.cor||{},d=r.decision||{},df=d.fields||{},ls=(r.lines||[]).filter(l=>l.sku||l.barcode||l.name),first=ls[0]||{},qty=l=>(+l.qtyGood||0)+(+l.qtyDamaged||0);
     const st=df.status||(r.status!=='open'?'Closed':(d.action?'Pending Warehouse':''));
     const cond=c.cond||(r.kind==='rts'&&r.pack==='sealed'?'Unknown, unopened':(ls.some(l=>+l.qtyDamaged>0)?'Damaged':(r.status==='shelf'?'GOOD':'')));
     const wms=CV.D(c.wms)||(r.status==='shelf'?CV.D(r.date_processed):'');
-    out.push([st,CV.D(r.createdIso?CV.ymd(new Date(r.createdIso)):r.date_received),'Warehouse',r.order_no||'',c.name||'',num(c.po),c.country||'',({'Australia Post':'AusPost',DHL:'DHL'})[r.carrier]||r.carrier||'','',r.tracking||'',ls.length?num(first.sku||first.barcode):'',ls.length?qty(first):'',CV.D(r.date_received),df.reason||'',c.reason||(r.kind==='rts'?'RTS':'Return'),cond,df.gp||'',wms,[df.comments,d.note].filter(Boolean).join(' · '),r.client_note||'Return item has been received.',df.status==='Closed'&&d.at?CV.D(CV.ymd(new Date(d.at))):'']);
-    ls.slice(1).forEach(l=>{const row=Array(21).fill('');row[10]=num(l.sku||l.barcode);row[11]=qty(l);out.push(row)})});
-  const ws=XLSX.utils.aoa_to_sheet(out);ws['!cols']=[10,12,12,18,22,18,14,10,10,24,14,6,12,14,22,20,22,16,30,34,12].map(w=>({wch:w}));
+    out.push([st,CV.D(r.createdIso?CV.ymd(new Date(r.createdIso)):r.date_received),'Warehouse',r.order_no||r.job_no||'',c.name||'',num(c.po),c.country||'',({'Australia Post':'AusPost',DHL:'DHL'})[r.carrier]||r.carrier||'','',r.tracking||'',ls.length?num(first.sku||first.barcode):'',ls.length?qty(first):'',CV.D(r.date_received),df.reason||'',c.reason||(r.kind==='rts'?'RTS':'Return'),cond,df.gp||'',wms,[df.comments,d.note].filter(Boolean).join(' · '),r.client_note||'Return item has been received.',df.status==='Closed'&&d.at?CV.D(CV.ymd(new Date(d.at))):'',[c.addr,c.sub,c.st,c.pc].filter(Boolean).join(', ')]);
+    ls.slice(1).forEach(l=>{const row=Array(22).fill('');row[10]=num(l.sku||l.barcode);row[11]=qty(l);out.push(row)})});
+  const ws=XLSX.utils.aoa_to_sheet(out);ws['!cols']=[10,12,12,18,22,18,14,10,10,24,14,6,12,14,22,20,22,16,30,34,12,40].map(w=>({wch:w}));
   const wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,'Coravin Returns');
   const name='Coravin_APAC_AU_Returns_'+(CV.D(f)||'start')+'_to_'+(CV.D(t)||'today')+'.xlsx';XLSX.writeFile(wb,name);m.textContent='Downloaded '+name};
 
