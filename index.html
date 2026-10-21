@@ -2673,5 +2673,14 @@ html:not([data-theme=light]) .sheet-p .btn:not(.pri){background:rgba(255,255,255
 #shell .stgs .stg{border-color:rgba(255,255,255,.14)!important}
 html[data-theme=light] #shell .stgs .stg{border-color:rgba(0,0,0,.08)!important}
 </style>
+<script>
+/* ---- Reference number: spoken "hash" becomes #, and plain numbers get # in front ---- */
+GH.refHash=(v,final)=>{let s=String(v||'');
+  s=s.replace(/\b(hash\s*tags?|hashtags?|hash|pound\s*sign|pound|number\s*sign|sharp)\b\s*/gi,'#');
+  if(/^\s*#?\s*[\d][\d\s-]*\.?\s*$/.test(s)){s=s.replace(/[\s.-]/g,'');if(final&&!s.startsWith('#'))s='#'+s}
+  return s.replace(/##+/g,'#')};
+document.addEventListener('input',e=>{const t=e.target;if(t&&t.id==='f-job'){const n=GH.refHash(t.value,false);if(n!==t.value){t.value=n;try{t.setSelectionRange(n.length,n.length)}catch(x){}}}},true);
+document.addEventListener('focusout',e=>{const t=e.target;if(t&&t.id==='f-job'&&t.value){const n=GH.refHash(t.value,true);if(n!==t.value){t.value=n;if(S.draft)S.draft.jobNo=n}}},true);
+</script>
 </body>
 </html>
