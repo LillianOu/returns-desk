@@ -775,5 +775,107 @@ function benjiReportPortal(a){
 }
 
 </script>
+<script>
+/* ---- Coravin in the portal: decide what FA should do, add their own references, and download the Coravin Excel ---- */
+const CV={ex:{},ready:false,
+  tname:()=>{if(P.me&&P.me.role==='viewer')return P.me.tenant_name||'';const t=$('#tpick');return t&&t.selectedOptions[0]?t.selectedOptions[0].textContent:''},
+  on:()=>/coravin/i.test(CV.tname()),
+  L:{shelf:'Back to stock',resend:'Resend to customer',discard:'Discard',hold:'Hold, we\'ll confirm'},
+  STATUS:['','Open','Pending Coravin','Pending Customer','Pending Warehouse','Closed'],
+  REASON:['','Return','MBG','Faulty']};
+document.head.insertAdjacentHTML('beforeend','<style>'+
+ '.cv-sel{font:inherit;font-size:14px;padding:7px 10px;border-radius:10px;border:1px solid var(--line);background:var(--surface);color:var(--ink);max-width:190px}'+
+ '.cv-sel.set{border-color:#E8A317;box-shadow:0 0 0 1px #E8A317 inset}'+
+ '.cv-done{font-size:13px;color:var(--muted);white-space:nowrap}'+
+ '.cv-ok{display:block;font-size:12px;color:var(--muted);margin-top:3px}'+
+ '.cv-form{margin-top:14px;padding:14px;border:1.5px solid #E8A317;border-radius:14px}'+
+ '.cv-form h3{margin:0 0 4px;font-size:16px}.cv-form label{display:block;margin-top:10px;font-size:13px;color:var(--muted)}'+
+ '.cv-form input,.cv-form select,.cv-form textarea{display:block;width:100%;margin-top:4px;font:inherit;font-size:16px;padding:9px 11px;border-radius:10px;border:1px solid var(--line);background:var(--surface);color:var(--ink);box-sizing:border-box}'+
+ '.cv-form .two{display:grid;grid-template-columns:1fr 1fr;gap:10px}@media(max-width:560px){.cv-form .two{grid-template-columns:1fr}}'+
+ '</style>');
+
+const _loadCV=load;
+load=async function(){await _loadCV();CV.ex={};CV.ready=false;
+  if(CV.on()){const r=await sb.rpc('portal_extras',{p_tenant:P.tenant});
+    if(r.error)console.error(r.error);
+    else{(r.data||[]).forEach(x=>CV.ex[x.id]=x);P.rows.forEach(x=>{const e=CV.ex[x.id]||{};x.decision=e.decision||null;x.cor=e.cor||null;x.tracking=e.tracking||'';x.carrier=e.carrier||'';x.createdIso=e.created||''});CV.ready=true}}
+  CV.ui();drawRows()};
+
+CV.ui=()=>{const on=CV.on()&&CV.ready;
+  const tr=document.querySelector('#returns thead tr');if(tr){const th=tr.querySelector('.cv-th');if(on&&!th&&tr.children[1])tr.children[1].insertAdjacentHTML('afterend','<th class="cv-th">Your decision</th>');if(!on&&th)th.remove()}
+  const fl=document.querySelector('#returns .filters');let f=$('#cvf');
+  if(on&&!f&&fl){fl.insertAdjacentHTML('beforeend','<select id="cvf" aria-label="Decision"><option value="">All decisions</option><option value="need">Needs your decision</option><option value="sent">Decision sent</option></select>');$('#cvf').addEventListener('input',drawRows)}
+  if(!on&&f)f.remove();
+  const sub=document.querySelector('#returns .toprow .sub');if(sub)sub.textContent=on?'Choose what you\'d like us to do in "Your decision". Tap a return for items, photos and your reference fields.':'Tap a return to see items, photos and the team\'s note.';
+  const b=document.querySelector('#reports .btns');let x=$('#cvx');
+  if(on&&!x&&b){b.insertAdjacentHTML('beforeend','<button class="btn pri" id="cvx" type="button">Download Coravin Excel</button>');$('#cvx').addEventListener('click',CV.xlsx)}
+  if(!on&&x)x.remove()};
+
+CV.cell=r=>{const d=r.decision||{};
+  if(r.status!=='open')return'<span class="cv-done">'+(d.action?'You asked: '+esc(CV.L[d.action]||d.action)+' · ':'')+'Done</span>';
+  return'<select class="cv-sel'+(d.action?' set':'')+'" data-cv="'+esc(r.id)+'" aria-label="Your decision for '+esc(r.job_no||'')+'">'
+   +'<option value="">Choose…</option>'+Object.keys(CV.L).map(k=>'<option value="'+k+'"'+(d.action===k?' selected':'')+'>'+CV.L[k]+'</option>').join('')+'</select>'
+   +(d.action?'<span class="cv-ok">Sent to Fulfilment Australia</span>':'')};
+
+drawRows=function(){const q=$('#q').value.trim().toLowerCase(),k=$('#kind').value,dm=$('#dmg').value,on=CV.on()&&CV.ready,dv=on&&$('#cvf')?$('#cvf').value:'';
+  const list=P.rows.filter(r=>(!k||r.kind===k)&&(!dm||bad(r)>0)&&(!q||[r.job_no,r.order_no,r.tracking].concat((r.lines||[]).flatMap(l=>[l.sku,l.name,l.barcode])).join(' ').toLowerCase().includes(q))
+    &&(!dv||(dv==='need'?(r.status==='open'&&!(r.decision&&r.decision.action)):!!(r.decision&&r.decision.action))));
+  const cols=on?8:7;
+  $('#rows').innerHTML=list.slice(0,500).map(r=>'<tr class="row" tabindex="0" data-id="'+esc(r.id)+'"><td>'+fmtD(r.date_received)+'</td><td class="mono">'+esc(r.job_no||'—')+'</td>'+(on?'<td class="cv-act">'+CV.cell(r)+'</td>':'')+'<td class="mono">'+esc(r.order_no||'—')+'</td><td>'+kindL(r)+'</td><td class="num">'+(sealed(r)?'—':good(r))+'</td><td class="num">'+(sealed(r)?'—':bad(r))+'</td><td>'+pill(r)+'</td></tr>').join('')||'<tr><td colspan="'+cols+'" class="sub">No returns match.</td></tr>';
+  const need=on?P.rows.filter(r=>r.status==='open'&&!(r.decision&&r.decision.action)).length:0;
+  $('#count').textContent=list.length+' of '+P.rows.length+' returns'+(list.length>500?' (showing the latest 500)':'')+(on&&need?' · '+need+' need your decision':'');
+};
+
+CV.send=async(r,action,fields,note)=>{
+  const d=r.decision||{},f=Object.assign({},d.fields||{},fields||{});
+  const res=await sb.rpc('portal_decide',{p_id:r.id,p_action:action,p_note:note==null?(d.note||''):note,p_fields:f});
+  if(res.error){toast(/function|does not exist|404/i.test(res.error.message)?'Decisions are not switched on yet. Please tell Fulfilment Australia.':'Could not send: '+res.error.message);return false}
+  r.decision=res.data;toast(action?'Sent: '+CV.L[action]+'. Fulfilment Australia can see it now.':'Saved.');return true};
+
+document.addEventListener('click',e=>{if(e.target.closest&&e.target.closest('.cv-act'))e.stopPropagation()},true);
+document.addEventListener('keydown',e=>{if(e.target.closest&&e.target.closest('.cv-act')&&e.key==='Enter')e.stopPropagation()},true);
+document.addEventListener('change',async e=>{const t=e.target;if(!t.matches||!t.matches('.cv-sel'))return;
+  const r=P.rows.find(x=>x.id===t.dataset.cv);if(!r)return;t.disabled=true;
+  if(await CV.send(r,t.value,null,null))drawRows();else t.disabled=false});
+
+const _openCV=open;
+open=function(id){_openCV(id);if(!(CV.on()&&CV.ready))return;const r=P.rows.find(x=>x.id===id);if(!r)return;
+  const d=r.decision||{},f=d.fields||{},o=(a,v)=>a.map(x=>'<option value="'+esc(x)+'"'+(x===v?' selected':'')+'>'+(x?esc(x):'—')+'</option>').join('');
+  const html='<div class="cv-form"><h3>Your decision and references</h3><p class="sub" style="margin:0">Fulfilment Australia sees this straight away. It also fills your columns in the Coravin Excel.</p>'
+   +(r.status==='open'?'<label>What should we do?<select id="cv-a"><option value="">Choose…</option>'+Object.keys(CV.L).map(k=>'<option value="'+k+'"'+(d.action===k?' selected':'')+'>'+CV.L[k]+'</option>').join('')+'</select></label>':'<p class="sub">This return is finished'+(d.action?' (you asked: '+esc(CV.L[d.action])+')':'')+'. You can still update your references.</p>')
+   +'<div class="two"><label>GP Return #<input id="cv-gp" value="'+esc(f.gp||'')+'" autocapitalize="characters" autocorrect="off" spellcheck="false"></label>'
+   +'<label>Reason code (Coravin)<select id="cv-r">'+o(CV.REASON,f.reason||'')+'</select></label></div>'
+   +'<label>Status<select id="cv-s">'+o(CV.STATUS,f.status||'')+'</select></label>'
+   +'<label>Comments<textarea id="cv-c" rows="3">'+esc(f.comments||'')+'</textarea></label>'
+   +'<div class="btns" style="margin-top:12px"><button class="btn pri" id="cv-save" type="button">Send to Fulfilment Australia</button></div>'
+   +(d.at?'<p class="sub" style="margin-top:8px">Last sent '+new Date(d.at).toLocaleString('en-AU',{day:'numeric',month:'short',hour:'numeric',minute:'2-digit'})+(d.by?' by '+esc(d.by):'')+'</p>':'')+'</div>';
+  const s=$('#sheet'),dl=$('#dlall');if(dl&&dl.parentNode)dl.parentNode.insertAdjacentHTML('beforebegin',html);else s.insertAdjacentHTML('beforeend',html);
+  $('#cv-save').addEventListener('click',async ev=>{const b=ev.currentTarget;b.disabled=true;const a=$('#cv-a')?$('#cv-a').value:(d.action||'');
+    const ok=await CV.send(r,a,{gp:$('#cv-gp').value.trim(),reason:$('#cv-r').value,status:$('#cv-s').value,comments:$('#cv-c').value.trim()},null);
+    b.disabled=false;if(ok){drawRows();open(id)}})};
+
+/* Coravin Excel: their 21 columns A–U */
+CV.D=s=>{if(!s)return'';const m=String(s).slice(0,10).split('-');return m.length===3?m[2]+'.'+m[1]+'.'+m[0]:''};
+CV.ymd=d=>d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+CV.xlsx=()=>{const f=$('#from').value,t=$('#to').value,m=$('#rep-msg');
+  if(!window.XLSX){m.textContent='The report tool did not load. Reload the page and try again.';return}
+  const rs=P.rows.filter(r=>(!f||r.date_received>=f)&&(!t||r.date_received<=t)).slice().sort((a,b)=>String(a.date_received).localeCompare(b.date_received));
+  if(!rs.length){m.textContent='No returns in that range.';return}
+  const head=['Status','Create Date','Created by','Order Number','Customer Name','Customer PO #','Customer Country','Courier','Label Generated?','Tracking Number','Item(s) Received','Qty','Date Rec.','Reason Code (Coravin)','Reason Code (Fulfilment Australia)','Condition','GP Return # (Coravin)','Stock Returned in WMS','Comments CORAVIN','Comments Fulfilment Australia','Date Closed'];
+  const num=v=>{v=String(v||'').trim();return/^\d{1,15}$/.test(v)?+v:v};
+  const out=[head];rs.forEach(r=>{const c=r.cor||{},d=r.decision||{},df=d.fields||{},ls=(r.lines||[]).filter(l=>l.sku||l.barcode||l.name),first=ls[0]||{},qty=l=>(+l.qtyGood||0)+(+l.qtyDamaged||0);
+    const st=df.status||(r.status!=='open'?'Closed':(d.action?'Pending Warehouse':''));
+    const cond=c.cond||(r.kind==='rts'&&r.pack==='sealed'?'Unknown, unopened':(ls.some(l=>+l.qtyDamaged>0)?'Damaged':(r.status==='shelf'?'GOOD':'')));
+    const wms=CV.D(c.wms)||(r.status==='shelf'?CV.D(r.date_processed):'');
+    out.push([st,CV.D(r.createdIso?CV.ymd(new Date(r.createdIso)):r.date_received),'Warehouse',r.order_no||'',c.name||'',num(c.po),c.country||'',({'Australia Post':'AusPost',DHL:'DHL'})[r.carrier]||r.carrier||'','',r.tracking||'',ls.length?num(first.sku||first.barcode):'',ls.length?qty(first):'',CV.D(r.date_received),df.reason||'',c.reason||(r.kind==='rts'?'RTS':'Return'),cond,df.gp||'',wms,[df.comments,d.note].filter(Boolean).join(' · '),r.client_note||'Return item has been received.',df.status==='Closed'&&d.at?CV.D(CV.ymd(new Date(d.at))):'']);
+    ls.slice(1).forEach(l=>{const row=Array(21).fill('');row[10]=num(l.sku||l.barcode);row[11]=qty(l);out.push(row)})});
+  const ws=XLSX.utils.aoa_to_sheet(out);ws['!cols']=[10,12,12,18,22,18,14,10,10,24,14,6,12,14,22,20,22,16,30,34,12].map(w=>({wch:w}));
+  const wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,'Coravin Returns');
+  const name='Coravin_APAC_AU_Returns_'+(CV.D(f)||'start')+'_to_'+(CV.D(t)||'today')+'.xlsx';XLSX.writeFile(wb,name);m.textContent='Downloaded '+name};
+
+['q','kind','dmg'].forEach(id=>{const e=$('#'+id);if(e)e.addEventListener('input',()=>drawRows())});
+/* if the portal finished loading before this part ran, load once more so the Coravin parts appear */
+(function cvKick(n){if(P.me&&P.rows&&P.rows.length&&!CV.ready&&CV.on())load();else if(!P.me&&n<40)setTimeout(()=>cvKick(n+1),250)})(0);
+</script>
 </body>
 </html>
