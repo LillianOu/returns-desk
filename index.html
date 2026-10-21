@@ -1512,7 +1512,7 @@ function drawReport(){
   const el=$('#rep');if(!el)return;const d=repData(),r=S.rep,c=S.clients.find(x=>x.id===r.client);
   if(!d.rs.length){el.innerHTML='<div class="panel"><p class="note">'+(r.show==='damaged'?'No damaged items':r.show==='noref'?'No returns without a reference':'No returns were received')+' in this date range'+(c?' for '+esc(c.name):'')+'.</p></div>';return}
   let h='<div class="panel"><h3>Summary, '+fmtD(r.from)+' to '+fmtD(r.to)+'</h3><div class="tiles"><div class="tile"><span class="lab">Customer returns</span><b>'+d.ret.length+'</b></div><div class="tile"><span class="lab">Return to sender</span><b>'+d.rts.length+'</b></div><div class="tile"><span class="lab">Good units</span><b>'+d.good+'</b></div><div class="tile"><span class="lab">Damaged units</span><b>'+d.bad+'</b></div></div>'
-   +'<div class="row">'+(S.dl?((GH.isCor&&r.client&&GH.isCor(r.client))?'<button class="btn pri big" data-act="corXlsx">Download Coravin Excel</button><button class="btn" data-act="pdf">Download PDF</button>':'<button class="btn pri big" data-act="xlsx">Download Excel</button><button class="btn" data-act="pdf">Download PDF</button>'):'<p class="note">Downloads are not available in this view.</p>')+'</div><p class="note">'+((GH.isCor&&r.client&&GH.isCor(r.client))?'Coravin Excel: their own sheet (columns A–U in their order, plus customer address), ready to send.':'The Excel file has two tabs: Returns and Return to sender.')+'</p></div>';
+   +'<div class="row">'+(S.dl?((GH.isCor&&r.client&&GH.isCor(r.client))?'<button class="btn pri big" data-act="corXlsx">Download Coravin Excel</button><button class="btn" data-act="pdf">Download PDF</button>':'<button class="btn pri big" data-act="xlsx">Download Excel</button><button class="btn" data-act="pdf">Download PDF</button>'):'<p class="note">Downloads are not available in this view.</p>')+'</div><p class="note">'+((GH.isCor&&r.client&&GH.isCor(r.client))?'Coravin Excel: their own sheet (columns A–U, in their order), ready to send.':'The Excel file has two tabs: Returns and Return to sender.')+'</p></div>';
   h+='<div class="panel"><h3>Returns</h3>'+(d.rowsRet.length?repTable(d.rowsRet):'<p class="note">None in this period.</p>')+'</div>';
   h+='<div class="panel"><h3>Return to sender</h3>'+(d.rowsRts.length?repTable(d.rowsRts):'<p class="note">None in this period.</p>')+'</div>';
   el.innerHTML=h;
@@ -2696,8 +2696,8 @@ GH.corForm=d=>{
   const f=(k,label,attrs)=>'<label class="fld"><span>'+label+'</span><input data-cor="'+k+'" value="'+esc(c[k]||'')+'" '+(attrs||'')+'></label>';
   return'<div class="panel cor-panel"><div class="row" style="align-items:center;gap:10px;flex-wrap:wrap"><h3 style="flex:1 1 auto;margin:0">Coravin details</h3>'
    +'<button type="button" class="btn pri" data-act="corRead">'+ic('text')+'<span>Read label / invoice</span></button></div>'
-   +'<p class="note" id="cor-msg">Take a photo of the shipping label or the invoice in the box. It fills the customer\'s name and address, the reference (order) number, PO and tracking. Check them before you save.</p>'
-   +'<div class="grid">'+f('name','Customer name','autocomplete="off"')+f('addr','Street address','autocomplete="off"')+'</div><div class="grid">'+f('sub','Suburb','autocomplete="off"')+'<label class="fld"><span>State</span><select data-cor="st">'+opts(['','NSW','VIC','QLD','WA','SA','TAS','ACT','NT'],c.st||'')+'</select></label>'+f('pc','Postcode','inputmode="numeric" autocomplete="off"')+'</div><div class="grid">'
+   +'<p class="note" id="cor-msg">Take a photo of the shipping label or the invoice in the box. It fills the customer\'s name and country, the reference (order) number, PO and tracking. Check them before you save.</p>'
+   +'<div class="grid">'+f('name','Customer name','autocomplete="off"')
    +'<label class="fld"><span>Customer country</span><input data-cor="country" list="cor-countries" value="'+esc(c.country||'')+'" autocomplete="off"></label><datalist id="cor-countries">'+GH.COR_COUNTRY.map(x=>'<option value="'+x+'">').join('')+'</datalist>'
    +f('po','Customer PO #','class="mono" autocapitalize="characters" autocorrect="off" spellcheck="false"')+'</div>'
    +'<div class="grid"><label class="fld"><span>Reason code (FA)</span><select data-cor="reason">'+opts(GH.COR_REASON,c.reason||'')+'</select></label>'
@@ -2713,7 +2713,7 @@ document.addEventListener('change',e=>{const t=e.target;if(!t||!S.draft)return;
 GH.corImg=file=>new Promise((res,rej)=>{const fr=new FileReader();fr.onerror=rej;fr.onload=()=>{const im=new Image();im.onerror=rej;im.onload=()=>{const k=Math.min(1,1600/Math.max(im.width,im.height)),c=document.createElement('canvas');c.width=Math.round(im.width*k);c.height=Math.round(im.height*k);c.getContext('2d').drawImage(im,0,0,c.width,c.height);res(c.toDataURL('image/jpeg',.85).split(',')[1])};im.src=fr.result};fr.readAsDataURL(file)});
 GH.corApply=x=>{const d=S.draft;if(!d||!x)return 0;const c=d.cor=d.cor||{};let n=0;const set=(o,k,v)=>{v=(v==null?'':String(v)).trim();if(v&&!String(o[k]||'').trim()){o[k]=v;n++}};
   set(c,'name',x.customer_name);if(x.country&&(!c.country||c.country==='Australia')&&x.country!==c.country){c.country=x.country;n++}
-  set(c,'po',x.customer_po);set(c,'addr',x.address);set(c,'sub',x.suburb);set(c,'st',x.state);set(c,'pc',x.postcode);set(d,'jobNo',x.order_number);set(d,'tracking',x.tracking_number);
+  set(c,'po',x.customer_po);set(d,'jobNo',x.order_number);set(d,'tracking',x.tracking_number);
   if(x.courier&&!d.carrier){const m={auspost:'Australia Post','australia post':'Australia Post',dhl:'DHL',startrack:'StarTrack',aramex:'Aramex',tnt:'TNT',toll:'Toll',couriersplease:'CouriersPlease'}[String(x.courier).toLowerCase()];if(m){d.carrier=m;n++}}
   const items=(x.items||[]).filter(i=>i&&i.sku);const empty=d.lines.every(l=>!l.sku&&!l.barcode&&!l.name);
   if(items.length&&empty){d.lines=items.slice(0,20).map(i=>Object.assign(blankLine(),{sku:String(i.sku),name:String(i.name||''),qtyGood:+i.qty||1}));n+=items.length}
@@ -2733,7 +2733,7 @@ Object.assign(ACT,{
 });
 
 /* Coravin-format Excel: their 21 columns A–U */
-GH.COR_HEAD=['Status','Create Date','Created by','Order Number','Customer Name','Customer PO #','Customer Country','Courier','Label Generated?','Tracking Number','Item(s) Received','Qty','Date Rec.','Reason Code (Coravin)','Reason Code (Fulfilment Australia)','Condition','GP Return # (Coravin)','Stock Returned in WMS','Comments CORAVIN','Comments Fulfilment Australia','Date Closed','Customer Address'];
+GH.COR_HEAD=['Status','Create Date','Created by','Order Number','Customer Name','Customer PO #','Customer Country','Courier','Label Generated?','Tracking Number','Item(s) Received','Qty','Date Rec.','Reason Code (Coravin)','Reason Code (Fulfilment Australia)','Condition','GP Return # (Coravin)','Stock Returned in WMS','Comments CORAVIN','Comments Fulfilment Australia','Date Closed'];
 GH.corD=s=>{if(!s)return'';const m=String(s).slice(0,10).split('-');return m.length===3?m[2]+'.'+m[1]+'.'+m[0]:''};
 GH.corRows=()=>{const r=S.rep;const rs=S.returns.filter(x=>!x.example&&GH.isCor(x.clientId)&&x.dateReceived>=r.from&&x.dateReceived<=r.to).sort((a,b)=>String(a.dateReceived).localeCompare(b.dateReceived));
   const out=[];rs.forEach(x=>{const c=x.cor||{},ls=(x.lines||[]).filter(l=>l.sku||l.barcode||l.name);
@@ -2748,14 +2748,14 @@ GH.corRows=()=>{const r=S.rep;const rs=S.returns.filter(x=>!x.example&&GH.isCor(
     const dc=x.decision||{},df=dc.fields||{};
     const stA=df.status||(x.status!=='open'?'Closed':(dc.action?'Pending Warehouse':''));
     const cmtC=[df.comments,dc.note].filter(Boolean).join(' · ');
-    out.push([stA,GH.corD(x.createdAt?ymd(new Date(x.createdAt)):x.dateReceived)||GH.corD(x.dateReceived),'Warehouse',x.orderNo||x.jobNo||'',c.name||'',c.po?(/^\d{1,15}$/.test(c.po)?+c.po:c.po):'',c.country||'',courier,'',x.tracking||'',ls.length?sku(first):'',ls.length?qty(first):'',GH.corD(x.dateReceived),df.reason||'',reason,cond,df.gp||'',wms,cmtC,comment,df.status==='Closed'&&dc.at?GH.corD(ymd(new Date(dc.at))):'',[c.addr,c.sub,c.st,c.pc].filter(Boolean).join(', ')]);
-    ls.slice(1).forEach(l=>{const row=Array(22).fill('');row[10]=sku(l);row[11]=qty(l);out.push(row)})});
+    out.push([stA,GH.corD(x.createdAt?ymd(new Date(x.createdAt)):x.dateReceived)||GH.corD(x.dateReceived),'Warehouse',x.orderNo||x.jobNo||'',c.name||'',c.po?(/^\d{1,15}$/.test(c.po)?+c.po:c.po):'',c.country||'',courier,'',x.tracking||'',ls.length?sku(first):'',ls.length?qty(first):'',GH.corD(x.dateReceived),df.reason||'',reason,cond,df.gp||'',wms,cmtC,comment,df.status==='Closed'&&dc.at?GH.corD(ymd(new Date(dc.at))):'']);
+    ls.slice(1).forEach(l=>{const row=Array(21).fill('');row[10]=sku(l);row[11]=qty(l);out.push(row)})});
   return{rs,out}};
 GH.corXlsx=async()=>{const{rs,out}=GH.corRows();if(!rs.length)return toast('No Coravin returns in this date range.');
   toast('Building the Coravin Excel file…');
   try{await loadXlsx()}catch(e){return toast('The Excel builder did not load. Check the connection and try again.')}
   const ws=XLSX.utils.aoa_to_sheet([GH.COR_HEAD].concat(out));
-  ws['!cols']=[10,12,12,18,22,18,14,10,10,24,14,6,12,14,22,20,22,16,30,34,12,40].map(w=>({wch:w}));
+  ws['!cols']=[10,12,12,18,22,18,14,10,10,24,14,6,12,14,22,20,22,16,30,34,12].map(w=>({wch:w}));
   const wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,'Coravin Returns');
   const buf=XLSX.write(wb,{bookType:'xlsx',type:'array'});
   saveFile('Coravin_APAC_AU_Returns_'+GH.corD(S.rep.from)+'_to_'+GH.corD(S.rep.to)+'.xlsx',new Blob([buf],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'}))};
