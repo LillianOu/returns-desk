@@ -1132,7 +1132,8 @@ function vForm(){
    +'<label class="fld"><span>Carrier</span><select id="f-carrier" data-f="carrier">'+opts(CARRIERS,d.carrier)+'</select></label>'
    +'</div><div class="pick"><span>Status</span>'+seg('f-status','Status',sts.map(s=>[s,'<i class="dot st-'+s+'"></i>'+SL(s)]),d.status)+'</div></div>';
   h+=GH.corForm?GH.corForm(d):'';
-  if(d.kind==='rts'){if(!d.location&&!S.editId)d.location=firstFreeLoc();}
+  if(!d.location&&!S.editId)d.location=firstFreeLoc();
+  if(d.kind!=='rts')h+='<div class="panel"><div class="grid"><label class="fld"><span>Storage location (quarantine)</span><select id="f-loc" class="mono" data-f="location">'+locOpts(d.location,S.editId)+'</select></label></div><p class="note">Where the parcel waits until it is processed. Up to '+S.store.cap+' waiting parcels per location; the next free one is picked for you.</p></div>';
   if(d.kind==='rts')h+='<div class="panel"><div class="grid"><label class="fld"><span>Storage location</span><select id="f-loc" class="mono" data-f="location">'+locOpts(d.location,S.editId)+'</select></label></div><p class="note">Up to '+S.store.cap+' waiting parcels per location. Full locations are greyed out. The next free one is picked for you.</p><div class="pick"><span>Package condition</span>'+seg('f-pack','Package condition',PACKS,d.pack||'')+'</div><p class="note">For an unopened parcel you can leave the items below empty. Add items only if the parcel was opened.</p></div>';
   h+='<h3>'+(d.kind==='rts'?'Items (optional)':'Items')+'</h3>';
   d.lines.forEach((l,i)=>{
@@ -1158,11 +1159,11 @@ async function saveReturn(){
   if(!d.jobNo.trim())return toast('Add the reference number.');
   if(S.returns.some(r=>r.jobNo===d.jobNo.trim()&&r.id!==S.editId))return toast('Reference number '+d.jobNo+' is already used. Change it.');
   if(S.uploading)return toast('Photos are still uploading. Try again in a moment.');
-  if(d.kind==='rts'&&d.status==='open'&&d.location&&locUsed(d.location,S.editId)>=S.store.cap)return toast('Location '+d.location+' is full. Choose another location.');
+  if(d.status==='open'&&d.location&&locUsed(d.location,S.editId)>=S.store.cap)return toast('Location '+d.location+' is full. Choose another location.');
   const now=new Date().toISOString(),prev=S.editId?S.returns.find(r=>r.id===S.editId):null,by=S.uid||'';
   const hist=((prev&&prev.history)||[]).slice(-40);
   hist.push({at:now,by,what:!prev?'Logged as '+(d.kind==='rts'?'return to sender':'customer return'):prev.status!==d.status?'Status changed to '+SL(d.status):'Edited'});
-  const body={jobNo:d.jobNo.trim(),clientId:d.clientId,kind:d.kind==='rts'?'rts':'return',pack:d.kind==='rts'?(d.pack||''):'',location:d.kind==='rts'?(d.location||''):'',orderNo:(d.orderNo||'').trim(),tracking:(d.tracking||'').trim(),carrier:d.carrier||'',dateReceived:d.dateReceived||today(),dateProcessed:d.dateProcessed||'',status:d.status,notes:(d.notes||'').trim(),clientNote:(d.clientNote||'').trim(),cor:(GH.isCor&&GH.isCor(d.clientId)&&d.cor)?d.cor:undefined,
+  const body={jobNo:d.jobNo.trim(),clientId:d.clientId,kind:d.kind==='rts'?'rts':'return',pack:d.kind==='rts'?(d.pack||''):'',location:d.location||'',orderNo:(d.orderNo||'').trim(),tracking:(d.tracking||'').trim(),carrier:d.carrier||'',dateReceived:d.dateReceived||today(),dateProcessed:d.dateProcessed||'',status:d.status,notes:(d.notes||'').trim(),clientNote:(d.clientNote||'').trim(),cor:(GH.isCor&&GH.isCor(d.clientId)&&d.cor)?d.cor:undefined,
     lines:d.lines.filter(l=>l.barcode||l.sku||l.name||l.photos.length).map(l=>({barcode:l.barcode.trim(),sku:l.sku.trim(),name:l.name.trim(),qtyGood:+l.qtyGood||0,qtyDamaged:+l.qtyDamaged||0,reason:l.reason||'',photos:l.photos})),
     createdAt:(prev&&prev.createdAt)||now,createdBy:(prev&&prev.createdBy)||by,updatedAt:now,history:hist};
   if(prev&&prev.decision)body.decision=prev.decision;if(prev&&prev.example)body.example=true;if(prev&&prev.rts)body.rts=prev.rts;if(prev&&prev.emailedAt)body.emailedAt=prev.emailedAt;
@@ -1278,7 +1279,7 @@ function drawRows(){
      +(act2?'<div class="rw-under" aria-hidden="true"><span>'+ic('check')+lab+'</span></div>':'')
      +'<div class="rw-card"><button class="rw-main" data-act="open" data-v="'+r.id+'" aria-label="Open '+esc(r.jobNo)+', '+esc(clientName(r.clientId))+', '+esc(STG[sg2][0])+'">'
      +'<span class="job">'+esc(r.jobNo)+'</span><span class="rw-cl">'+esc(clientName(r.clientId))+(GH.decChip?GH.decChip(r):'')+'</span>'
-     +'<span class="rw-meta"><span>'+fmtD(r.dateReceived)+'</span><span class="mono">'+esc(r.orderNo||'no reference')+'</span><span class="rw-q">'+esc(qtyText(r))+'</span>'+(isRts(r)&&r.location?'<span class="tag mono">Loc '+esc(r.location)+'</span>':'')+'</span>'
+     +'<span class="rw-meta"><span>'+fmtD(r.dateReceived)+'</span><span class="mono">'+esc(r.orderNo||'no reference')+'</span><span class="rw-q">'+esc(qtyText(r))+'</span>'+(r.location&&(isRts(r)||r.status==='open')?'<span class="tag mono">Loc '+esc(r.location)+'</span>':'')+'</span>'
      +pill(sg2,ch)+'</button>'
      +(act2?'<button class="adv" data-act="advance" data-v="'+r.id+'" aria-label="'+lab+' for '+esc(r.jobNo)+'" title="'+lab+'">'+ic('arrow')+'</button>':'')
      +'</div></li>'}).join('')+'</ul>';
@@ -1356,7 +1357,7 @@ function renderSheet(){
   let h='<div class="sh-grab" data-shgrab aria-hidden="true"><i></i></div>'
    +'<header class="sh-h" data-shgrab><div class="sh-ht"><span class="job big">'+esc(r.jobNo)+'</span><h2 id="sh-t">'+esc(clientName(r.clientId))+'</h2><p class="note">'+(isRts(r)?'Return to sender':'Customer return')+' · received '+fmtD(r.dateReceived)+' · '+esc(qtyText(r))+'</p>'+pill(sg,S.sheetStatus&&S.sheetStatus!==sg)+'</div>'
    +'<button class="icb" data-act="closeSheet" aria-label="Close">'+ic('x')+'</button></header><div class="sh-b">'+(GH.decBox?GH.decBox(r):'')
-   +'<dl class="kv">'+(isRts(r)?'<div><dt>Storage location</dt><dd class="mono loc-big">'+esc(r.location||'—')+'</dd></div>':'')+'<div><dt>Reference</dt><dd class="mono">'+esc(r.orderNo||'—')+'</dd></div><div><dt>Tracking</dt><dd class="mono">'+esc(r.tracking||'—')+'</dd></div><div><dt>Carrier</dt><dd>'+esc(r.carrier||'—')+'</dd></div><div><dt>Closed on</dt><dd>'+fmtD(r.dateProcessed)+'</dd></div></dl>';
+   +'<dl class="kv">'+((isRts(r)||r.location)?'<div><dt>Storage location</dt><dd class="mono loc-big">'+esc(r.location||'—')+'</dd></div>':'')+'<div><dt>Reference</dt><dd class="mono">'+esc(r.orderNo||'—')+'</dd></div><div><dt>Tracking</dt><dd class="mono">'+esc(r.tracking||'—')+'</dd></div><div><dt>Carrier</dt><dd>'+esc(r.carrier||'—')+'</dd></div><div><dt>Closed on</dt><dd>'+fmtD(r.dateProcessed)+'</dd></div></dl>';
   if(sg==='rts'){prepFiles(r);
     h+='<div class="dec"><h3>Waiting on the tenant</h3><p class="note">'+(r.emailedAt?'Tenant emailed '+esc(new Date(r.emailedAt).toLocaleDateString('en-AU'))+'. ':'')+'Record their answer when it arrives: resend to a corrected address, put it back to stock, or discard it.</p>'
      +'<label class="fld"><span>New address or tenant instructions</span><textarea id="rts-note" placeholder=" ">'+esc(S.rtsNote)+'</textarea></label>'
@@ -1685,7 +1686,7 @@ if(document.fonts&&document.fonts.ready)document.fonts.ready.then(()=>{placeNav(
 /* ---------- RTS storage locations (trays 001, 002 …, each holding a limited number of waiting parcels) ---------- */
 S.store={count:50,cap:10};
 const locCode=i=>String(i).padStart(3,'0');
-const locUsed=(code,exclude)=>S.returns.filter(r=>isRts(r)&&r.status==='open'&&r.location===code&&r.id!==exclude).length;
+const locUsed=(code,exclude)=>S.returns.filter(r=>r.status==='open'&&r.location===code&&r.id!==exclude).length;
 function firstFreeLoc(exclude){for(let i=1;i<=S.store.count;i++){const c=locCode(i);if(locUsed(c,exclude)<S.store.cap)return c}return''}
 function locOpts(cur,exclude){
   let h='<option value="">Choose a location…</option>';
@@ -2394,11 +2395,11 @@ function fileBase(){const r=S.rep,c=S.clients.find(x=>x.id===r.client);return(r.
 
 /* RTS storage check: tap a location to see the parcels waiting in it */
 function storeHtml(){
-  const waiting=S.returns.filter(r=>isRts(r)&&r.status==='open'&&r.location),by={};
+  const waiting=S.returns.filter(r=>r.status==='open'&&r.location),by={};
   waiting.forEach(r=>{(by[r.location]=by[r.location]||[]).push(r)});
   const codes=Object.keys(by).sort(),sel=S.storeSel&&by[S.storeSel]?S.storeSel:'';
-  let h='<div class="panel store"><div class="row"><h3 style="flex:1 1 auto;margin:0">RTS storage</h3><span class="note">'+waiting.length+' parcel'+(waiting.length===1?'':'s')+' in '+codes.length+' location'+(codes.length===1?'':'s')+'</span></div>';
-  if(!codes.length)return h+'<p class="note">No RTS parcels in storage.</p></div>';
+  let h='<div class="panel store"><div class="row"><h3 style="flex:1 1 auto;margin:0">Storage</h3><span class="note">'+waiting.length+' parcel'+(waiting.length===1?'':'s')+' in '+codes.length+' location'+(codes.length===1?'':'s')+'</span></div>';
+  if(!codes.length)return h+'<p class="note">No parcels in storage.</p></div>';
   h+='<div class="loc-grid">'+codes.map(c=>{const n=by[c].length,full=n>=S.store.cap;return'<button type="button" class="loc-tile'+(c===sel?' on':'')+(full?' full':'')+'" data-act="storeLoc" data-v="'+c+'" aria-pressed="'+(c===sel)+'"><b class="mono">'+c+'</b><span>'+n+' / '+S.store.cap+'</span></button>'}).join('')+'</div>';
   if(sel)h+='<div class="loc-list"><p class="note">Location '+sel+' holds:</p>'+by[sel].sort((a,b)=>String(a.dateReceived).localeCompare(b.dateReceived)).map(r=>'<button type="button" class="loc-row" data-act="open" data-v="'+r.id+'"><span class="mono">'+esc(r.jobNo)+'</span><span>'+esc(clientName(r.clientId))+'</span><span class="note">'+fmtD(r.dateReceived)+(packText(r)?' · '+esc(packText(r)):'')+'</span></button>').join('')+'</div>';
   return h+'</div>';
