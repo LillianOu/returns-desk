@@ -2871,5 +2871,36 @@ const _vRepW=vReport;vReport=function(){return _vRepW.apply(this,arguments)+'<di
 const _dRepW=drawReport;drawReport=function(){_dRepW.apply(this,arguments);try{GH.drawWait()}catch(e){console.error(e)}};
 
 </script>
+<script>
+/* ---- Time per tenant (internal), Reports page. Fri 23 Oct 2026 ----
+   Uses the automatic timer on each return (timeSec). Staff app only: never in the client portal or client Excel. */
+GH.timeData=()=>{const r=S.rep;
+  const rs=S.returns.filter(x=>!x.example&&+x.timeSec>0&&match(x,{client:r.client,from:r.from,to:r.to}));
+  const by={};rs.forEach(x=>{const k=x.clientId||'';const o=by[k]=by[k]||{name:clientName(k)||'No tenant',n:0,sec:0,max:0,units:0};o.n++;o.sec+=+x.timeSec;o.max=Math.max(o.max,+x.timeSec);o.units+=goodQ(x)+badQ(x)});
+  const list=Object.values(by).sort((a,b)=>b.sec-a.sec);const tot=rs.reduce((a,x)=>a+(+x.timeSec),0);
+  const all=S.returns.filter(x=>!x.example&&match(x,{client:r.client,from:r.from,to:r.to})).length;
+  return{rs,list,tot,all}};
+GH.mins=s=>Math.round((+s||0)/6)/10;
+GH.drawTime=()=>{const el=document.getElementById('timeRep');if(!el)return;const t=GH.timeData(),r=S.rep;
+  let h='<div class="panel"><h3>Time spent by tenant · internal</h3><p class="note">Staff only. Never shown to clients. Each return is timed automatically from the first entry to Save (pauses over 5 minutes are not counted). '+fmtD(r.from)+' to '+fmtD(r.to)+'.</p>';
+  if(!t.rs.length){el.innerHTML=h+'<p class="note">No timed returns in this date range yet. Timing started on 22 Oct, so only returns logged from then on have a time.</p></div>';return}
+  h+='<div class="tiles"><div class="tile"><span class="lab">Timed returns</span><b>'+t.rs.length+(t.all>t.rs.length?' <small style="font-size:.5em;opacity:.7">of '+t.all+'</small>':'')+'</b></div><div class="tile"><span class="lab">Total time</span><b>'+GH.fmtT(t.tot)+'</b></div><div class="tile"><span class="lab">Average per return</span><b>'+GH.fmtT(t.tot/t.rs.length)+'</b></div></div>';
+  h+='<div class="tbl"><table><thead><tr><th>Tenant</th><th>Returns</th><th>Units</th><th>Total time</th><th>Average per return</th><th>Longest</th><th>Share of time</th></tr></thead><tbody>'
+   +t.list.map(o=>'<tr><td>'+esc(o.name)+'</td><td>'+o.n+'</td><td>'+o.units+'</td><td>'+GH.fmtT(o.sec)+'</td><td><b>'+GH.fmtT(o.sec/o.n)+'</b></td><td>'+GH.fmtT(o.max)+'</td><td>'+Math.round(o.sec/t.tot*100)+'%</td></tr>').join('')+'</tbody></table></div>';
+  h+='<div class="row">'+(S.dl?'<button class="btn" data-act="timeXlsx">Download time report (Excel, internal)</button>':'')+'</div></div>';
+  el.innerHTML=h};
+ACT.timeXlsx=async()=>{const t=GH.timeData(),r=S.rep;if(!t.rs.length)return toast('No timed returns in this date range.');
+  try{await loadXlsx()}catch(e){return toast('The Excel builder did not load. Check the connection and try again.')}
+  const wb=XLSX.utils.book_new();
+  const s1=XLSX.utils.aoa_to_sheet([['Tenant','Returns','Units','Total minutes','Average minutes per return','Longest (minutes)','Share of time']].concat(t.list.map(o=>[o.name,o.n,o.units,GH.mins(o.sec),GH.mins(o.sec/o.n),GH.mins(o.max),Math.round(o.sec/t.tot*1000)/10+'%'])).concat([[],['Internal only. '+fmtD(r.from)+' to '+fmtD(r.to)+'. Timed automatically from first entry to Save; pauses over 5 minutes not counted.']]));
+  s1['!cols']=[24,9,8,14,24,16,13].map(w=>({wch:w}));
+  const s2=XLSX.utils.aoa_to_sheet([['Date received','Reference','Tenant','Type','Units','Minutes']].concat(t.rs.slice().sort((a,b)=>String(a.dateReceived).localeCompare(b.dateReceived)).map(x=>[fmtD(x.dateReceived),x.jobNo||'',clientName(x.clientId),isRts(x)?'RTS':'Customer return',goodQ(x)+badQ(x),GH.mins(x.timeSec)])));
+  s2['!cols']=[13,20,22,16,7,9].map(w=>({wch:w}));
+  XLSX.utils.book_append_sheet(wb,s1,'By tenant');XLSX.utils.book_append_sheet(wb,s2,'Each return');
+  const out=XLSX.write(wb,{bookType:'xlsx',type:'array'});saveFile('time-by-tenant-'+r.from+'-to-'+r.to+'.xlsx',new Blob([out],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'}))};
+{const _vRepT=vReport;vReport=function(){return _vRepT.apply(this,arguments).replace('<div id="waitRep"></div>','<div id="timeRep"></div><div id="waitRep"></div>')}}
+{const _dRepT=drawReport;drawReport=function(){_dRepT.apply(this,arguments);try{GH.drawTime()}catch(e){console.error(e)}}}
+
+</script>
 </body>
 </html>
