@@ -2820,5 +2820,56 @@ GH.avgT=rs=>{const t=(rs||[]).filter(r=>+r.timeSec>0);if(!t.length)return'';retu
 document.head.insertAdjacentHTML('beforeend','<style id="quar-st">.st-quar{color:#E8A317!important}.pill.st-quar .dot,.dot.st-quar{background:#E8A317!important}i.stg-quar{background:#E8A317!important}.stg-quar{--c:#E8A317}.shell .stgs .stg.stg-quar{border-color:#E8A317!important}html[data-theme=light] .shell .stgs .stg.stg-quar{border-color:#F2C062!important}@media (min-width:900px){.shell .stgs,.stgs{grid-template-columns:repeat(3,minmax(0,1fr))!important}}@media (min-width:1280px){.shell .stgs,.stgs{grid-template-columns:repeat(6,minmax(0,1fr))!important}}</style>');
 
 </script>
+<script>
+/* ---- Waiting parcels & storage report (Reports page). Thu 22 Oct 2026 ---- */
+S.bill=S.bill||{free:14,rate:0.5,per:'day'};
+GH.billCharge=days=>{const b=S.bill,over=Math.max(0,days-b.free);return b.per==='week'?Math.ceil(over/7)*b.rate:over*b.rate};
+GH.money=n=>'A$'+(Math.round(n*100)/100).toLocaleString('en-AU',{minimumFractionDigits:2,maximumFractionDigits:2});
+GH.waitData=()=>{
+  const cid=S.rep&&S.rep.client;
+  const rs=S.returns.filter(r=>!r.example&&r.status==='open'&&(!cid||r.clientId===cid)).map(r=>{const d=age(r.dateReceived);return{r,d,type:isRts(r)?'RTS waiting':(r.quar?'Quarantine':'Open'),fee:GH.billCharge(d)}}).sort((a,b)=>b.d-a.d);
+  const by={};rs.forEach(x=>{const k=x.r.clientId||'';const o=by[k]=by[k]||{name:clientName(k)||'No tenant',n:0,over:0,old:0,fee:0};o.n++;if(x.d>S.bill.free)o.over++;o.old=Math.max(o.old,x.d);o.fee+=x.fee});
+  const clients=Object.values(by).sort((a,b)=>b.old-a.old);
+  return{rs,clients,over:rs.filter(x=>x.d>S.bill.free).length,old:rs.length?rs[0].d:0,fee:rs.reduce((a,x)=>a+x.fee,0)};
+};
+GH.drawWait=()=>{
+  const el=document.getElementById('waitRep');if(!el)return;
+  if(!GH.billSub&&S.db){GH.billSub=1;try{S.db.doc('orgs/billing').onSnapshot(s=>{const d=s.exists?s.data():{};S.bill={free:d.free!=null?+d.free:14,rate:d.rate!=null?+d.rate:0.5,per:d.per==='week'?'week':'day'};if(S.tab==='report')GH.drawWait()},()=>{})}catch(e){}}
+  const w=GH.waitData(),b=S.bill,c=S.clients.find(x=>x.id===(S.rep&&S.rep.client));
+  let h='<div class="panel"><h3>Waiting parcels and storage, as of today'+(c?' · '+esc(c.name):'')+'</h3>'
+   +'<p class="note">Parcels still waiting (Open, Quarantine or RTS), however long ago they arrived. The date range above does not apply here.</p>'
+   +'<div class="grid"><label class="fld"><span>Free days</span><input id="bl-free" type="number" min="0" max="365" inputmode="numeric" value="'+b.free+'"></label>'
+   +'<label class="fld"><span>Storage rate per parcel (A$, ex GST)</span><input id="bl-rate" type="number" min="0" step="0.05" inputmode="decimal" value="'+b.rate+'"></label>'
+   +'<label class="fld"><span>Charged</span><select id="bl-per">'+opts([['day','per day'],['week','per week']],b.per)+'</select></label></div>'
+   +'<div class="row"><button class="btn" data-act="billSave">Save rate</button><span class="note">Example rate; set your own. The charge starts after the free days.</span></div>'
+   +'<div class="tiles"><div class="tile"><span class="lab">Parcels waiting</span><b>'+w.rs.length+'</b></div>'
+   +'<div class="tile"><span class="lab">Over '+b.free+' days</span><b>'+w.over+'</b></div>'
+   +'<div class="tile"><span class="lab">Longest wait</span><b>'+w.old+' d</b></div>'
+   +'<div class="tile"><span class="lab">Storage if charged</span><b>'+GH.money(w.fee)+'</b></div></div>';
+  if(!w.rs.length){el.innerHTML=h+'<p class="note">Nothing is waiting right now.</p></div>';return}
+  h+='<div class="row">'+(S.dl?'<button class="btn pri big" data-act="waitXlsx">Download waiting parcels (Excel)</button>':'')+'</div></div>';
+  h+='<div class="panel"><h3>By tenant</h3><div class="tbl"><table><thead><tr><th>Tenant</th><th>Waiting</th><th>Over '+b.free+' days</th><th>Longest (days)</th><th>Storage if charged</th></tr></thead><tbody>'
+   +w.clients.map(o=>'<tr><td>'+esc(o.name)+'</td><td>'+o.n+'</td><td>'+(o.over?'<b style="color:#E8A317">'+o.over+'</b>':'0')+'</td><td>'+o.old+'</td><td>'+GH.money(o.fee)+'</td></tr>').join('')+'</tbody></table></div></div>';
+  h+='<div class="panel"><h3>Longest waiting</h3><div class="tbl"><table><thead><tr><th>Reference</th><th>Tenant</th><th>Status</th><th>Location</th><th>Received</th><th>Days</th><th>Storage if charged</th></tr></thead><tbody>'
+   +w.rs.slice(0,50).map(x=>'<tr><td class="mono">'+esc(x.r.jobNo||'—')+'</td><td>'+esc(clientName(x.r.clientId))+'</td><td>'+x.type+'</td><td class="mono">'+esc(x.r.location||'—')+'</td><td>'+fmtD(x.r.dateReceived)+'</td><td>'+(x.d>b.free?'<b style="color:#E8A317">'+x.d+'</b>':x.d)+'</td><td>'+GH.money(x.fee)+'</td></tr>').join('')
+   +'</tbody></table></div>'+(w.rs.length>50?'<p class="note">Showing the 50 longest of '+w.rs.length+'. The Excel has all of them.</p>':'')+'</div>';
+  el.innerHTML=h;
+};
+Object.assign(ACT,{
+  billSave:async()=>{const f=Math.max(0,Math.min(365,parseInt($('#bl-free').value,10)||0)),r=Math.max(0,parseFloat($('#bl-rate').value)||0),p=$('#bl-per').value==='week'?'week':'day';
+    S.bill={free:f,rate:r,per:p};GH.drawWait();try{await S.db.doc('orgs/billing').set({free:f,rate:r,per:p});toast('Storage rate saved.')}catch(e){toast('Shown with the new rate, but it could not be saved.')}},
+  waitXlsx:async()=>{const w=GH.waitData(),b=S.bill;if(!w.rs.length)return toast('Nothing is waiting.');
+    try{await loadXlsx()}catch(e){return toast('The Excel builder did not load. Check the connection and try again.')}
+    const wb=XLSX.utils.book_new(),note='Storage: '+GH.money(b.rate)+' per parcel per '+b.per+' after '+b.free+' free days (ex GST)';
+    const s1=XLSX.utils.aoa_to_sheet([['Tenant','Waiting','Over '+b.free+' days','Longest (days)','Storage if charged (A$)']].concat(w.clients.map(o=>[o.name,o.n,o.over,o.old,Math.round(o.fee*100)/100])).concat([[],[note]]));s1['!cols']=[24,10,14,14,22].map(x=>({wch:x}));
+    const s2=XLSX.utils.aoa_to_sheet([['Reference','Tenant','Status','Location','Received','Days waiting','Storage if charged (A$)']].concat(w.rs.map(x=>[x.r.jobNo||'',clientName(x.r.clientId),x.type,x.r.location||'',fmtD(x.r.dateReceived),x.d,Math.round(x.fee*100)/100])));s2['!cols']=[20,22,14,10,12,13,22].map(x=>({wch:x}));
+    XLSX.utils.book_append_sheet(wb,s1,'By tenant');XLSX.utils.book_append_sheet(wb,s2,'Waiting parcels');
+    const out=XLSX.write(wb,{bookType:'xlsx',type:'array'});saveFile('waiting-parcels-'+ymd(new Date())+'.xlsx',new Blob([out],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'}))}
+});
+document.addEventListener('change',e=>{if(e.target&&e.target.id==='bl-per'){S.bill.per=e.target.value==='week'?'week':'day';GH.drawWait()}});
+const _vRepW=vReport;vReport=function(){return _vRepW.apply(this,arguments)+'<div id="waitRep"></div>'};
+const _dRepW=drawReport;drawReport=function(){_dRepW.apply(this,arguments);try{GH.drawWait()}catch(e){console.error(e)}};
+
+</script>
 </body>
 </html>
