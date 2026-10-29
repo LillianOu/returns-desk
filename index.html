@@ -2298,7 +2298,7 @@ const Benji=(()=>{
   const UA=navigator.userAgent||'';
   const STRICT=/iP(hone|ad|od)/.test(UA)||(/Macintosh/.test(UA)&&navigator.maxTouchPoints>1)||(/AppleWebKit/.test(UA)&&!/Chrome|Chromium|CriOS|Edg|OPR|Android/.test(UA));
   let micWant=false,micKeep='',micDog=null,micSess=0,micOne=null,micQuick=0,micEnding=null,micRetry=0;
-  function micUI(on,msg){if(!micBtn)return;micBtn.setAttribute('aria-pressed',on?'true':'false');micBtn.setAttribute('aria-label',on?'Stop listening':'Speak your question');if(input&&!/blocked/.test(input.placeholder))input.placeholder=msg||(on?T('listen'):T('ph'))}
+  function micUI(on,msg){if(!micBtn)return;micBtn.setAttribute('aria-pressed',on?'true':'false');micBtn.setAttribute('aria-label',on?'Stop listening':'Speak your question');if(input&&!/blocked/.test(input.placeholder))input.placeholder=msg||(on?T('listen')+(lang!=='en'?' · '+LG().n:''):T('ph'))}
   function micReset(msg){rec=null;heard='';clearTimeout(micDog);micUI(false,msg)}
   function micHalt(r){if(!r)return;try{STRICT?r.stop():(r.abort?r.abort():r.stop())}catch(e){}}
   function micStop(msg){micWant=false;micRetry=0;micSess++;const r=rec;rec=null;if(r){if(!STRICT){r.onresult=null;r.onerror=null;
@@ -2316,7 +2316,8 @@ const Benji=(()=>{
     try{r.lang=lang==='en'?((navigator.language&&/^en/i.test(navigator.language))?navigator.language:'en-AU'):LG().sr}catch(e){}
     micKeep=input.value?input.value.replace(/\s*$/,' '):'';
     r.onresult=e=>{if(micSess!==id)return;r.got=true;micRetry=0;clearTimeout(micDog);let t='';for(let i=0;i<e.results.length;i++)t+=e.results[i][0].transcript;heard=t;input.value=micKeep+t;grow()};
-    r.onerror=e=>{if(micSess!==id)return;if(e.error==='not-allowed'||e.error==='service-not-allowed'){micStop('Microphone blocked. Allow it in your browser settings.')}};
+    r.onerror=e=>{if(micSess!==id)return;if(e.error==='not-allowed'||e.error==='service-not-allowed'){micStop('Microphone blocked. Allow it in your browser settings.')}
+      else if(e.error==='language-not-supported'){micStop();if(PHONE)phoneDictate();else micUI(false,LG().e+' voice isn\'t available in this browser. Type instead.')}};
     r.onend=()=>{if(micSess!==id)return;rec=null;
       // Chrome may end a long session by itself: carry on listening until the person stops it.
       if(micWant&&!STRICT){micQuick=Date.now()-t0<1500?micQuick+1:0;if(micQuick<3){setTimeout(()=>{if(micWant&&!rec)micStart()},150);return}}
@@ -2336,10 +2337,10 @@ const Benji=(()=>{
   // so the site never asks for microphone access on a phone.
   const PHONE=/iPhone|iPad|iPod|Android/i.test(UA)||(/Macintosh/.test(UA)&&navigator.maxTouchPoints>1);
   function phoneDictate(){input.focus();try{input.setSelectionRange(input.value.length,input.value.length)}catch(e){}
-    input.placeholder=T('dict');micBtn.classList.add('bj-kbd');
-    setTimeout(()=>{if(input.placeholder===T('dict'))input.placeholder=T('ph');micBtn.classList.remove('bj-kbd')},9000)}
+    input.placeholder=T('dict')+(lang!=='en'&&!TX[lang]?' (switch your keyboard to '+LG().e+')':'');micBtn.classList.add('bj-kbd');
+    setTimeout(()=>{if(input.placeholder.startsWith(T('dict')))input.placeholder=T('ph');micBtn.classList.remove('bj-kbd')},9000)}
   function micToggle(){
-    if(PHONE){phoneDictate();return}
+    if(PHONE&&!(SR&&lang!=='en')){phoneDictate();return}
     if(micWant){micStop();input.focus();return}
     if(rec){micStop()}
     micWant=true;
