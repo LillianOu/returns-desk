@@ -2814,7 +2814,7 @@ GH.tmTick=()=>{if(S.tab!=='new'||!S.draft)return;const now=Date.now(),t=GH.TM;
 GH.tmSec=()=>{GH.tmTick();return GH.TM.d===S.draft?GH.TM.ms/1000:0};
 GH.tmReset=()=>{GH.TM={d:null,ms:0,last:0}};
 GH.fmtT=sec=>{sec=Math.round(+sec||0);if(sec<60)return sec+' s';const m=Math.floor(sec/60),s=sec%60;if(m<60)return m+' min'+(s?' '+s+' s':'');const h=Math.floor(m/60);return h+' h '+(m%60)+' min'};
-GH.avgT=rs=>{const t=(rs||[]).filter(r=>+r.timeSec>0);if(!t.length)return'';return'<div class="tile"><span class="lab">Avg time per return</span><b>'+GH.fmtT(t.reduce((a,r)=>a+(+r.timeSec),0)/t.length)+'</b></div>'};
+GH.avgT=rs=>{const t=(rs||[]).filter(r=>+r.timeSec>0);if(!t.length)return'';return'<div class="tile" style="grid-column:1/-1"><span class="lab">Avg time per return</span><b style="white-space:nowrap">'+GH.fmtT(t.reduce((a,r)=>a+(+r.timeSec),0)/t.length)+'</b></div>'};
 
 /* Quarantine colours (amber), and 6 status cards on wide screens */
 document.head.insertAdjacentHTML('beforeend','<style id="quar-st">html:not([data-theme=light]) .st-quar{color:#7FA0FF!important}.st-quar{color:#1748E8!important}.pill.st-quar .dot,.dot.st-quar{background:#1748E8!important}html[data-theme=light] i.stg-quar{background:#9A9DA4!important;box-shadow:none!important}.stg-quar{--c:#1748E8}.shell .stgs .stg.stg-quar{border-color:#1748E8!important}html[data-theme=light] .shell .stgs .stg.stg-quar{border-color:#6284F2!important}@media (min-width:900px){.shell .stgs,.stgs{grid-template-columns:repeat(3,minmax(0,1fr))!important}}@media (min-width:1280px){.shell .stgs,.stgs{grid-template-columns:repeat(5,minmax(0,1fr))!important}}</style>');
