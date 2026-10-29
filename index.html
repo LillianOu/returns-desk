@@ -2912,5 +2912,18 @@ ACT.timeXlsx=async()=>{const t=GH.timeData(),r=S.rep;if(!t.rs.length)return toas
 (function(){function fit(){document.querySelectorAll('.tiles .tile').forEach(function(t){var b=t.querySelector('b');if(!b)return;t.classList.remove('tile-wide');if(b.scrollWidth>t.clientWidth-8)t.classList.add('tile-wide')})}
 var r0=render;render=function(){var x=r0.apply(this,arguments);requestAnimationFrame(fit);setTimeout(fit,1300);return x};
 var rt;addEventListener('resize',function(){clearTimeout(rt);rt=setTimeout(fit,150)});})();</script>
+<script>/* Keep an unfinished NEW return on this device (29 Oct). Restored when the app reopens; cleared on save, delete or "start a new return". Edits to saved returns are not stored. */
+(function(){var K='rb-draft-v1',pending=null;
+try{var raw=localStorage.getItem(K);if(raw){var o=JSON.parse(raw);if(o&&o.d&&Date.now()-o.t<3*864e5)pending=o.d;else localStorage.removeItem(K)}}catch(e){}
+function has(d){if(!d)return false;if(d.jobNo||d.clientId||d.orderNo||d.tracking||d.notes||d.clientNote||d.location)return true;return(d.lines||[]).some(function(l){return l.barcode||l.sku||l.name||l.reason||+l.qtyDamaged>0||(l.photos&&l.photos.length)})}
+function clean(d){return JSON.parse(JSON.stringify(d,function(k,v){return typeof v==='string'&&v.length>200000?undefined:v}))}
+function clear(){pending=null;try{localStorage.removeItem(K)}catch(e){}}
+var tm;function save(){clearTimeout(tm);tm=setTimeout(function(){try{if(S.tab==='new'&&!S.editId&&has(S.draft)&&!pending)localStorage.setItem(K,JSON.stringify({t:Date.now(),d:clean(S.draft)}))}catch(e){}},400)}
+var nd=newDraft;newDraft=function(){var x=nd.apply(this,arguments);if(S.returns&&S.returns.length)clear();return x};
+var r0=render;render=function(){if(pending&&S.tab==='new'&&!S.editId&&!has(S.draft)&&S.clients&&S.clients.length){S.draft=Object.assign(S.draft,pending);pending=null;setTimeout(function(){toast('Your unfinished return is back. Carry on where you left off.')},300)}var x=r0.apply(this,arguments);save();return x};
+['input','change','click'].forEach(function(ev){addEventListener(ev,save,true)});
+addEventListener('pagehide',function(){try{if(S.tab==='new'&&!S.editId&&has(S.draft))localStorage.setItem(K,JSON.stringify({t:Date.now(),d:clean(S.draft)}))}catch(e){}});
+document.addEventListener('visibilitychange',function(){if(document.visibilityState==='hidden')dispatchEvent(new Event('pagehide'))});
+})();</script>
 </body>
 </html>
