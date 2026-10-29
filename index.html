@@ -922,12 +922,12 @@ const micBtn=(target,label)=>(SR||PHONE_DICT)?'<button type="button" class="btn 
 const cap=s=>s?s[0].toUpperCase()+s.slice(1):'';
 STATUS.splice(0,STATUS.length,'open','shelf','discarded','resent');
 const SLAB={open:'Open',quar:'Quarantine',shelf:'Back to stock',discarded:'Discarded',resent:'Resent to customer'},SL=s=>SLAB[s]||cap(s);
-const STAGES=['open','quar','rts','shelf','discarded','resent'];
-const STG={open:['Open','Customer returns logged, not put away yet'],quar:['Quarantine','Customer returns held in quarantine'],rts:['RTS waiting','Return to sender, waiting on the tenant'],shelf:['Back to stock','Received back into stock'],discarded:['Discarded','Damaged, recorded for write-off'],resent:['Resent','Sent out again to the customer']};
+const STAGES=['quar','rts','shelf','discarded','resent'];
+const STG={open:['Open','Customer returns logged, not put away yet'],quar:['Quarantine','Customer returns held in quarantine until put away'],rts:['RTS waiting','Return to sender, in quarantine waiting on the tenant'],shelf:['Back to stock','Received back into stock'],discarded:['Discarded','Damaged, recorded for write-off'],resent:['Resent','Sent out again to the customer']};
 const KINDS=[['return','Customer return'],['rts','Return to sender (RTS)']];
-REASONS.splice(0,REASONS.length,'Change of mind','Exchange requested','Unsuitable or adverse reaction','Faulty','Wrong item sent','Damaged in transit','Item not collected','Wrong or incomplete address','Refused delivery','Received with unclear reason','Other');
+REASONS.splice(0,REASONS.length,'Change of mind','Exchange requested','Unsuitable or adverse reaction','Faulty','Wrong item sent','Damaged in transit','Item not collected','Wrong or incomplete address','Refused delivery','Received with unclear reason','Duplicated item or barcode','Other');
 const isRts=r=>r.kind==='rts';
-const stage=r=>r.status==='open'?(isRts(r)?'rts':(r.quar?'quar':'open')):r.status;
+const stage=r=>r.status==='open'?(isRts(r)?'rts':'quar'):r.status;
 const goodQ=r=>(r.lines||[]).reduce((a,l)=>a+(+l.qtyGood||0),0),badQ=r=>(r.lines||[]).reduce((a,l)=>a+(+l.qtyDamaged||0),0);
 const PACKS=[['sealed','New box, unopened'],['damaged','Packaging damaged'],['opened','Opened']];
 const packText=r=>isRts(r)&&r.pack?(PACKS.find(p=>p[0]===r.pack)||[])[1]||'':'';
@@ -1019,9 +1019,9 @@ function panelOrder(){
   return S.order;
 }
 function board(all,rs){
-  const sets={};STAGES.forEach(s=>sets[s]=(s==='open'||s==='quar'||s==='rts'?all:rs).filter(r=>stage(r)===s));
+  const sets={open:[]};STAGES.forEach(s=>sets[s]=(s==='open'||s==='quar'||s==='rts'?all:rs).filter(r=>stage(r)===s));
   const open=sets.open.length+sets.quar.length+sets.rts.length,pl=S.period===1?'today':S.period?'last '+S.period+' days':'all time';
-  let h='<div class="hero"><p class="hero-k">Right now'+(S.dashClient?' · '+esc(clientName(S.dashClient)):'')+'</p><h2 class="hero-h"><b data-count="'+open+'">'+open+'</b>Open return'+(open===1?'':'s')+'</h2><p class="hero-s">'+sets.open.length+' to put away · '+(sets.quar.length?sets.quar.length+' in quarantine · ':'')+sets.rts.length+' RTS waiting on tenants</p></div>';
+  let h='<div class="hero"><p class="hero-k">Right now'+(S.dashClient?' · '+esc(clientName(S.dashClient)):'')+'</p><h2 class="hero-h"><b data-count="'+open+'">'+open+'</b>Open return'+(open===1?'':'s')+'</h2><p class="hero-s">'+sets.quar.length+' in quarantine · '+sets.rts.length+' RTS waiting on tenants (also quarantined)</p></div>';
   h+='<div class="stgs">'+STAGES.map((s,i)=>{const a=sets[s],live=s==='open'||s==='quar'||s==='rts',old=a.length?Math.max(...a.map(r=>age(r.dateReceived))):0;
     return'<button class="stg stg-'+s+'" style="--i:'+i+'" data-act="toList" data-v="'+s+'" aria-label="'+STG[s][0]+': '+a.length+'. '+STG[s][1]+'. Show these returns.">'
      +'<span class="stg-t">'+STG[s][0]+'</span><b data-count="'+a.length+'">'+a.length+'</b><span class="stg-d">'+STG[s][1]+'</span>'
@@ -1119,9 +1119,9 @@ function vForm(){
   if(!S.clients.length)return'<div class="panel empty"><h2>Add a tenant first</h2><p>Every return belongs to a tenant, so the app needs at least one before you can log a return.</p><button class="btn pri" data-act="tab" data-v="settings">Go to Settings</button></div>';
   const d=S.draft;S.formLive=true;if(!d.kind)d.kind='return';
   if(d.quar&&d.status==='open'&&d.kind!=='rts')d.status='quar';delete d.quar;
-  if(!S.editId&&!d.qInit&&d.clientId&&d.kind!=='rts'&&GH.isCor&&GH.isCor(d.clientId)){d.qInit=1;if(d.status==='open')d.status='quar'}
+  if(d.kind!=='rts'&&d.status==='open')d.status='quar';
   if(d.kind==='rts'&&d.status==='quar')d.status='open';
-  const sts=d.kind==='rts'?['open','resent','shelf','discarded']:['open','quar','shelf','discarded'];if(!sts.includes(d.status))d.status='open';
+  const sts=d.kind==='rts'?['open','resent','shelf','discarded']:['quar','shelf','discarded'];if(!sts.includes(d.status))d.status=sts[0];
   const prev=S.editId?S.returns.find(r=>r.id===S.editId):null;
   let h='<div class="row"><h2 style="flex:1 1 auto">'+(S.editId?'Edit return':'New return')+'</h2>'+(S.editId?'<button class="btn" data-act="newDraft">Start a new one</button>':'')+'</div>';
   h+='<div class="panel"><div class="pick"><span>Type</span>'+seg('f-kind','Type',KINDS,d.kind)+'</div>'
@@ -1133,11 +1133,11 @@ function vForm(){
    +'<div class="fld"><span>Order number</span><div class="with-btn"><input id="f-order" class="mono" data-f="orderNo" value="'+esc(d.orderNo)+'" aria-label="Order number"><button class="btn" data-act="scan" data-v="orderNo" aria-label="Scan the order barcode">'+ic('scan')+'</button><button class="btn" data-act="ocr" data-v="orderNo" aria-label="Read the order number from a photo of the label">'+ic('text')+'</button>'+micBtn('orderNo','order number')+'</div><div class="row ocrPick" id="ocrPick-orderNo" style="padding-top:6px"></div></div>'
    +'<div class="fld"><span>Tracking number</span><div class="with-btn"><input id="f-track" class="mono" data-f="tracking" value="'+esc(d.tracking)+'" aria-label="Tracking number"><button class="btn" data-act="scan" data-v="tracking" aria-label="Scan tracking number">'+ic('scan')+'</button></div></div>'
    +'<label class="fld"><span>Carrier</span><select id="f-carrier" data-f="carrier">'+opts(CARRIERS,d.carrier)+'</select></label>'
-   +'</div><div class="pick"><span>Status</span>'+seg('f-status','Status',sts.map(s=>[s,'<i class="dot st-'+s+'"></i>'+SL(s)]),d.status)+'</div></div>';
+   +'</div><div class="pick"><span>Status</span>'+seg('f-status','Status',sts.map(s=>[s,s==='open'?'<i class="dot st-quar"></i>Quarantine (waiting)':'<i class="dot st-'+s+'"></i>'+SL(s)]),d.status)+'</div></div>';
   h+=GH.corForm?GH.corForm(d):'';
   if(!d.location&&!S.editId)d.location=firstFreeLoc();
   if(d.kind!=='rts')h+='<div class="panel"><div class="grid"><label class="fld"><span>Storage location (quarantine)</span><select id="f-loc" class="mono" data-f="location">'+locOpts(d.location,S.editId)+'</select></label></div><p class="note">Where the parcel waits until it is processed. Up to '+S.store.cap+' waiting parcels per location; the next free one is picked for you.</p></div>';
-  if(d.kind==='rts')h+='<div class="panel"><div class="grid"><label class="fld"><span>Storage location</span><select id="f-loc" class="mono" data-f="location">'+locOpts(d.location,S.editId)+'</select></label></div><p class="note">Up to '+S.store.cap+' waiting parcels per location. Full locations are greyed out. The next free one is picked for you.</p><div class="pick"><span>Package condition</span>'+seg('f-pack','Package condition',PACKS,d.pack||'')+'</div><p class="note">For an unopened parcel you can leave the items below empty. Add items only if the parcel was opened.</p></div>';
+  if(d.kind==='rts')h+='<div class="panel"><div class="grid"><label class="fld"><span>Storage location (quarantine)</span><select id="f-loc" class="mono" data-f="location">'+locOpts(d.location,S.editId)+'</select></label></div><p class="note">Up to '+S.store.cap+' waiting parcels per location. Full locations are greyed out. The next free one is picked for you.</p><div class="pick"><span>Package condition</span>'+seg('f-pack','Package condition',PACKS,d.pack||'')+'</div><p class="note">For an unopened parcel you can leave the items below empty. Add items only if the parcel was opened.</p></div>';
   h+='<h3>'+(d.kind==='rts'?'Items (optional)':'Items')+'</h3>';
   d.lines.forEach((l,i)=>{
     h+='<div class="line"><div class="line-h"><strong>Item '+(i+1)+'</strong>'+(d.lines.length>1?'<button class="btn danger" data-act="rmLine" data-v="'+i+'">Remove</button>':'')+'</div>'
@@ -1162,11 +1162,11 @@ async function saveReturn(){
   if(!d.jobNo.trim())return toast('Add the reference number.');
   if(S.returns.some(r=>r.jobNo===d.jobNo.trim()&&r.id!==S.editId))return toast('Reference number '+d.jobNo+' is already used. Change it.');
   if(S.uploading)return toast('Photos are still uploading. Try again in a moment.');
-  if(d.status==='open'&&d.location&&locUsed(d.location,S.editId)>=S.store.cap)return toast('Location '+d.location+' is full. Choose another location.');
+  if((d.status==='open'||d.status==='quar')&&d.location&&locUsed(d.location,S.editId)>=S.store.cap)return toast('Location '+d.location+' is full. Choose another location.');
   const now=new Date().toISOString(),prev=S.editId?S.returns.find(r=>r.id===S.editId):null,by=S.uid||'';
   const hist=((prev&&prev.history)||[]).slice(-40);
   hist.push({at:now,by,what:!prev?'Logged as '+(d.kind==='rts'?'return to sender':'customer return'):prev.status!==d.status?'Status changed to '+SL(d.status):'Edited'});
-  const body={jobNo:d.jobNo.trim(),clientId:d.clientId,kind:d.kind==='rts'?'rts':'return',pack:d.kind==='rts'?(d.pack||''):'',location:d.location||'',orderNo:(d.orderNo||'').trim(),tracking:(GH.apTrim?GH.apTrim(d.tracking||''):(d.tracking||'')).trim(),carrier:d.carrier||'',dateReceived:d.dateReceived||today(),dateProcessed:d.dateProcessed||'',status:d.status==='quar'?'open':d.status,quar:(d.status==='quar'&&d.kind!=='rts')||undefined,timeSec:(GH.tmSec?Math.round(((prev&&prev.timeSec)||0)+GH.tmSec()):undefined),notes:(d.notes||'').trim(),clientNote:(d.clientNote||'').trim(),cor:(GH.isCor&&GH.isCor(d.clientId)&&d.cor)?d.cor:undefined,
+  const body={jobNo:d.jobNo.trim(),clientId:d.clientId,kind:d.kind==='rts'?'rts':'return',pack:d.kind==='rts'?(d.pack||''):'',location:d.location||'',orderNo:(d.orderNo||'').trim(),tracking:(GH.apTrim?GH.apTrim(d.tracking||''):(d.tracking||'')).trim(),carrier:d.carrier||'',dateReceived:d.dateReceived||today(),dateProcessed:d.dateProcessed||'',status:d.status==='quar'?'open':d.status,quar:(d.status==='quar'||(d.kind==='rts'&&d.status==='open'))||undefined,timeSec:(GH.tmSec?Math.round(((prev&&prev.timeSec)||0)+GH.tmSec()):undefined),notes:(d.notes||'').trim(),clientNote:(d.clientNote||'').trim(),cor:(GH.isCor&&GH.isCor(d.clientId)&&d.cor)?d.cor:undefined,
     lines:d.lines.filter(l=>l.barcode||l.sku||l.name||l.photos.length).map(l=>({barcode:l.barcode.trim(),sku:l.sku.trim(),name:l.name.trim(),qtyGood:+l.qtyGood||0,qtyDamaged:+l.qtyDamaged||0,reason:l.reason||'',photos:l.photos})),
     createdAt:(prev&&prev.createdAt)||now,createdBy:(prev&&prev.createdBy)||by,updatedAt:now,history:hist};
   if(body.cor)body.cor=Object.assign({},body.cor,{q:body.quar?1:0});if(!body.quar)delete body.quar;if(!body.timeSec)delete body.timeSec;if(GH.tmReset)GH.tmReset();
@@ -1501,14 +1501,14 @@ const RHEAD=['Date','Reference number','Tenant','Order number','Location','SKU',
 const sealedBox=x=>isRts(x)&&x.pack==='sealed'&&!goodQ(x)&&!badQ(x);
 function outcome(x,l){const g=+l.qtyGood||0,b=+l.qtyDamaged||0;
   if(sealedBox(x))return({open:'New box, unopened · ready to resend',resent:'New box, unopened · resent to customer',discarded:'New box, unopened · discarded',shelf:'New box, unopened · back to stock'})[x.status]||'New box, unopened';
-  if(x.status==='open')return isRts(x)?'Return to sender, waiting on tenant'+(packText(x)?' · '+packText(x):''):'Not put away yet';
+  if(x.status==='open')return isRts(x)?'In quarantine · return to sender, waiting on tenant'+(packText(x)?' · '+packText(x):''):'In quarantine, not put away yet';
   if(isRts(x)&&!g&&!b)return(({resent:'Resent to customer',discarded:'Discarded'})[x.status]||'Put back to stock')+(packText(x)?' · '+packText(x):'');
   if(x.status==='resent')return'Resent to customer';
   return[g?g+' received back into stock':'',b?b+' damaged and discarded':''].filter(Boolean).join('; ')}
 function repData(){
   const r=S.rep,dmg=r.show==='damaged',isDmg=x=>badQ(x)>0||(isRts(x)&&x.pack==='damaged');
   const rs=S.returns.filter(x=>match(x,{client:r.client,from:r.from,to:r.to})&&(!dmg||isDmg(x))&&(r.show!=='noref'||/^\*/.test(String(x.jobNo||'')))).sort((a,b)=>String(a.dateReceived).localeCompare(b.dateReceived));
-  const mk=list=>{const o=[];list.forEach(x=>{let ls=x.lines&&x.lines.length?x.lines:[{}];if(dmg&&badQ(x)>0)ls=ls.filter(l=>(+l.qtyDamaged||0)>0);ls.forEach(l=>o.push([fmtD(x.dateReceived),x.jobNo,clientName(x.clientId),x.orderNo||'',x.location||'',l.sku||'',l.name||'',sealedBox(x)?'':+l.qtyGood||0,sealedBox(x)?'':+l.qtyDamaged||0,[outcome(x,l),l.reason,x.notes,x.rts&&x.rts.note].filter(Boolean).join(' · '),SL(stage(x)==='quar'?'quar':x.status)]))});return o};
+  const mk=list=>{const o=[];list.forEach(x=>{let ls=x.lines&&x.lines.length?x.lines:[{}];if(dmg&&badQ(x)>0)ls=ls.filter(l=>(+l.qtyDamaged||0)>0);ls.forEach(l=>o.push([fmtD(x.dateReceived),x.jobNo,clientName(x.clientId),x.orderNo||'',x.location||'',l.sku||'',l.name||'',sealedBox(x)?'':+l.qtyGood||0,sealedBox(x)?'':+l.qtyDamaged||0,[outcome(x,l),l.reason,x.notes,x.rts&&x.rts.note].filter(Boolean).join(' · '),(x.status==='open'?'Quarantine':SL(x.status))]))});return o};
   const ret=rs.filter(x=>!isRts(x)),rts=rs.filter(isRts);
   return{rs,ret,rts,rowsRet:mk(ret),rowsRts:mk(rts),good:rs.reduce((a,x)=>a+goodQ(x),0),bad:rs.reduce((a,x)=>a+badQ(x),0)};
 }
@@ -2751,7 +2751,7 @@ GH.corRows=()=>{const r=S.rep;const rs=S.returns.filter(x=>!x.example&&GH.isCor(
     const qty=l=>(+l.qtyGood||0)+(+l.qtyDamaged||0);
     const first=ls[0]||{};
     const dc=x.decision||{},df=dc.fields||{};
-    const stA=df.status||(x.status!=='open'?'Closed':(x.quar?'Quarantine':(dc.action?'Pending Warehouse':'')));
+    const stA=df.status||(x.status!=='open'?'Closed':'Quarantine');
     const cmtC=[df.comments,dc.note].filter(Boolean).join(' · ');
     out.push([stA,GH.corD(x.createdAt?ymd(new Date(x.createdAt)):x.dateReceived)||GH.corD(x.dateReceived),'Warehouse',x.orderNo||x.jobNo||'',c.name||'',c.po?(/^\d{1,15}$/.test(c.po)?+c.po:c.po):'',c.country||'',courier,'',x.tracking||'',ls.length?sku(first):'',ls.length?qty(first):'',GH.corD(x.dateReceived),df.reason||'',reason,cond,df.gp||'',wms,cmtC,comment,df.status==='Closed'&&dc.at?GH.corD(ymd(new Date(dc.at))):'']);
     ls.slice(1).forEach(l=>{const row=Array(21).fill('');row[10]=sku(l);row[11]=qty(l);out.push(row)})});
@@ -2817,7 +2817,7 @@ GH.fmtT=sec=>{sec=Math.round(+sec||0);if(sec<60)return sec+' s';const m=Math.flo
 GH.avgT=rs=>{const t=(rs||[]).filter(r=>+r.timeSec>0);if(!t.length)return'';return'<div class="tile"><span class="lab">Avg time per return</span><b>'+GH.fmtT(t.reduce((a,r)=>a+(+r.timeSec),0)/t.length)+'</b></div>'};
 
 /* Quarantine colours (amber), and 6 status cards on wide screens */
-document.head.insertAdjacentHTML('beforeend','<style id="quar-st">.st-quar{color:#E8A317!important}.pill.st-quar .dot,.dot.st-quar{background:#E8A317!important}i.stg-quar{background:#E8A317!important}.stg-quar{--c:#E8A317}.shell .stgs .stg.stg-quar{border-color:#E8A317!important}html[data-theme=light] .shell .stgs .stg.stg-quar{border-color:#F2C062!important}@media (min-width:900px){.shell .stgs,.stgs{grid-template-columns:repeat(3,minmax(0,1fr))!important}}@media (min-width:1280px){.shell .stgs,.stgs{grid-template-columns:repeat(6,minmax(0,1fr))!important}}</style>');
+document.head.insertAdjacentHTML('beforeend','<style id="quar-st">.st-quar{color:#E8A317!important}.pill.st-quar .dot,.dot.st-quar{background:#E8A317!important}i.stg-quar{background:#E8A317!important}.stg-quar{--c:#E8A317}.shell .stgs .stg.stg-quar{border-color:#E8A317!important}html[data-theme=light] .shell .stgs .stg.stg-quar{border-color:#F2C062!important}@media (min-width:900px){.shell .stgs,.stgs{grid-template-columns:repeat(3,minmax(0,1fr))!important}}@media (min-width:1280px){.shell .stgs,.stgs{grid-template-columns:repeat(5,minmax(0,1fr))!important}}</style>');
 
 </script>
 <script>
@@ -2827,7 +2827,7 @@ GH.billCharge=days=>{const b=S.bill,over=Math.max(0,days-b.free);return b.per===
 GH.money=n=>'A$'+(Math.round(n*100)/100).toLocaleString('en-AU',{minimumFractionDigits:2,maximumFractionDigits:2});
 GH.waitData=()=>{
   const cid=S.rep&&S.rep.client;
-  const rs=S.returns.filter(r=>!r.example&&r.status==='open'&&(!cid||r.clientId===cid)).map(r=>{const d=age(r.dateReceived);return{r,d,type:isRts(r)?'RTS waiting':(r.quar?'Quarantine':'Open'),fee:GH.billCharge(d)}}).sort((a,b)=>b.d-a.d);
+  const rs=S.returns.filter(r=>!r.example&&r.status==='open'&&(!cid||r.clientId===cid)).map(r=>{const d=age(r.dateReceived);return{r,d,type:isRts(r)?'RTS waiting (quarantine)':'Quarantine',fee:GH.billCharge(d)}}).sort((a,b)=>b.d-a.d);
   const by={};rs.forEach(x=>{const k=x.r.clientId||'';const o=by[k]=by[k]||{name:clientName(k)||'No tenant',n:0,over:0,old:0,fee:0};o.n++;if(x.d>S.bill.free)o.over++;o.old=Math.max(o.old,x.d);o.fee+=x.fee});
   const clients=Object.values(by).sort((a,b)=>b.old-a.old);
   return{rs,clients,over:rs.filter(x=>x.d>S.bill.free).length,old:rs.length?rs[0].d:0,fee:rs.reduce((a,x)=>a+x.fee,0)};
