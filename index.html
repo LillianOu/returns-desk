@@ -1678,7 +1678,7 @@ Object.assign(ACT,{
           ins=(pre&&!/[\s:]$/.test(pre)?' ':'')+(/Customer name: $/.test(pre)?txt.replace(/\b\w/g,c=>c.toUpperCase()):txt);
         S.draft.notes=pre+ins+post;if(t){t.value=S.draft.notes;const k=(pre+ins).length;try{t.focus();t.setSelectionRange(k,k)}catch(e){}}
         return toast('Added: '+txt+'. Check it is right.')}
-      const code=spokenCode(heard);if(!code)return toast('Did not catch that. Try again.');
+      const code=spokenCode(typeof GH!=='undefined'&&GH.refHash?GH.refHash(heard,true):heard);if(!code)return toast('Did not catch that. Try again.');
       if(v==='search'){S.flt.q=code;const q=$('#q');if(q)q.value=code;drawRows()}else{fillField(v,code);if(v==='jobNo'&&!S.draft.orderNo)fillField('orderNo',code)}
       toast('Heard '+code+'. Check it is right.')};
     r.onerror=e=>toast(e.error==='not-allowed'||e.error==='service-not-allowed'?'Allow microphone access for this site, then try again.':e.error==='no-speech'?'Did not hear anything. Tap the microphone and try again.':'Voice input did not work this time. Type the number instead.');
@@ -1981,7 +1981,7 @@ Object.assign(ACT,{
   signOut:(v,b)=>twice(b,()=>GH.signOut())
 });
 /* App version. Bump on EVERY update to this file: v = '2.' + updates since the Supabase move (17 Oct 2026); n = all updates since day one (11 Oct 2026). v1 = the GitHub-only Return Desk (31 updates, 11-16 Oct). */
-const RB_VER={v:'2.81',n:112,at:'30 Oct 2026, 8:50 am'};
+const RB_VER={v:'2.82',n:113,at:'30 Oct 2026, 9:00 am'};
 GH.panel=()=>{const m=GH.me(),role=m.role==='admin'?'Admin':m.role==='viewer'?'Client':'Staff';return'<div class="panel"><h3>Your account</h3><p class="note">Signed in as <strong>'+esc(m.email)+'</strong> · '+role+(m.initials?' · initials <strong>'+esc(m.initials)+'</strong> on the returns you log':'')+'.<br>Everything saves automatically and shows on your other devices within seconds.</p>'+'<p class="note rb-ver">App version <strong>'+RB_VER.v+'</strong> · update '+RB_VER.n+' since 11 Oct 2026 · last updated '+esc(RB_VER.at)+'</p>'+
   '<label class="fld"><span>New password</span><input id="sb-newpass" type="password" autocomplete="new-password" placeholder=" "></label><div class="row"><button class="btn" data-act="setPass">Change password</button> <button class="btn danger" data-act="signOut">Sign out</button></div></div>'};
 GH.adminPanels=()=>GH.me().role==='admin'?GH.staffPanel()+GH.portalPanel():'';
@@ -2871,13 +2871,32 @@ html:not([data-theme=light]) .sheet-p .btn:not(.pri){background:rgba(255,255,255
 html[data-theme=light] #shell .stgs .stg{border-color:rgba(0,0,0,.08)!important}
 </style>
 <script>
-/* ---- Reference number: spoken "hash" becomes #; no # is added otherwise (22 Oct) ---- */
+/* ---- Reference / order number: spoken "hash" becomes #; no # is added otherwise (22 Oct, fixed 30 Oct) ----
+   30 Oct: the box is only tidied once dictation has paused (or the box is left), never while the phone is still typing
+   (rewriting it mid-dictation made iPhone add the number a second time). Repeated numbers are collapsed to one. */
 GH.refHash=(v,final)=>{let s=String(v||'');
-  s=s.replace(/\b(hash\s*tags?|hashtags?|hash|pound\s*sign|pound|number\s*sign|sharp)\b\s*/gi,'#');
-  if(/^\s*#?\s*[\d][\d\s-]*\.?\s*$/.test(s)){s=s.replace(/[\s.-]/g,'')}
-  return s.replace(/##+/g,'#')};
-document.addEventListener('input',e=>{const t=e.target;if(t&&t.id==='f-job'){const n=GH.refHash(t.value,false);if(n!==t.value){t.value=n;try{t.setSelectionRange(n.length,n.length)}catch(x){}}}},true);
-document.addEventListener('focusout',e=>{const t=e.target;if(t&&t.id==='f-job'&&t.value){const n=GH.refHash(t.value,true);if(n!==t.value){t.value=n;if(S.draft)S.draft.jobNo=n}}},true);
+  const W='hash\\s*tags?|hashtags?|hash|pound\\s*sign|pound|number\\s*sign|sharp';
+  s=s.replace(new RegExp('\\b(?:'+W+')\\b[\\s.:,-]*','gi'),'#');
+  // common mis-hearings of "hash", only when a number follows
+  s=s.replace(/\b(?:has|ash|hatch|hush|hashed|harsh)\b[\s.:,-]*(?=[A-Z]*\d)/gi,'#');
+  s=s.replace(/#\s+/g,'#').replace(/##+/g,'#');
+  // the same number said or typed twice in a row: keep one
+  const tok=s.trim().split(/\s+/).filter(Boolean),out=[];
+  for(const t of tok){const k=t.replace(/^#/,'').replace(/[.,]$/,'').toUpperCase(),p=out.length?out[out.length-1].replace(/^#/,'').replace(/[.,]$/,'').toUpperCase():null;if(k&&k===p){if(t[0]==='#'&&out[out.length-1][0]!=='#')out[out.length-1]='#'+out[out.length-1].replace(/^#/,'');continue}out.push(t)}
+  s=tok.length?out.join(' '):s;
+  if(/^\s*#?\s*[\dA-Z][\dA-Z\s-]*\.?\s*$/i.test(s)&&/\d/.test(s)){const h=s.trim()[0]==='#'?'#':'';let b=s.replace(/[#\s.]/g,'');
+    // joined repeat, e.g. 640311640311 -> 640311 (long numbers only)
+    if(b.length>=8&&b.length%2===0&&b.slice(0,b.length/2)===b.slice(b.length/2))b=b.slice(0,b.length/2);
+    s=h+(/^\d[\d-]*$/.test(b)?b.replace(/-/g,''):b)}
+  return s};
+GH.refIds={'f-job':'jobNo','f-order':'orderNo'};
+GH.refTidy=t=>{const n=GH.refHash(t.value,true);if(n!==t.value){t.value=n;try{t.setSelectionRange(n.length,n.length)}catch(x){}if(S.draft)S.draft[GH.refIds[t.id]]=n}};
+GH.refT=null;
+document.addEventListener('input',e=>{const t=e.target;if(!t||!GH.refIds[t.id])return;clearTimeout(GH.refT);
+  if(e.isComposing)return;GH.refT=setTimeout(()=>{if(document.activeElement===t&&!t.dataset.composing)GH.refTidy(t)},900)},true);
+document.addEventListener('compositionstart',e=>{const t=e.target;if(t&&GH.refIds[t.id]){t.dataset.composing='1';clearTimeout(GH.refT)}},true);
+document.addEventListener('compositionend',e=>{const t=e.target;if(t&&GH.refIds[t.id]){delete t.dataset.composing;clearTimeout(GH.refT);GH.refT=setTimeout(()=>GH.refTidy(t),900)}},true);
+document.addEventListener('focusout',e=>{const t=e.target;if(t&&GH.refIds[t.id]&&t.value){clearTimeout(GH.refT);delete t.dataset.composing;GH.refTidy(t)}},true);
 </script>
 <script>
 /* ---- Coravin receiving (Fulfilment Australia only): extra fields, label/invoice reader, Coravin-format Excel ---- */
