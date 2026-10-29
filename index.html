@@ -13,7 +13,7 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="robots" content="noindex">
 <style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style>
-<style id="dash-tenant">.fld.dash-tenant{flex:1 1 100%;width:100%;max-width:none}.fld.dash-tenant select{width:100%;background:#141518!important;color:#fff!important;border:1.5px solid #141518!important;font-weight:600;color-scheme:dark;box-shadow:0 6px 18px -8px rgba(0,0,0,.45)}.fld.dash-tenant span{color:rgba(255,255,255,.72)!important;font-weight:600}html:not([data-theme=light]) .fld.dash-tenant select{background:#F2F3F5!important;color:#141518!important;border-color:#F2F3F5!important;color-scheme:light}html:not([data-theme=light]) .fld.dash-tenant span{color:#4A4C52!important}</style>
+<style id="dash-tenant">.btn.old-all{display:flex;width:100%;margin-top:12px;justify-content:center;text-align:center;font-weight:600}.fld.dash-tenant{flex:1 1 100%;width:100%;max-width:none}.fld.dash-tenant select{width:100%;background:#141518!important;color:#fff!important;border:1.5px solid #141518!important;font-weight:600;color-scheme:dark;box-shadow:0 6px 18px -8px rgba(0,0,0,.45)}.fld.dash-tenant span{color:rgba(255,255,255,.72)!important;font-weight:600}html:not([data-theme=light]) .fld.dash-tenant select{background:#F2F3F5!important;color:#141518!important;border-color:#F2F3F5!important;color-scheme:light}html:not([data-theme=light]) .fld.dash-tenant span{color:#4A4C52!important}</style>
 </head>
 <body>
 <title>Returns Bench</title>
@@ -1048,7 +1048,7 @@ function vDash(){
   const days=[];for(let i=13;i>=0;i--)days.push(daysAgo(i));
   const per=days.map(d=>all.filter(r=>r.dateReceived===d).length),mx=Math.max(1,...per);
   const body={
-    oldest:old.length?'<div>'+old.map(r=>{const a=age(r.dateReceived);return'<button class="old" data-id="'+r.id+'" data-act="open" data-v="'+r.id+'"><span class="job">'+esc(r.jobNo)+'</span><span>'+esc(clientName(r.clientId))+'</span>'+pill(stage(r))+'<span class="ag '+(a>7?'b':a>3?'w':'')+'">'+a+' d</span></button>'}).join('')+'</div>':'<p class="note">Nothing open.</p>',
+    oldest:old.length?'<div>'+old.map(r=>{const a=age(r.dateReceived);return'<button class="old" data-id="'+r.id+'" data-act="open" data-v="'+r.id+'"><span class="job">'+esc(r.jobNo)+'</span><span>'+esc(clientName(r.clientId))+'</span>'+pill(stage(r))+'<span class="ag '+(a>7?'b':a>3?'w':'')+'">'+a+' d</span></button>'}).join('')+'<button type="button" class="btn old-all" data-act="oldAll">See all '+open.length+' waiting'+(S.dashClient?' for '+esc(clientName(S.dashClient)):'')+' →</button></div>':'<p class="note">Nothing open.</p>',
     clients:bars(tally(r=>[clientName(r.clientId)])),
     reasons:bars(tally(r=>(r.lines||[]).map(l=>l.reason))),
     grades:bars([['Good',rs.reduce((a,r)=>a+goodQ(r),0)],['Damaged',rs.reduce((a,r)=>a+badQ(r),0)]]),
@@ -1263,13 +1263,13 @@ function vList(){
 }
 function fltRows(skipStatus){
   const q=(S.flt.q||'').trim(),f=q?{q}:Object.assign({},S.flt),st=q?'':f.status;f.status='';
-  return S.returns.filter(r=>match(r,f)&&(skipStatus||!st||stage(r)===st));
+  return S.returns.filter(r=>match(r,f)&&(skipStatus||!st||(st==='waiting'?r.status==='open':stage(r)===st)));
 }
 function drawRows(){
   const el=$('#rows');if(!el)return;if(S.swiping){S.rowsDirty=true;return}
   const base=fltRows(true),n=s=>base.filter(r=>stage(r)===s).length;
   const sg=$('#statusSeg');
-  if(sg){const o=[['','All <small>'+base.length+'</small>']].concat(STAGES.map(s=>[s,'<i class="dot st-'+s+'"></i>'+STG[s][0]+' <small>'+n(s)+'</small>']));
+  if(sg){const o=[['','All <small>'+base.length+'</small>'],['waiting','Waiting <small>'+base.filter(r=>r.status==='open').length+'</small>']].concat(STAGES.map(s=>[s,'<i class="dot st-'+s+'"></i>'+STG[s][0]+' <small>'+n(s)+'</small>']));
     const cur=sg.querySelector('.seg');
     const shown=(S.flt.q||'').trim()?'':S.flt.status;
     if(cur){cur.querySelectorAll('button').forEach((b,i)=>{b.innerHTML=o[i][1];b.setAttribute('aria-pressed',o[i][0]===shown)})}
@@ -1631,6 +1631,7 @@ Object.assign(ACT,{
     const a=document.createElement('a');a.href=tenantMail(r,c);document.body.appendChild(a);a.click();a.remove();mark('Emailed tenant about RTS')},
   xlsx:()=>makeXlsx(),
   toList:v=>{S.flt.status=v;go('list')},
+  oldAll:()=>{S.flt.q='';S.flt.from='';S.flt.to='';S.flt.client=S.dashClient||'';S.flt.status='waiting';go('list')},
   clearFlt:()=>{S.flt.client='';S.flt.from='';S.flt.to='';S.flt.noref='';['fc','ff','ft','fn'].forEach(i=>{const e=$('#'+i);if(e)e.value=''});drawRows()},
   seg:(v,b)=>{
     const k=b.parentNode.dataset.seg;
