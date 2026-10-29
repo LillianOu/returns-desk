@@ -12,7 +12,13 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="robots" content="noindex">
-<style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style>
+<style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0}img{max-width:100%}[hidden]{display:none!important}
+/* 30 Oct: tenant return instructions card on New return */
+.howto{margin:12px 0 4px;padding:12px 14px 10px;border-radius:14px;border:1px solid rgba(33,72,242,.35);border-left:4px solid #2148F2;background:rgba(33,72,242,.08)}
+.howto b{display:block;font-size:15px;margin-bottom:4px}
+.howto ol{margin:4px 0 6px;padding-left:22px}.howto li{margin:3px 0;line-height:1.4}.howto p{margin:2px 0 6px}
+.howto small{opacity:.7;font-size:12.5px}
+</style>
 <style id="dash-tenant">.btn.old-all{display:flex;width:100%;margin-top:12px;justify-content:center;text-align:center;font-weight:600}.fld.dash-tenant{flex:1 1 100%;width:100%;max-width:none}.fld.dash-tenant select{width:100%;background:#141518!important;color:#fff!important;border:1.5px solid #141518!important;font-weight:600;color-scheme:dark;box-shadow:0 6px 18px -8px rgba(0,0,0,.45)}.fld.dash-tenant span{color:rgba(255,255,255,.72)!important;font-weight:600}html:not([data-theme=light]) .fld.dash-tenant select{background:#F2F3F5!important;color:#141518!important;border-color:#F2F3F5!important;color-scheme:light}html:not([data-theme=light]) .fld.dash-tenant span{color:#4A4C52!important}</style>
 <style id="rw-fit">@media (min-width:760px){.rw-main>.rw-meta{flex-wrap:wrap!important;min-width:0;overflow:hidden;row-gap:3px}.rw-meta>span{flex:0 1 auto!important;min-width:0;max-width:100%}.rw-meta>.mono,.rw-meta>.tag{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.rw-main .pill{white-space:nowrap;margin-left:10px}}</style>
 <style id="tn-card">.line-h.tn-h{display:grid!important;grid-template-columns:minmax(0,1fr) auto;align-items:start;gap:12px}.tn-name{display:flex;flex-direction:column;align-items:flex-start;gap:8px;min-width:0}.tn-name>span:first-child{overflow-wrap:anywhere}.tn-act{display:flex!important;flex-wrap:nowrap!important;gap:8px;justify-self:end;margin:0!important}.tn-act .btn{white-space:nowrap}</style>
@@ -876,7 +882,7 @@ async function rmExamples(){try{for(const r of S.returns.filter(r=>r.example))aw
 
 /* ---------- client edit and per-return email ---------- */
 const DEF_SUBJ='Return {job} | {sku} | Qty {qty}';
-function vEditClient(c){return'<div class="grid"><label class="fld"><span>Tenant name</span><input id="ec-n" value="'+esc(c.name)+'"></label><label class="fld"><span>Short code</span><input id="ec-c" class="mono" maxlength="8" value="'+esc(c.code||'')+'"></label><label class="fld"><span>Tenant email</span><input id="ec-e" type="email" value="'+esc(c.email||'')+'"></label></div>'+'<div class="site-pick" role="group" aria-label="Site" data-for="edit"><span class="note">Site</span><button type="button" class="site-btn site-par" data-site-pick="par" aria-pressed="'+((S.editSite||c.site||'par')!=='smi')+'">Parramatta</button><button type="button" class="site-btn site-smi" data-site-pick="smi" aria-pressed="'+((S.editSite||c.site||'par')==='smi')+'">Smithfield</button></div>'+'<div class="row"><button class="btn pri" data-act="saveClient" data-v="'+c.id+'">Save tenant</button><button class="btn" data-act="cancelClient">Cancel</button></div>'}
+function vEditClient(c){return'<div class="grid"><label class="fld"><span>Tenant name</span><input id="ec-n" value="'+esc(c.name)+'"></label><label class="fld"><span>Short code</span><input id="ec-c" class="mono" maxlength="8" value="'+esc(c.code||'')+'"></label><label class="fld"><span>Tenant email</span><input id="ec-e" type="email" value="'+esc(c.email||'')+'"></label></div>'+'<label class="fld"><span>Return instructions (staff see this on New return, and Benji knows it)</span><textarea id="ec-h" rows="5" maxlength="2000" placeholder="One step per line, e.g.&#10;Open every return&#10;Photo of the return form&#10;Photo of every item with swing tags">'+esc(c.howto||'')+'</textarea></label><div class="site-pick" role="group" aria-label="Site" data-for="edit"><span class="note">Site</span><button type="button" class="site-btn site-par" data-site-pick="par" aria-pressed="'+((S.editSite||c.site||'par')!=='smi')+'">Parramatta</button><button type="button" class="site-btn site-smi" data-site-pick="smi" aria-pressed="'+((S.editSite||c.site||'par')==='smi')+'">Smithfield</button></div>'+'<div class="row"><button class="btn pri" data-act="saveClient" data-v="'+c.id+'">Save tenant</button><button class="btn" data-act="cancelClient">Cancel</button></div>'}
 function subjFor(r){
   const sk=(r.lines||[]).map(l=>l.sku).filter(Boolean),rep={job:r.jobNo||'',sku:sk.slice(0,3).join(', ')+(sk.length>3?' +'+(sk.length-3)+' more':''),qty:units(r),order:r.orderNo||'',client:clientName(r.clientId)};
   return(S.org.subject||DEF_SUBJ).replace(/\{(job|sku|qty|order|client)\}/g,(m,k)=>rep[k]);
@@ -901,7 +907,7 @@ const ACT={
   addClient:async()=>{const name=$('#cN').value.trim();if(!name)return toast('Type the client name.');if(S.clients.some(c=>c.name.toLowerCase()===name.toLowerCase()))return toast('That client already exists.');try{await S.db.collection('clients').add({name,code:$('#cC').value.trim().toUpperCase(),email:$('#cE').value.trim(),skuCount:0,site:S.newSite==='smi'?'smi':'par'});S.newSite='par';toast('Added '+name)}catch(e){fail(e,'add this client')}},
   delClient:(v,b)=>{if(S.returns.some(r=>r.clientId===v))return toast('This client has returns logged, so it can\'t be deleted.');twice(b,async()=>{try{await S.db.doc('clients/'+v).delete()}catch(e){fail(e,'delete this client')}})},
   editClient:v=>{S.editClient=v;render()},cancelClient:()=>{S.editClient=null;render()},
-  saveClient:async v=>{const name=$('#ec-n').value.trim();if(!name)return toast('Type the client name.');try{await S.db.doc('clients/'+v).update({name,code:$('#ec-c').value.trim().toUpperCase(),email:$('#ec-e').value.trim(),site:(S.editSite||(S.clients.find(x=>x.id===v)||{}).site)==='smi'?'smi':'par'});S.editClient=null;S.editSite=null;toast('Client saved.');render()}catch(e){fail(e,'save this client')}},
+  saveClient:async v=>{const name=$('#ec-n').value.trim();if(!name)return toast('Type the client name.');try{await S.db.doc('clients/'+v).update({name,code:$('#ec-c').value.trim().toUpperCase(),email:$('#ec-e').value.trim(),howto:(($('#ec-h')||{}).value||'').trim().slice(0,2000),site:(S.editSite||(S.clients.find(x=>x.id===v)||{}).site)==='smi'?'smi':'par'});S.editClient=null;S.editSite=null;toast('Client saved.');render()}catch(e){fail(e,'save this client')}},
   copy:async v=>{const t=$('#'+v);try{await navigator.clipboard.writeText(t.value);toast('Copied.')}catch(e){t.select();toast('Press copy to copy the selected text.')}},
   csvPick:v=>{S.target=v;const i=$('#csvInput');i.value='';i.click()},impGo,impCancel:()=>{S.imp=null;render()}
 };
@@ -1171,6 +1177,21 @@ function qty(i,f,id,label,val){
    +'<button type="button" class="qb" data-step="1" aria-label="Increase '+label.toLowerCase()+'">'+ic('plus')+'</button></div></div>';
 }
 function qnoteText(l){return''}
+/* 30 Oct: per-tenant return instructions (Settings > Tenants > Edit). Shown on New return and given to Benji. */
+function howtoLines(t){return String(t||'').split(/\n+/).map(x=>x.replace(/^\s*(?:[-•*]|\d+[.)])\s*/,'').trim()).filter(Boolean)}
+function howtoCard(cid){const c=S.clients.find(x=>x.id===cid);if(!c||!c.howto)return'';const L=howtoLines(c.howto);
+  return'<div class="howto" role="note"><b>'+esc(c.name)+' · return instructions</b>'+(L.length>1?'<ol>'+L.map(x=>'<li>'+esc(x)+'</li>').join('')+'</ol>':'<p>'+esc(L[0]||'')+'</p>')+'<small>Not sure? Ask Benji.</small></div>'}
+function benjiContext(q){
+  const key=x=>String(x||'').toLowerCase().replace(/[^a-z0-9\u00c0-\uffff]/g,'').replace(/(.)\1+/g,'$1');
+  const list=(S.clients||[]).filter(c=>c.howto&&String(c.howto).trim());if(!list.length)return'';
+  const qk=key(q);let hit=list.filter(c=>(key(c.name).length>2&&qk.includes(key(c.name)))||(c.code&&key(c.code).length>1&&new RegExp('\\b'+String(c.code).toLowerCase().replace(/[^a-z0-9]/g,'')+'\\b').test(String(q).toLowerCase())));
+  const cur=S.tab==='new'&&S.draft&&S.draft.clientId?list.find(c=>c.id===S.draft.clientId):null;
+  if(cur&&!hit.includes(cur))hit.push(cur);
+  if(!hit.length&&/instruction|requirement|process|procedure|special|rule|step|tenant|client|brand/i.test(q))hit=list;
+  if(!hit.length)return'';
+  let t='Tenant return instructions saved by the warehouse in Returns Bench (Settings, Tenants). When asked how to process a return for one of these tenants, give these steps exactly, as a numbered list, and do not add steps of your own. Tenants not listed here have no special instructions saved.'+(cur?' The staff member is logging a return for '+cur.name+' right now.':'');
+  for(const c of hit)t+='\n'+c.name+':\n'+howtoLines(c.howto).map((x,i)=>(i+1)+'. '+x).join('\n');
+  return t.slice(0,4000)}
 function vForm(){
   if(!S.clients.length)return'<div class="panel empty"><h2>Add a tenant first</h2><p>Every return belongs to a tenant, so the app needs at least one before you can log a return.</p><button class="btn pri" data-act="tab" data-v="settings">Go to Settings</button></div>';
   const d=S.draft;S.formLive=true;if(!d.kind)d.kind='return';
@@ -1185,7 +1206,7 @@ function vForm(){
    +'<label class="fld"><span>Tenant</span><select id="f-client" data-f="clientId">'+tenantOpts('Choose a tenant…',d.clientId)+'</select></label>'
    +'<div class="fld"><span>Reference number</span><div class="with-btn"><input id="f-job" class="mono" data-f="jobNo" value="'+esc(d.jobNo)+'" autocapitalize="characters" aria-label="Reference number"><button class="btn" data-act="ocr" data-v="jobNo" aria-label="Read the reference number (REF or #) from a photo of the label">'+ic('text')+'</button>'+micBtn('jobNo','reference number')+'</div><div class="row ocrPick" id="ocrPick-jobNo" style="padding-top:6px"></div>'+(d.kind!=='rts'?'<button type="button" class="btn noref" data-act="noRef">No reference provided</button>':'')+'</div>'
    +'<label class="fld"><span>Date received</span><input id="f-date" type="date" data-f="dateReceived" max="'+ymd(new Date())+'" value="'+esc(d.dateReceived)+'"></label>'
-   +'</div><div class="grid">'
+   +'</div>'+howtoCard(d.clientId)+'<div class="grid">'
    +'<div class="fld"><span>Order number</span><div class="with-btn"><input id="f-order" class="mono" data-f="orderNo" value="'+esc(d.orderNo)+'" aria-label="Order number"><button class="btn" data-act="scan" data-v="orderNo" aria-label="Scan the order barcode">'+ic('scan')+'</button><button class="btn" data-act="ocr" data-v="orderNo" aria-label="Read the order number from a photo of the label">'+ic('text')+'</button>'+micBtn('orderNo','order number')+'</div><div class="row ocrPick" id="ocrPick-orderNo" style="padding-top:6px"></div></div>'
    +'<div class="fld"><span>Tracking number</span><div class="with-btn"><input id="f-track" class="mono" data-f="tracking" value="'+esc(d.tracking)+'" aria-label="Tracking number"><button class="btn" data-act="scan" data-v="tracking" aria-label="Scan tracking number">'+ic('scan')+'</button></div></div>'
    +'<label class="fld"><span>Carrier</span><select id="f-carrier" data-f="carrier">'+opts(CARRIERS,d.carrier)+'</select></label>'
@@ -1903,7 +1924,7 @@ const GH=(()=>{
     let m=null;try{m=await loadMe()}catch(e){console.error(e)}
     cleanAddress();
     if(m&&(!m.pwSet||RECOVERY||window.__rbRec)){render();showGate('',false,true,RECOVERY||window.__rbRec);return}
-    if(m&&m.company_id&&m.role!=='viewer'){boot();try{Benji.mount({client:sb,surface:'app',mobileBottom:'84px',onReport:benjiReportApp})}catch(e){console.error(e)}return}
+    if(m&&m.company_id&&m.role!=='viewer'){boot();try{Benji.mount({client:sb,surface:'app',mobileBottom:'84px',onReport:benjiReportApp,context:benjiContext})}catch(e){console.error(e)}return}
     render();
     if(!m){showGate(LINK_ERR?(/expired|invalid/i.test(LINK_ERR)?'That email link has expired or was already used. Sign in with your email and password, or ask for a new link.':LINK_ERR):'');return}
     if(!m.company_id){let ex=true;try{ex=(await sb.rpc('company_exists')).data!==false}catch(e){}
@@ -2102,6 +2123,7 @@ const Benji=(()=>{
   const NONLATIN=/[Ͱ-ϿЀ-ԯ֐-ۿऀ-෿฀-໿ᄀ-ᇿ぀-ヿ㐀-鿿가-힯]/;
   // Only the copy sent to Benji gets the language note; the chat on screen shows exactly what was typed.
   function outMsgs(){const a=msgs.filter(m=>!m.local).map(m=>({role:m.role,content:m.content}));const L=LG(),last=a[a.length-1];
+    if(last&&last.role==='user'&&o.context){try{const x=o.context(last.content);if(x)last.content='['+x+']\n\n'+last.content}catch(e){}}
     if(last&&last.role==='user'){
       if(L.c!=='en')last.content='[Please reply in '+L.e+'. Keep the exact names of app buttons, tabs and statuses in English, in bold, so I can find them on screen. Keep reference, order and SKU numbers exactly as they are.]\n\n'+last.content;
       else if(NONLATIN.test(last.content))last.content='[Please reply in the same language as my question. Keep app button names in English, in bold.]\n\n'+last.content}
