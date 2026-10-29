@@ -1,3 +1,13 @@
+function locOpts(cur,exclude){
+  const cid=S.draft&&S.draft.clientId;
+  if(!cid)return'<option value="">Choose a tenant first…</option>';
+  const s=siteOf(cid),st=storeOf(s);
+  let h='<option value="">Choose a '+SITES[s]+' location…</option>';
+  if(cur&&locSite(cur)!==s)h+='<option value="'+esc(cur)+'" selected>'+esc(cur)+'  ·  other site</option>';
+  for(let i=1;i<=st.count;i++){const c=siteCode(s,i),u=locUsed(c,exclude),full=u>=st.cap;
+    h+='<option value="'+c+'"'+(c===cur?' selected':'')+(full&&c!==cur?' disabled':'')+'>'+c+'  ·  '+u+'/'+st.cap+(full?'  ·  full':'')+'</option>'}
+  return h;
+}
 <!doctype html>
 <html lang="en">
 <head>
@@ -17,6 +27,31 @@
 <style id="rw-fit">@media (min-width:760px){.rw-main>.rw-meta{flex-wrap:wrap!important;min-width:0;overflow:hidden;row-gap:3px}.rw-meta>span{flex:0 1 auto!important;min-width:0;max-width:100%}.rw-meta>.mono,.rw-meta>.tag{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.rw-main .pill{white-space:nowrap;margin-left:10px}}</style>
 <style id="tn-card">.line-h.tn-h{display:grid!important;grid-template-columns:minmax(0,1fr) auto;align-items:start;gap:12px}.tn-name{display:flex;flex-direction:column;align-items:flex-start;gap:8px;min-width:0}.tn-name>span:first-child{overflow-wrap:anywhere}.tn-act{display:flex!important;flex-wrap:nowrap!important;gap:8px;justify-self:end;margin:0!important}.tn-act .btn{white-space:nowrap}</style>
 <style id="hawk-29oct">.tiles .tile{min-width:0}.tiles .tile.tile-wide{grid-column:1/-1}.tiles .tile b{white-space:nowrap}.old{min-width:0;flex-wrap:wrap!important;row-gap:6px}.old .job{flex:none}.old>span:nth-child(2){flex:1 1 70px!important}.old .pill{flex:none;margin-left:auto}.old .ag{flex:none}</style>
+<style id="fa-sites">
+.site-chip{display:inline-flex;align-items:center;padding:2px 9px;border-radius:999px;font:600 12px/1.5 var(--body,system-ui);white-space:nowrap}
+.tn-tags{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.site-pick{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:10px 0}
+.site-btn{padding:8px 14px;border-radius:12px;border:1.5px solid var(--line);background:transparent;color:var(--ink);font-weight:600;cursor:pointer;min-height:40px}
+.site-sec{border-radius:14px;padding:12px;margin:10px 0}
+.site-sec>.row{gap:10px;margin-bottom:8px}
+html[data-theme=light] .site-chip.site-par{background:#E3E9FF;color:#1C3FD6}
+html[data-theme=light] .site-chip.site-smi{background:#D9F3EE;color:#0B6355}
+html[data-theme=light] .line.site-par,html[data-theme=light] .site-sec.site-par{background:linear-gradient(180deg,rgba(33,72,242,.07),rgba(33,72,242,.025))!important;border-color:rgba(33,72,242,.18)!important}
+html[data-theme=light] .line.site-smi,html[data-theme=light] .site-sec.site-smi{background:linear-gradient(180deg,rgba(13,148,128,.10),rgba(13,148,128,.035))!important;border-color:rgba(13,148,128,.25)!important}
+html[data-theme=light] .site-btn.site-par[aria-pressed=true]{background:#1C3FD6;border-color:#1C3FD6;color:#fff}
+html[data-theme=light] .site-btn.site-smi[aria-pressed=true]{background:#0B6355;border-color:#0B6355;color:#fff}
+html[data-theme=light] .loc-tile.site-smi{background:linear-gradient(180deg,#137A6B,#0B5247)!important;border-color:rgba(11,82,71,.45)!important;color:#fff!important}
+html[data-theme=light] .opt-par{background:#EEF2FF;color:#0B1430}html[data-theme=light] .opt-smi{background:#E6F6F2;color:#08332C}
+html:not([data-theme=light]) .site-chip.site-par{background:rgba(74,116,255,.20);color:#C3D0FF}
+html:not([data-theme=light]) .site-chip.site-smi{background:rgba(45,212,191,.18);color:#9FF2E0}
+html:not([data-theme=light]) .line.site-par,html:not([data-theme=light]) .site-sec.site-par{background:linear-gradient(180deg,rgba(74,116,255,.12),rgba(74,116,255,.04))!important;border-color:rgba(130,160,255,.25)!important}
+html:not([data-theme=light]) .line.site-smi,html:not([data-theme=light]) .site-sec.site-smi{background:linear-gradient(180deg,rgba(45,212,191,.13),rgba(45,212,191,.04))!important;border-color:rgba(45,212,191,.30)!important}
+html:not([data-theme=light]) .site-btn.site-par[aria-pressed=true]{background:#3D63F5;border-color:#3D63F5;color:#fff}
+html:not([data-theme=light]) .site-btn.site-smi[aria-pressed=true]{background:#14917F;border-color:#14917F;color:#fff}
+html:not([data-theme=light]) .loc-tile.site-smi{background:linear-gradient(180deg,rgba(45,212,191,.24),rgba(45,212,191,.08))!important;border-color:rgba(45,212,191,.40)!important;color:#EFFFFB!important}
+html:not([data-theme=light]) .opt-par{background:#101A3D;color:#F4F6FF}html:not([data-theme=light]) .opt-smi{background:#0C2B2A;color:#EFFFFB}
+.loc-tile.full{border-color:#FF8A9A!important}
+</style>
 </head>
 <body>
 <title>Returns Bench</title>
@@ -728,7 +763,7 @@ function match(r,f){
 function vReport(){
   const r=S.rep;
   return'<h2>Reports</h2><div class="panel"><div class="row">'
-   +'<label class="fld"><span>Tenant</span><select id="rc" data-rep="client">'+opts([['','All tenants']].concat(S.clients.map(c=>[c.id,c.name])),r.client)+'</select></label>'
+   +'<label class="fld"><span>Tenant</span><select id="rc" data-rep="client">'+tenantOpts('All tenants',r.client)+'</select></label>'
    +'<label class="fld"><span>Received from</span><input id="rf" type="date" data-rep="from" value="'+esc(r.from)+'"></label>'
    +'<label class="fld"><span>Received to</span><input id="rt" type="date" data-rep="to" value="'+esc(r.to)+'"></label></div></div><div id="rep"></div>';
 }
@@ -779,8 +814,8 @@ function vSettings(){
   h+='<div class="panel"><h3>Tenants</h3>';
   if(!S.gotClients)h+='<p class="note">Loading clients…</p>';
   else if(!S.clients.length)h+='<p class="note">No clients yet. Add each brand you handle returns for.</p>';
-  S.clients.forEach(c=>{h+='<div class="line"><div class="line-h tn-h"><strong class="tn-name"><span>'+esc(c.name)+'</span>'+(c.code?'<span class="job">'+esc(c.code)+'</span>':'')+'</strong><span class="row tn-act"><button class="btn" data-act="editClient" data-v="'+c.id+'">Edit</button><button class="btn danger" data-act="delClient" data-v="'+c.id+'">Delete</button></span></div>'+(S.editClient===c.id?vEditClient(c):'')+'<div class="note">'+(c.email?'Reports to <span class="sel">'+esc(c.email)+'</span>':'No tenant email saved')+' · '+(c.skuCount?c.skuCount+' SKUs imported':'No SKU list imported')+'</div><div class="row"><button class="btn" data-act="csvPick" data-v="'+c.id+'">'+(c.skuCount?'Replace SKU list (CSV or Excel)':'Import SKU list (CSV or Excel)')+'</button></div>'+(S.imp&&S.imp.cid===c.id?vImport():'')+'</div>'});
-  h+='<div class="grid"><label class="fld"><span>Tenant name</span><input id="cN" placeholder="Brand name"></label><label class="fld"><span>Short code (optional)</span><input id="cC" class="mono" maxlength="8" autocapitalize="characters"></label><label class="fld"><span>Tenant email</span><input id="cE" type="email"></label></div><div><button class="btn pri" data-act="addClient">Add tenant</button></div></div>';
+  S.clients.slice().sort((a,b)=>siteOf(a.id).localeCompare(siteOf(b.id))||String(a.name).localeCompare(b.name)).forEach(c=>{const st=siteOf(c.id);h+='<div class="line site-'+st+'"><div class="line-h tn-h"><strong class="tn-name"><span>'+esc(c.name)+'</span><span class="tn-tags">'+(c.code?'<span class="job">'+esc(c.code)+'</span>':'')+'<span class="site-chip site-'+st+'">'+SITES[st]+'</span></span></strong><span class="row tn-act"><button class="btn" data-act="editClient" data-v="'+c.id+'">Edit</button><button class="btn danger" data-act="delClient" data-v="'+c.id+'">Delete</button></span></div>'+(S.editClient===c.id?vEditClient(c):'')+'<div class="note">'+(c.email?'Reports to <span class="sel">'+esc(c.email)+'</span>':'No tenant email saved')+' · '+(c.skuCount?c.skuCount+' SKUs imported':'No SKU list imported')+'</div><div class="row"><button class="btn" data-act="csvPick" data-v="'+c.id+'">'+(c.skuCount?'Replace SKU list (CSV or Excel)':'Import SKU list (CSV or Excel)')+'</button></div>'+(S.imp&&S.imp.cid===c.id?vImport():'')+'</div>'});
+  h+='<div class="grid"><label class="fld"><span>Tenant name</span><input id="cN" placeholder="Brand name"></label><label class="fld"><span>Short code (optional)</span><input id="cC" class="mono" maxlength="8" autocapitalize="characters"></label><label class="fld"><span>Tenant email</span><input id="cE" type="email"></label></div>'+'<div class="site-pick" role="group" aria-label="Site" data-for="new"><span class="note">Site</span><button type="button" class="site-btn site-par" data-site-pick="par" aria-pressed="'+((S.newSite||'par')!=='smi')+'">Parramatta</button><button type="button" class="site-btn site-smi" data-site-pick="smi" aria-pressed="'+((S.newSite||'par')==='smi')+'">Smithfield</button></div>'+'<div><button class="btn pri" data-act="addClient">Add tenant</button></div></div>';
   S.exHtml='';if(S.returns.some(r=>r.example)||S.clients.some(c=>c.example))S.exHtml='<div class="panel"><h3>Example data</h3><p class="note">Sample returns are loaded. Remove them before you start logging real ones.</p><div><button class="btn danger" data-act="rmExamples">Remove example data</button></div></div>';
   h+=GH.adminPanels()+(S.exHtml||'')+wh+GH.about();return h;
 }
@@ -824,7 +859,7 @@ async function rmExamples(){try{for(const r of S.returns.filter(r=>r.example))aw
 
 /* ---------- client edit and per-return email ---------- */
 const DEF_SUBJ='Return {job} | {sku} | Qty {qty}';
-function vEditClient(c){return'<div class="grid"><label class="fld"><span>Tenant name</span><input id="ec-n" value="'+esc(c.name)+'"></label><label class="fld"><span>Short code</span><input id="ec-c" class="mono" maxlength="8" value="'+esc(c.code||'')+'"></label><label class="fld"><span>Tenant email</span><input id="ec-e" type="email" value="'+esc(c.email||'')+'"></label></div><div class="row"><button class="btn pri" data-act="saveClient" data-v="'+c.id+'">Save tenant</button><button class="btn" data-act="cancelClient">Cancel</button></div>'}
+function vEditClient(c){return'<div class="grid"><label class="fld"><span>Tenant name</span><input id="ec-n" value="'+esc(c.name)+'"></label><label class="fld"><span>Short code</span><input id="ec-c" class="mono" maxlength="8" value="'+esc(c.code||'')+'"></label><label class="fld"><span>Tenant email</span><input id="ec-e" type="email" value="'+esc(c.email||'')+'"></label></div>'+'<div class="site-pick" role="group" aria-label="Site" data-for="edit"><span class="note">Site</span><button type="button" class="site-btn site-par" data-site-pick="par" aria-pressed="'+((S.editSite||c.site||'par')!=='smi')+'">Parramatta</button><button type="button" class="site-btn site-smi" data-site-pick="smi" aria-pressed="'+((S.editSite||c.site||'par')==='smi')+'">Smithfield</button></div>'+'<div class="row"><button class="btn pri" data-act="saveClient" data-v="'+c.id+'">Save tenant</button><button class="btn" data-act="cancelClient">Cancel</button></div>'}
 function subjFor(r){
   const sk=(r.lines||[]).map(l=>l.sku).filter(Boolean),rep={job:r.jobNo||'',sku:sk.slice(0,3).join(', ')+(sk.length>3?' +'+(sk.length-3)+' more':''),qty:units(r),order:r.orderNo||'',client:clientName(r.clientId)};
   return(S.org.subject||DEF_SUBJ).replace(/\{(job|sku|qty|order|client)\}/g,(m,k)=>rep[k]);
@@ -846,10 +881,10 @@ const ACT={
   saveOrg:async()=>{try{await S.db.doc('orgs/main').set({name:$('#orgN').value.trim(),color:$('#orgC').value,logo:S.org.logo||'',subject:$('#orgS').value.trim(),email:$('#orgE').value.trim()});toast('Branding saved.')}catch(e){fail(e,'save branding')}},
   resetColor:async()=>{try{await S.db.doc('orgs/main').set({name:S.org.name||'',color:'',logo:S.org.logo||'',subject:S.org.subject||'',email:S.org.email||''})}catch(e){fail(e,'save branding')}},
   logo:()=>{const i=$('#logoInput');i.value='';i.click()},
-  addClient:async()=>{const name=$('#cN').value.trim();if(!name)return toast('Type the client name.');if(S.clients.some(c=>c.name.toLowerCase()===name.toLowerCase()))return toast('That client already exists.');try{await S.db.collection('clients').add({name,code:$('#cC').value.trim().toUpperCase(),email:$('#cE').value.trim(),skuCount:0});toast('Added '+name)}catch(e){fail(e,'add this client')}},
+  addClient:async()=>{const name=$('#cN').value.trim();if(!name)return toast('Type the client name.');if(S.clients.some(c=>c.name.toLowerCase()===name.toLowerCase()))return toast('That client already exists.');try{await S.db.collection('clients').add({name,code:$('#cC').value.trim().toUpperCase(),email:$('#cE').value.trim(),skuCount:0,site:S.newSite==='smi'?'smi':'par'});S.newSite='par';toast('Added '+name)}catch(e){fail(e,'add this client')}},
   delClient:(v,b)=>{if(S.returns.some(r=>r.clientId===v))return toast('This client has returns logged, so it can\'t be deleted.');twice(b,async()=>{try{await S.db.doc('clients/'+v).delete()}catch(e){fail(e,'delete this client')}})},
   editClient:v=>{S.editClient=v;render()},cancelClient:()=>{S.editClient=null;render()},
-  saveClient:async v=>{const name=$('#ec-n').value.trim();if(!name)return toast('Type the client name.');try{await S.db.doc('clients/'+v).update({name,code:$('#ec-c').value.trim().toUpperCase(),email:$('#ec-e').value.trim()});S.editClient=null;toast('Client saved.');render()}catch(e){fail(e,'save this client')}},
+  saveClient:async v=>{const name=$('#ec-n').value.trim();if(!name)return toast('Type the client name.');try{await S.db.doc('clients/'+v).update({name,code:$('#ec-c').value.trim().toUpperCase(),email:$('#ec-e').value.trim(),site:(S.editSite||(S.clients.find(x=>x.id===v)||{}).site)==='smi'?'smi':'par'});S.editClient=null;S.editSite=null;toast('Client saved.');render()}catch(e){fail(e,'save this client')}},
   copy:async v=>{const t=$('#'+v);try{await navigator.clipboard.writeText(t.value);toast('Copied.')}catch(e){t.select();toast('Press copy to copy the selected text.')}},
   csvPick:v=>{S.target=v;const i=$('#csvInput');i.value='';i.click()},impGo,impCancel:()=>{S.imp=null;render()}
 };
@@ -964,7 +999,7 @@ function soft(){
   if(S.tab==='new'&&S.formLive)return;
   if(S.tab==='settings'&&(S.imp||S.editClient))return;
   if(S.tab==='list'&&$('#rows')&&S.returns.length){
-    const fc=$('#fc');if(fc&&document.activeElement!==fc)fc.innerHTML=opts([['','All tenants']].concat(S.clients.map(c=>[c.id,c.name])),S.flt.client);
+    const fc=$('#fc');if(fc&&document.activeElement!==fc)fc.innerHTML=tenantOpts('All tenants',S.flt.client);
     drawRows();return}
   render();
 }
@@ -1044,7 +1079,7 @@ function vDash(){
   if(S.returns.some(r=>r.example))h+='<div class="banner">Example data. Remove it in Settings before logging real returns.</div>';
   h+=board(all,rs);
   if(!S.returns.length)return h+emptyState();
-  h+='<div class="row"><label class="fld dash-tenant"><span>Tenant</span><select id="dashClient" data-bind="dashClient">'+opts([['','All tenants']].concat(S.clients.map(c=>[c.id,c.name])),S.dashClient)+'</select></label></div>';
+  h+='<div class="row"><label class="fld dash-tenant"><span>Tenant</span><select id="dashClient" data-bind="dashClient">'+tenantOpts('All tenants',S.dashClient)+'</select></label></div>';
   const tally=(key)=>{const m={};rs.forEach(r=>key(r).forEach(k=>{if(k)m[k]=(m[k]||0)+1}));return Object.entries(m).sort((a,b)=>b[1]-a[1])};
   const bars=(rows)=>{rows=rows.filter(r=>r[1]);if(!rows.length)return'<p class="note">No data in this period.</p>';const mx=Math.max(...rows.map(r=>r[1]));return'<div class="bars">'+rows.slice(0,7).map(r=>'<div class="bar"><span class="nm">'+esc(r[0])+'</span><span class="tr"><span class="fl" data-w="'+Math.round(r[1]/mx*100)+'"></span></span><span class="n">'+r[1]+'</span></div>').join('')+'</div>'};
   const old=open.slice().sort((a,b)=>String(a.dateReceived).localeCompare(b.dateReceived)).slice(0,5);
@@ -1130,7 +1165,7 @@ function vForm(){
   let h='<div class="row"><h2 style="flex:1 1 auto">'+(S.editId?'Edit return':'New return')+'</h2>'+(S.editId?'<button class="btn" data-act="newDraft">Start a new one</button>':(window.__draftHas&&window.__draftHas(S.draft)?'<button class="btn" type="button" data-clear-draft>Clear form</button>':''))+'</div>';
   h+='<div class="panel"><div class="pick"><span>Type</span>'+seg('f-kind','Type',KINDS,d.kind)+'</div>'
    +'<p class="note">'+(d.kind==='rts'?'The parcel never reached the customer. It stays open until the tenant says resend or back to stock.':'The customer sent it back. Count what is in good condition and what is damaged. No tenant approval is needed.')+'</p><div class="grid">'
-   +'<label class="fld"><span>Tenant</span><select id="f-client" data-f="clientId">'+opts([['','Choose a tenant…']].concat(S.clients.map(c=>[c.id,c.name])),d.clientId)+'</select></label>'
+   +'<label class="fld"><span>Tenant</span><select id="f-client" data-f="clientId">'+tenantOpts('Choose a tenant…',d.clientId)+'</select></label>'
    +'<div class="fld"><span>Reference number</span><div class="with-btn"><input id="f-job" class="mono" data-f="jobNo" value="'+esc(d.jobNo)+'" autocapitalize="characters" aria-label="Reference number"><button class="btn" data-act="ocr" data-v="jobNo" aria-label="Read the reference number (REF or #) from a photo of the label">'+ic('text')+'</button>'+micBtn('jobNo','reference number')+'</div><div class="row ocrPick" id="ocrPick-jobNo" style="padding-top:6px"></div>'+(d.kind!=='rts'?'<button type="button" class="btn noref" data-act="noRef">No reference provided</button>':'')+'</div>'
    +'<label class="fld"><span>Date received</span><input id="f-date" type="date" data-f="dateReceived" max="'+ymd(new Date())+'" value="'+esc(d.dateReceived)+'"></label>'
    +'</div><div class="grid">'
@@ -1139,8 +1174,8 @@ function vForm(){
    +'<label class="fld"><span>Carrier</span><select id="f-carrier" data-f="carrier">'+opts(CARRIERS,d.carrier)+'</select></label>'
    +'</div><div class="pick"><span>Status</span>'+seg('f-status','Status',sts.map(s=>[s,s==='open'?'<i class="dot st-quar"></i>Quarantine (waiting)':'<i class="dot st-'+s+'"></i>'+SL(s)]),d.status)+'</div></div>';
   h+=GH.corForm?GH.corForm(d):'';
-  if(d.kind!=='rts')h+='<div class="panel"><div class="grid"><label class="fld"><span>Storage location (quarantine)</span><select id="f-loc" class="mono" data-f="location">'+locOpts(d.location,S.editId)+'</select></label></div><p class="note">Where the parcel waits until it is processed. Up to '+S.store.cap+' waiting parcels per location. Choose one before you save.</p></div>';
-  if(d.kind==='rts')h+='<div class="panel"><div class="grid"><label class="fld"><span>Storage location (quarantine)</span><select id="f-loc" class="mono" data-f="location">'+locOpts(d.location,S.editId)+'</select></label></div><p class="note">Up to '+S.store.cap+' waiting parcels per location. Full locations are greyed out. Choose one before you save.</p><div class="pick"><span>Package condition</span>'+seg('f-pack','Package condition',PACKS,d.pack||'')+'</div><p class="note">For an unopened parcel you can leave the items below empty. Add items only if the parcel was opened.</p></div>';
+  if(d.kind!=='rts')h+='<div class="panel"><div class="grid"><label class="fld"><span>Storage location (quarantine)</span><select id="f-loc" class="mono" data-f="location">'+locOpts(d.location,S.editId)+'</select></label></div><p class="note">Where the parcel waits until it is processed. Up to '+storeOf(siteOf(d.clientId)).cap+' waiting parcels per location at '+SITES[siteOf(d.clientId)]+'. Choose one before you save.</p></div>';
+  if(d.kind==='rts')h+='<div class="panel"><div class="grid"><label class="fld"><span>Storage location (quarantine)</span><select id="f-loc" class="mono" data-f="location">'+locOpts(d.location,S.editId)+'</select></label></div><p class="note">Up to '+storeOf(siteOf(d.clientId)).cap+' waiting parcels per location at '+SITES[siteOf(d.clientId)]+'. Full locations are greyed out. Choose one before you save.</p><div class="pick"><span>Package condition</span>'+seg('f-pack','Package condition',PACKS,d.pack||'')+'</div><p class="note">For an unopened parcel you can leave the items below empty. Add items only if the parcel was opened.</p></div>';
   h+='<h3>'+(d.kind==='rts'?'Items (optional)':'Items')+'</h3>';
   d.lines.forEach((l,i)=>{
     h+='<div class="line"><div class="line-h"><strong>Item '+(i+1)+'</strong>'+(d.lines.length>1?'<button class="btn danger" data-act="rmLine" data-v="'+i+'">Remove</button>':'')+'</div>'
@@ -1167,7 +1202,8 @@ async function saveReturn(){
   if(S.uploading)return toast('Photos are still uploading. Try again in a moment.');
   if(d.dateReceived&&d.dateReceived>ymd(new Date()))return toast('The date received is in the future. Check the day and month.');
   if((d.status==='open'||d.status==='quar')&&!d.location)return toast('Choose a storage location before saving.');
-  if((d.status==='open'||d.status==='quar')&&d.location&&locUsed(d.location,S.editId)>=S.store.cap)return toast('Location '+d.location+' is full. Choose another location.');
+  if((d.status==='open'||d.status==='quar')&&d.location&&locSite(d.location)!==siteOf(d.clientId))return toast(d.location+' is at '+SITES[locSite(d.location)]+'. This tenant is at '+SITES[siteOf(d.clientId)]+', so choose a '+SITES[siteOf(d.clientId)]+' location.');
+  if((d.status==='open'||d.status==='quar')&&d.location&&locUsed(d.location,S.editId)>=capOf(d.location))return toast('Location '+d.location+' is full. Choose another location.');
   const now=new Date().toISOString(),prev=S.editId?S.returns.find(r=>r.id===S.editId):null,by=S.uid||'';
   const hist=((prev&&prev.history)||[]).slice(-40);
   hist.push({at:now,by,what:!prev?'Logged as '+(d.kind==='rts'?'return to sender':'customer return'):prev.status!==d.status?'Status changed to '+SL(d.status):'Edited'});
@@ -1256,7 +1292,7 @@ function vList(){
    +'<div class="fld" style="flex:none"><span>Search reference, order, tracking or SKU</span><div class="with-btn"><input id="q" type="search" data-flt="q" value="'+esc(f.q)+'" aria-label="Search reference, order, tracking or SKU">'+micBtn('search','job or order number')+'</div></div>'
    +'<div id="statusSeg"></div>'
    +'<div class="drawer" id="drawer" data-open="'+open+'"><div class="dr-body" id="drBody"><div class="dr-in" id="drIn"'+(open?'':' inert')+'><div class="dr-pad">'
-   +'<label class="fld"><span>Tenant</span><select id="fc" data-flt="client">'+opts([['','All tenants']].concat(S.clients.map(c=>[c.id,c.name])),f.client)+'</select></label>'
+   +'<label class="fld"><span>Tenant</span><select id="fc" data-flt="client">'+tenantOpts('All tenants',f.client)+'</select></label>'
    +'<label class="fld"><span>Received from</span><input id="ff" type="date" data-flt="from" value="'+esc(f.from)+'"></label>'
    +'<label class="fld"><span>Received to</span><input id="ft" type="date" data-flt="to" value="'+esc(f.to)+'"></label>'
    +'<label class="fld"><span>Show</span><select id="fn" data-flt="noref">'+opts([['','All returns'],['1','No reference provided (*)']],f.noref||'')+'</select></label>'
@@ -1694,10 +1730,18 @@ document.addEventListener('change',e=>{
 let rsT;window.addEventListener('resize',()=>{clearTimeout(rsT);rsT=setTimeout(()=>{placeNav();placeSegs()},80)});
 if(document.fonts&&document.fonts.ready)document.fonts.ready.then(()=>{placeNav();placeSegs()});
 /* ---------- RTS storage locations (trays 001, 002 …, each holding a limited number of waiting parcels) ---------- */
-S.store={count:50,cap:10};
+S.store={count:50,cap:10};S.storeSmi={count:20,cap:10};
+/* Two FA sites (30 Oct): Parramatta trays PAR-001…, Smithfield trays SMI-001…; each tenant belongs to one site */
+const SITES={par:'Parramatta',smi:'Smithfield'};
+const siteOf=id=>((S.clients.find(c=>c.id===id)||{}).site==='smi'?'smi':'par');
+const locSite=code=>/^SMI-/.test(code||'')?'smi':'par';
+const storeOf=s=>s==='smi'?S.storeSmi:S.store;
+const capOf=code=>storeOf(locSite(code)).cap;
+const siteCode=(s,i)=>(s==='smi'?'SMI-':'PAR-')+String(i).padStart(3,'0');
+function tenantOpts(first,val){const g={par:[],smi:[]};S.clients.forEach(c=>g[siteOf(c.id)].push(c));let h='<option value="">'+esc(first)+'</option>';['par','smi'].forEach(s=>{if(!g[s].length)return;h+='<optgroup class="og-'+s+'" label="'+SITES[s]+'">'+g[s].sort((a,b)=>String(a.name).localeCompare(b.name)).map(c=>'<option class="opt-'+s+'" value="'+esc(c.id)+'"'+(c.id===val?' selected':'')+'>'+esc(c.name)+' ('+SITES[s]+')</option>').join('')+'</optgroup>'});return h}
 const locCode=i=>String(i).padStart(3,'0');
 const locUsed=(code,exclude)=>S.returns.filter(r=>r.status==='open'&&r.location===code&&r.id!==exclude).length;
-function firstFreeLoc(exclude){for(let i=1;i<=S.store.count;i++){const c=locCode(i);if(locUsed(c,exclude)<S.store.cap)return c}return''}
+function firstFreeLoc(exclude){for(let i=1;i<=S.store.count;i++){const c=siteCode('par',i);if(locUsed(c,exclude)<S.store.cap)return c}return''}
 function locOpts(cur,exclude){
   let h='<option value="">Choose a location…</option>';
   for(let i=1;i<=S.store.count;i++){const c=locCode(i),u=locUsed(c,exclude),full=u>=S.store.cap;
@@ -1712,18 +1756,19 @@ function match(r,f){
 }
 const _vSettings=vSettings;
 vSettings=function(){
-  const busy=[];for(let i=1;i<=S.store.count;i++){const c=locCode(i),u=locUsed(c);if(u)busy.push([c,u])}
   const base=_vSettings(),at=base.indexOf('<div class="panel" id="about">'),cut=at<0?base.length:at;
-  return base.slice(0,cut)+'<div class="panel" id="storage"><h3>Storage locations for return to sender</h3><p class="note">Parcels waiting on a tenant are stored in numbered locations. A location counts as full when it holds the maximum number of waiting parcels. Once a parcel is resent, put back to stock or discarded, its space frees up.</p>'
-   +'<div class="grid"><label class="fld"><span>Number of locations</span><input id="st-count" type="number" min="1" max="999" inputmode="numeric" value="'+S.store.count+'"></label><label class="fld"><span>Maximum parcels per location</span><input id="st-cap" type="number" min="1" max="999" inputmode="numeric" value="'+S.store.cap+'"></label></div>'
-   +'<div><button class="btn pri" data-act="saveStore">Save storage settings</button></div>'
-   +'<h3>In use now</h3>'+(busy.length?'<div class="tags">'+busy.map(b=>'<span class="tag">'+b[0]+' · '+b[1]+'/'+S.store.cap+'</span>').join('')+'</div>':'<p class="note">All locations are empty.</p>')+'</div>'+base.slice(cut);
+  const sec=s=>{const st=storeOf(s),busy=[];for(let i=1;i<=st.count;i++){const c=siteCode(s,i),u=locUsed(c);if(u)busy.push([c,u])}
+    return'<div class="site-sec site-'+s+'"><h3><span class="site-chip site-'+s+'">'+SITES[s]+'</span> '+(s==='smi'?'SMI':'PAR')+'-001 to '+siteCode(s,st.count)+'</h3>'
+     +'<div class="grid"><label class="fld"><span>Number of locations</span><input id="st-count-'+s+'" type="number" min="1" max="999" inputmode="numeric" value="'+st.count+'"></label><label class="fld"><span>Maximum parcels per location</span><input id="st-cap-'+s+'" type="number" min="1" max="999" inputmode="numeric" value="'+st.cap+'"></label></div>'
+     +(busy.length?'<div class="tags">'+busy.map(x=>'<span class="tag">'+x[0]+' · '+x[1]+'/'+st.cap+'</span>').join('')+'</div>':'<p class="note">All '+SITES[s]+' locations are empty.</p>')+'</div>'};
+  return base.slice(0,cut)+'<div class="panel" id="storage"><h3>Storage locations</h3><p class="note">Each site has its own numbered locations. Parcels waiting on a tenant go in a location at that tenant\'s site. A location is full when it holds the maximum number of waiting parcels.</p>'+sec('par')+sec('smi')+'<div><button class="btn pri" data-act="saveStore">Save storage settings</button></div></div>'+base.slice(cut);
 };
-ACT.saveStore=async()=>{const c=Math.max(1,Math.min(999,parseInt($('#st-count').value,10)||0)),p=Math.max(1,Math.min(999,parseInt($('#st-cap').value,10)||0));
-  if(!c||!p)return toast('Enter a number of locations and a maximum per location.');
-  try{await S.db.doc('orgs/storage').set({count:c,cap:p});toast('Storage settings saved.')}catch(e){fail(e,'save the storage settings')}};
+ACT.saveStore=async()=>{const n=id=>Math.max(1,Math.min(999,parseInt(($('#'+id)||{}).value,10)||0));
+  const pc=n('st-count-par'),pp=n('st-cap-par'),sc=n('st-count-smi'),sp=n('st-cap-smi');
+  if(!pc||!pp||!sc||!sp)return toast('Enter a number of locations and a maximum per location for both sites.');
+  try{await S.db.doc('orgs/storage').set({count:pc,cap:pp});await S.db.doc('orgs/storageSmi').set({count:sc,cap:sp});toast('Storage settings saved.')}catch(e){fail(e,'save the storage settings')}};
 const _boot=boot;
-boot=async function(){await _boot();if(S.db)S.db.doc('orgs/storage').onSnapshot(s=>{const d=s.exists?s.data():{};S.store={count:+d.count||50,cap:+d.cap||10};soft()},()=>{})};
+boot=async function(){await _boot();if(S.db)S.db.doc('orgs/storage').onSnapshot(s=>{const d=s.exists?s.data():{};S.store={count:+d.count||50,cap:+d.cap||10};soft()},()=>{});if(S.db)S.db.doc('orgs/storageSmi').onSnapshot(s=>{const d=s.exists?s.data():{};S.storeSmi={count:+d.count||20,cap:+d.cap||10};soft()},()=>{})};
 /* =====================================================================
    Supabase storage. Same surface as the GitHub adapter (db / assets /
    downloads / user), so the rest of the app is unchanged.
@@ -2396,7 +2441,7 @@ GH.start();
 function vReport(){
   const r=S.rep;
   return'<h2>Reports</h2><div class="panel"><div class="row">'
-   +'<label class="fld"><span>Tenant</span><select id="rc" data-rep="client">'+opts([['','All tenants']].concat(S.clients.map(c=>[c.id,c.name])),r.client)+'</select></label>'
+   +'<label class="fld"><span>Tenant</span><select id="rc" data-rep="client">'+tenantOpts('All tenants',r.client)+'</select></label>'
    +'<label class="fld"><span>Received from</span><input id="rf" type="date" data-rep="from" value="'+esc(r.from)+'"></label>'
    +'<label class="fld"><span>Received to</span><input id="rt" type="date" data-rep="to" value="'+esc(r.to)+'"></label>'
    +'<label class="fld"><span>Show</span><select id="rs" data-rep="show">'+opts([['','All returns'],['damaged','Damaged only'],['noref','No reference provided (*)']],r.show||'')+'</select></label></div></div><div id="rep"></div>';
@@ -2410,8 +2455,9 @@ function storeHtml(){
   const codes=Object.keys(by).sort(),sel=S.storeSel&&by[S.storeSel]?S.storeSel:'';
   let h='<div class="panel store"><div class="row"><h3 style="flex:1 1 auto;margin:0">Storage</h3><span class="note">'+waiting.length+' parcel'+(waiting.length===1?'':'s')+' in '+codes.length+' location'+(codes.length===1?'':'s')+'</span></div>';
   if(!codes.length)return h+'<p class="note">No parcels in storage.</p></div>';
-  h+='<div class="loc-grid">'+codes.map(c=>{const n=by[c].length,full=n>=S.store.cap;return'<button type="button" class="loc-tile'+(c===sel?' on':'')+(full?' full':'')+'" data-act="storeLoc" data-v="'+c+'" aria-pressed="'+(c===sel)+'"><b class="mono">'+c+'</b><span>'+n+' / '+S.store.cap+'</span></button>'}).join('')+'</div>';
-  if(sel)h+='<div class="loc-list"><p class="note">Location '+sel+' holds:</p>'+by[sel].sort((a,b)=>String(a.dateReceived).localeCompare(b.dateReceived)).map(r=>'<button type="button" class="loc-row" data-act="open" data-v="'+r.id+'"><span class="mono">'+esc(r.jobNo)+'</span><span>'+esc(clientName(r.clientId))+'</span><span class="note">'+fmtD(r.dateReceived)+(packText(r)?' · '+esc(packText(r)):'')+'</span></button>').join('')+'</div>';
+  ['par','smi'].forEach(s=>{const cs=codes.filter(c=>locSite(c)===s);if(!cs.length)return;const n=cs.reduce((a,c)=>a+by[c].length,0);
+    h+='<div class="site-sec site-'+s+'"><div class="row"><span class="site-chip site-'+s+'">'+SITES[s]+'</span><span class="note">'+n+' parcel'+(n===1?'':'s')+' in '+cs.length+' location'+(cs.length===1?'':'s')+'</span></div><div class="loc-grid">'+cs.map(c=>{const k=by[c].length,cap=capOf(c),full=k>=cap;return'<button type="button" class="loc-tile site-'+s+(c===sel?' on':'')+(full?' full':'')+'" data-act="storeLoc" data-v="'+c+'" aria-pressed="'+(c===sel)+'"><b class="mono">'+c+'</b><span>'+k+' / '+cap+'</span></button>'}).join('')+'</div></div>'});
+  if(sel)h+='<div class="loc-list"><p class="note">Location '+sel+' holds:</p>'+by[sel].sort((a,b)=>String(a.dateReceived).localeCompare(b.dateReceived)).map(r=>'<button type="button" class="loc-row" data-act="open" data-v="'+r.id+'"><span class="mono">'+esc(r.jobNo)+'</span><span>'+esc(clientName(r.clientId))+'</span><span class="note">'+fmtD(r.dateReceived)+'</span></button>').join('')+'</div>';
   return h+'</div>';
 }
 function drawStore(){const el=$('#storeBox');if(el)el.innerHTML=storeHtml()}
@@ -2928,5 +2974,10 @@ addEventListener('pagehide',function(){try{if(S.tab==='new'&&!S.editId&&has(S.dr
 document.addEventListener('visibilitychange',function(){if(document.visibilityState==='hidden')dispatchEvent(new Event('pagehide'))});
 })();</script>
 <script>/* FA navy glass theme (29 Oct), appended last so it wins over earlier theme layers */(function(){var s=document.createElement("style");s.id="fa-navy";s.textContent="html:root:not([data-theme=light]){background:#060A1C!important;--bg:#070B20!important;--surface:rgba(120,150,255,.07)!important;--sunk:rgba(120,150,255,.10)!important;--line:rgba(130,160,255,.20)!important;--muted:#AEB8DA!important;--ink:#F4F6FF!important;--solid:#0E1638!important;--accent:#4A74FF!important;--accent-ink:#FFFFFF!important;--tape:#4A74FF!important;--tape-ink:#FFFFFF!important} html:root:not([data-theme=light]) body{background:radial-gradient(900px 640px at 88% -8%,rgba(47,91,255,.34),transparent 60%),radial-gradient(820px 620px at -4% 104%,rgba(33,72,242,.26),transparent 62%),radial-gradient(700px 500px at 40% 40%,rgba(20,40,140,.18),transparent 70%),linear-gradient(180deg,#0B1334 0%,#070B22 45%,#050817 100%)!important;background-color:#070B20!important;background-attachment:fixed!important} html:root:not([data-theme=light]) body::after{background:radial-gradient(36% 30% at 82% 12%,rgba(70,110,255,.26),transparent 70%),radial-gradient(40% 32% at 12% 88%,rgba(50,90,255,.18),transparent 70%)!important} html:root:not([data-theme=light])[data-kind=rts] body::after{background:radial-gradient(36% 30% at 82% 12%,rgba(255,140,50,.14),transparent 70%),radial-gradient(40% 32% at 12% 88%,rgba(50,90,255,.18),transparent 70%)!important} html:root:not([data-theme=light]) .shell .stg,html:root:not([data-theme=light]) .panel,html:root:not([data-theme=light]) .gate-p{background:linear-gradient(180deg,rgba(130,160,255,.13),rgba(130,160,255,.045))!important;border:1px solid rgba(130,160,255,.22)!important;box-shadow:inset 0 1px 0 rgba(200,215,255,.16),0 24px 60px -30px rgba(0,0,10,.85)!important;-webkit-backdrop-filter:blur(18px) saturate(140%);backdrop-filter:blur(18px) saturate(140%)} html:root:not([data-theme=light]) .shell .stg b{color:#FFFFFF!important;-webkit-text-fill-color:#FFFFFF!important;background:none!important} html:root:not([data-theme=light]) .btn.pri,html:root:not([data-theme=light]) .badge{background:linear-gradient(180deg,#4A74FF,#2148F2)!important;color:#fff!important;border-color:transparent!important;box-shadow:0 10px 26px -10px rgba(47,91,255,.75),inset 0 1px 0 rgba(255,255,255,.25)!important} html:root:not([data-theme=light]) .hero-h b{background:linear-gradient(120deg,#3D6BFF,#1A36B8)!important;color:#fff!important;-webkit-text-fill-color:#fff!important;box-shadow:0 12px 30px -10px rgba(47,91,255,.7)!important} html:root:not([data-theme=light]) .seg .seg-th{background:linear-gradient(180deg,#3D6BFF,#2148F2)!important;box-shadow:0 6px 18px -8px rgba(47,91,255,.8),inset 0 1px 0 rgba(255,255,255,.22)!important} html:root:not([data-theme=light]) .job{background:rgba(120,150,255,.10)!important;color:#E6ECFF!important;border-color:rgba(130,160,255,.30)!important} html:root:not([data-theme=light]) .nav-ind{background:rgba(120,150,255,.16)!important} html:root:not([data-theme=light]) .brand,html:root:not([data-theme=light]) .nav{border-color:rgba(130,160,255,.16)!important} html:root:not([data-theme=light]) .loc-tile{background:linear-gradient(180deg,rgba(130,160,255,.18),rgba(130,160,255,.06))!important;border-color:rgba(130,160,255,.28)!important;color:#F4F6FF!important} html:root:not([data-theme=light]) .loc-tile.full{border-color:#FF8A9A!important} html:root[data-theme=light]{background:#EEF3FC!important;--bg:#EEF3FC!important;--ink:#0B1430!important;--muted:#4A5878!important;--line:rgba(20,40,110,.12)!important;--sunk:rgba(232,238,250,.96)!important;--solid:#FFFFFF!important;--accent:#2148F2!important;--accent-ink:#FFFFFF!important;--tape:#0C1A4B!important;--tape-ink:#FFFFFF!important;--s-received:#4A5878!important;--s-inspected:#3D4C70!important;--s-processed:#33416A!important;--s-closed:#24325E!important;--s-waiting:#3D4C70!important;--s-action:#33416A!important;--c-received:#8EA0D6!important;--c-inspected:#7489C8!important;--c-waiting:#8EA0D6!important;--c-action:#5B72BA!important;--c-closed:#3F57A6!important} html:root[data-theme=light] body{background:radial-gradient(900px 640px at 92% -10%,rgba(33,72,242,.13),transparent 62%),radial-gradient(820px 620px at -6% 106%,rgba(33,72,242,.08),transparent 62%),linear-gradient(180deg,#F6F9FF,#E9EFFA)!important;background-color:#EEF3FC!important;background-attachment:fixed!important} html:root[data-theme=light] body::before{background-image:linear-gradient(rgba(12,26,75,.04) 1px,transparent 1px),linear-gradient(90deg,rgba(12,26,75,.04) 1px,transparent 1px)!important} html:root[data-theme=light] body::after{background:radial-gradient(40% 32% at 20% 16%,rgba(255,255,255,.95),transparent 70%),radial-gradient(38% 30% at 82% 26%,rgba(80,120,255,.14),transparent 70%)!important} html:root[data-theme=light] .shell .stg,html:root[data-theme=light] .panel{background:linear-gradient(180deg,rgba(255,255,255,.94),rgba(255,255,255,.76))!important;border:1px solid rgba(20,40,110,.10)!important;box-shadow:inset 0 1px 0 #fff,0 18px 40px -26px rgba(16,32,96,.30)!important} html:root[data-theme=light] .shell .stg b{color:#0B1430!important;-webkit-text-fill-color:#0B1430!important;background:none!important} html:root[data-theme=light] .shell .stg .pk i{background:#A7B4DE!important} html:root[data-theme=light] .btn.pri,html:root[data-theme=light] .badge{background:linear-gradient(180deg,#2F5BFF,#1C3FD6)!important;color:#fff!important;border-color:transparent!important;box-shadow:0 8px 20px -10px rgba(33,72,242,.6)!important} html:root[data-theme=light] .hero-h b{background:linear-gradient(120deg,#1B2E73,#0C1A4B)!important;color:#fff!important;-webkit-text-fill-color:#fff!important;box-shadow:0 10px 24px -10px rgba(12,26,75,.5)!important} html:root[data-theme=light] .seg .seg-th{background:linear-gradient(180deg,#1B2E73,#0C1A4B)!important;box-shadow:0 6px 16px -8px rgba(12,26,75,.55),inset 0 1px 0 rgba(255,255,255,.16)!important} html:root[data-theme=light] .job{background:#0C1A4B!important;color:#fff!important;border-color:#0C1A4B!important} html:root[data-theme=light] .nav-ind{background:rgba(33,72,242,.10)!important} html:root[data-theme=light] .brand,html:root[data-theme=light] .nav{border-color:rgba(20,40,110,.10)!important} html:root[data-theme=light] .brand img{background:#0C1A4B!important} html:root[data-theme=light] .loc-tile{background:linear-gradient(180deg,#1B2E73,#0C1A4B)!important;color:#fff!important;border-color:rgba(12,26,75,.4)!important} html:root[data-theme=light] i.stg-quar{background:#A3B3EA!important}html:root[data-theme=light] i.stg-rts{background:#7F95E0!important}html:root[data-theme=light] i.stg-shelf{background:#5874D4!important}html:root[data-theme=light] i.stg-discarded{background:#3553C2!important}html:root[data-theme=light] i.stg-resent{background:#1F3B9E!important} html:root[data-theme=light] .trend i:not(.zero),html:root[data-theme=light] .fl{background:linear-gradient(180deg,#3D6BFF,#1C3FD6)!important} html:root[data-theme=light] .trend i.zero{background:#CBD4EE!important} html:root[data-theme=light] .dot{color:#7A88AE!important} html:root[data-theme=light] .fld.dash-tenant select{background:#0C1A4B!important;border-color:#0C1A4B!important} html:root[data-theme=light] main a{color:#1C3FD6}";document.head.appendChild(s)})();</script>
+<script>/* Sites (30 Oct): site picker buttons, and the location list follows the chosen tenant's site */
+addEventListener('click',function(e){var b=e.target.closest&&e.target.closest('[data-site-pick]');if(!b)return;var g=b.closest('.site-pick');var v=b.dataset.sitePick;if(g.dataset.for==='new')S.newSite=v;else S.editSite=v;g.querySelectorAll('[data-site-pick]').forEach(function(x){x.setAttribute('aria-pressed',String(x===b))})},true);
+addEventListener('change',function(e){var t=e.target;if(!t||!t.dataset||t.dataset.f!=='clientId')return;setTimeout(function(){if(!S.draft)return;if(S.draft.location&&locSite(S.draft.location)!==siteOf(S.draft.clientId))S.draft.location='';var l=document.getElementById('f-loc');if(l)l.innerHTML=locOpts(S.draft.location,S.editId)},0)});
+var _ec=ACT.editClient;if(_ec)ACT.editClient=function(){S.editSite=null;return _ec.apply(this,arguments)};
+</script>
 </body>
 </html>
