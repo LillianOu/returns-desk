@@ -1183,14 +1183,18 @@ function howtoCard(cid){const c=S.clients.find(x=>x.id===cid);if(!c||!c.howto)re
   return'<div class="howto" role="note"><b>'+esc(c.name)+' · return instructions</b>'+(L.length>1?'<ol>'+L.map(x=>'<li>'+esc(x)+'</li>').join('')+'</ol>':'<p>'+esc(L[0]||'')+'</p>')+'<small>Not sure? Ask Benji.</small></div>'}
 function benjiContext(q){
   const key=x=>String(x||'').toLowerCase().replace(/[^a-z0-9\u00c0-\uffff]/g,'').replace(/(.)\1+/g,'$1');
-  const list=(S.clients||[]).filter(c=>c.howto&&String(c.howto).trim());if(!list.length)return'';
-  const qk=key(q);let hit=list.filter(c=>(key(c.name).length>2&&qk.includes(key(c.name)))||(c.code&&key(c.code).length>1&&new RegExp('\\b'+String(c.code).toLowerCase().replace(/[^a-z0-9]/g,'')+'\\b').test(String(q).toLowerCase())));
-  const cur=S.tab==='new'&&S.draft&&S.draft.clientId?list.find(c=>c.id===S.draft.clientId):null;
-  if(cur&&!hit.includes(cur))hit.push(cur);
-  if(!hit.length&&/instruction|requirement|process|procedure|special|rule|step|tenant|client|brand/i.test(q))hit=list;
+  const all=S.clients||[];if(!all.length)return'';
+  const has=c=>!!(c.howto&&String(c.howto).trim());
+  const qk=key(q),ql=String(q).toLowerCase();
+  let hit=all.filter(c=>(key(c.name).length>2&&qk.includes(key(c.name)))||(c.code&&key(c.code).length>1&&new RegExp('\\b'+String(c.code).toLowerCase().replace(/[^a-z0-9]/g,'')+'\\b').test(ql)));
+  const cur=S.tab==='new'&&S.draft&&S.draft.clientId?all.find(c=>c.id===S.draft.clientId):null;
+  const asks=/instruction|requirement|process|procedure|special|rule|step|how (do|should|to)|what do i do|pack|photo|tenant|client|brand/i.test(q);
+  if(cur&&!hit.includes(cur)&&(asks||!hit.length))hit.push(cur);
+  if(!hit.length&&asks)hit=all.filter(has);
   if(!hit.length)return'';
-  let t='Tenant return instructions saved by the warehouse in Returns Bench (Settings, Tenants). When asked how to process a return for one of these tenants, give these steps exactly, as a numbered list, and do not add steps of your own. Tenants not listed here have no special instructions saved.'+(cur?' The staff member is logging a return for '+cur.name+' right now.':'');
-  for(const c of hit)t+='\n'+c.name+':\n'+howtoLines(c.howto).map((x,i)=>(i+1)+'. '+x).join('\n');
+  const NONE='Sorry, the return instructions for {t} are not in the system yet. Please contact your admin for {t}\'s returning process.';
+  let t='Tenant return instructions saved by the warehouse in Returns Bench (Settings, Tenants). When asked how to process, pack or handle a return for a tenant, give the saved steps exactly, as a numbered list, and do not add steps of your own. If a tenant is marked NO INSTRUCTIONS SAVED, never guess or give general steps: reply only with this message (in the staff member\'s language, with the tenant name filled in): "'+NONE+'" Any tenant not listed here also has no instructions saved, so give the same reply.'+(cur?' The staff member is logging a return for '+cur.name+' right now.':'');
+  for(const c of hit)t+='\n'+c.name+':\n'+(has(c)?howtoLines(c.howto).map((x,k)=>(k+1)+'. '+x).join('\n'):'NO INSTRUCTIONS SAVED');
   return t.slice(0,4000)}
 function vForm(){
   if(!S.clients.length)return'<div class="panel empty"><h2>Add a tenant first</h2><p>Every return belongs to a tenant, so the app needs at least one before you can log a return.</p><button class="btn pri" data-act="tab" data-v="settings">Go to Settings</button></div>';
@@ -1977,7 +1981,7 @@ Object.assign(ACT,{
   signOut:(v,b)=>twice(b,()=>GH.signOut())
 });
 /* App version. Bump on EVERY update to this file: v = '2.' + updates since the Supabase move (17 Oct 2026); n = all updates since day one (11 Oct 2026). v1 = the GitHub-only Return Desk (31 updates, 11-16 Oct). */
-const RB_VER={v:'2.77',n:108,at:'30 Oct 2026, 8:15 am'};
+const RB_VER={v:'2.78',n:109,at:'30 Oct 2026, 8:20 am'};
 GH.panel=()=>{const m=GH.me(),role=m.role==='admin'?'Admin':m.role==='viewer'?'Client':'Staff';return'<div class="panel"><h3>Your account</h3><p class="note">Signed in as <strong>'+esc(m.email)+'</strong> · '+role+(m.initials?' · initials <strong>'+esc(m.initials)+'</strong> on the returns you log':'')+'.<br>Everything saves automatically and shows on your other devices within seconds.</p>'+'<p class="note rb-ver">App version <strong>'+RB_VER.v+'</strong> · update '+RB_VER.n+' since 11 Oct 2026 · last updated '+esc(RB_VER.at)+'</p>'+
   '<label class="fld"><span>New password</span><input id="sb-newpass" type="password" autocomplete="new-password" placeholder=" "></label><div class="row"><button class="btn" data-act="setPass">Change password</button> <button class="btn danger" data-act="signOut">Sign out</button></div></div>'};
 GH.adminPanels=()=>GH.me().role==='admin'?GH.staffPanel()+GH.portalPanel():'';
