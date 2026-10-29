@@ -1,13 +1,3 @@
-function locOpts(cur,exclude){
-  const cid=S.draft&&S.draft.clientId;
-  if(!cid)return'<option value="">Choose a tenant first…</option>';
-  const s=siteOf(cid),st=storeOf(s);
-  let h='<option value="">Choose a '+SITES[s]+' location…</option>';
-  if(cur&&locSite(cur)!==s)h+='<option value="'+esc(cur)+'" selected>'+esc(cur)+'  ·  other site</option>';
-  for(let i=1;i<=st.count;i++){const c=siteCode(s,i),u=locUsed(c,exclude),full=u>=st.cap;
-    h+='<option value="'+c+'"'+(c===cur?' selected':'')+(full&&c!==cur?' disabled':'')+'>'+c+'  ·  '+u+'/'+st.cap+(full?'  ·  full':'')+'</option>'}
-  return h;
-}
 <!doctype html>
 <html lang="en">
 <head>
@@ -1743,9 +1733,13 @@ const locCode=i=>String(i).padStart(3,'0');
 const locUsed=(code,exclude)=>S.returns.filter(r=>r.status==='open'&&r.location===code&&r.id!==exclude).length;
 function firstFreeLoc(exclude){for(let i=1;i<=S.store.count;i++){const c=siteCode('par',i);if(locUsed(c,exclude)<S.store.cap)return c}return''}
 function locOpts(cur,exclude){
-  let h='<option value="">Choose a location…</option>';
-  for(let i=1;i<=S.store.count;i++){const c=locCode(i),u=locUsed(c,exclude),full=u>=S.store.cap;
-    h+='<option value="'+c+'"'+(c===cur?' selected':'')+(full&&c!==cur?' disabled':'')+'>'+c+'  ·  '+u+'/'+S.store.cap+(full?'  ·  full':'')+'</option>'}
+  const cid=S.draft&&S.draft.clientId;
+  if(!cid)return'<option value="">Choose a tenant first…</option>';
+  const s=siteOf(cid),st=storeOf(s);
+  let h='<option value="">Choose a '+SITES[s]+' location…</option>';
+  if(cur&&locSite(cur)!==s)h+='<option value="'+esc(cur)+'" selected>'+esc(cur)+'  ·  other site</option>';
+  for(let i=1;i<=st.count;i++){const c=siteCode(s,i),u=locUsed(c,exclude),full=u>=st.cap;
+    h+='<option value="'+c+'"'+(c===cur?' selected':'')+(full&&c!==cur?' disabled':'')+'>'+c+'  ·  '+u+'/'+st.cap+(full?'  ·  full':'')+'</option>'}
   return h;
 }
 function match(r,f){
