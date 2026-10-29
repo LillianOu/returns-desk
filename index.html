@@ -1250,7 +1250,6 @@ function vList(){
   const f=S.flt,open=S.filtersOpen||!!(f.client||f.from||f.to||f.noref);
   return'<div class="row"><h2 style="flex:1 1 auto">Returns</h2><button class="btn pri" data-act="tab" data-v="new">'+ic('plus')+'Log a return</button></div>'
    +'<div class="fld" style="flex:none"><span>Search reference, order, tracking or SKU</span><div class="with-btn"><input id="q" type="search" data-flt="q" value="'+esc(f.q)+'" aria-label="Search reference, order, tracking or SKU">'+micBtn('search','job or order number')+'</div></div>'
-   +'<div id="storeBox"></div>'
    +'<div id="statusSeg"></div>'
    +'<div class="drawer" id="drawer" data-open="'+open+'"><div class="dr-body" id="drBody"><div class="dr-in" id="drIn"'+(open?'':' inert')+'><div class="dr-pad">'
    +'<label class="fld"><span>Tenant</span><select id="fc" data-flt="client">'+opts([['','All tenants']].concat(S.clients.map(c=>[c.id,c.name])),f.client)+'</select></label>'
@@ -1259,6 +1258,7 @@ function vList(){
    +'<label class="fld"><span>Show</span><select id="fn" data-flt="noref">'+opts([['','All returns'],['1','No reference provided (*)']],f.noref||'')+'</select></label>'
    +'<button class="btn" data-act="clearFlt">Clear</button></div></div></div>'
    +'<button class="dr-bar" id="drBar" data-drbar aria-expanded="'+open+'" aria-controls="drIn"><i></i><span>'+ic('filter')+'<span id="drLabel">Tenant, date and other filters</span>'+ic('chev','chev')+'</span></button></div>'
+   +'<div id="storeBox"></div>'
    +'<p class="note" id="rowsNote"></p><div id="rows"></div>';
 }
 function fltRows(skipStatus){
