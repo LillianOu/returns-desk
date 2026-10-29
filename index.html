@@ -2072,6 +2072,52 @@ const Benji=(()=>{
   const SUGGEST={
     app:['Which RTS parcels have waited longest?','How many returns came in this week?','How do I log a new return?','How do I download a report?',HOME_Q],
     portal:['Show my damaged returns this month','Which parcels are waiting for me?','How do I download a report?','What does "Waiting for you" mean?',HOME_Q]};
+  /* 30 Oct: Benji speaks other languages. The app's buttons stay in English; Benji keeps button names in English (bold) so staff can find them on screen. */
+  const LANGS=[
+    {c:'en',n:'English',e:'English',sr:'en-AU',k:'EN'},
+    {c:'fil',n:'Filipino',e:'Filipino (Tagalog)',sr:'fil-PH',k:'FIL'},
+    {c:'ru',n:'Русский',e:'Russian',sr:'ru-RU',k:'RU'},
+    {c:'zh-Hant',n:'繁體中文',e:'Traditional Chinese',sr:'zh-TW',k:'繁'},
+    {c:'zh-Hans',n:'简体中文',e:'Simplified Chinese',sr:'zh-CN',k:'简'},
+    {c:'vi',n:'Tiếng Việt',e:'Vietnamese',sr:'vi-VN',k:'VI'},
+    {c:'hi',n:'हिन्दी',e:'Hindi',sr:'hi-IN',k:'HI'},
+    {c:'ne',n:'नेपाली',e:'Nepali',sr:'ne-NP',k:'NE'},
+    {c:'ko',n:'한국어',e:'Korean',sr:'ko-KR',k:'KO'},
+    {c:'id',n:'Bahasa Indonesia',e:'Indonesian',sr:'id-ID',k:'ID'},
+    {c:'es',n:'Español',e:'Spanish',sr:'es-ES',k:'ES'},
+    {c:'ar',n:'العربية',e:'Arabic',sr:'ar-SA',k:'AR'}];
+  const TX={
+    en:{hi:"Hi, I'm Benji",hiN:"Hi {n}! I'm Benji",sub:"Returns Bench's AI helper. Ask me about your returns, or how to use {w}.",try:'Tap a question to ask Benji',ph:'Ask Benji…',listen:'Listening… press Enter to send',dict:'Tap the 🎤 on your keyboard to talk',chip:'🌏 Speak another language · 中文 · Русский · Filipino',title:'Which language should Benji speak?',pnote:'Benji replies in your language. Button names stay in English so you can find them on screen.',back:'← Back',ai:'Benji is an AI assistant and can make mistakes. Chats are saved so the team can help you better.',call:'What should I call you?',first:'Your first name',save:'Save',not:'Not {n}?',ok:"Back to English! Ask me anything."},
+    fil:{hi:'Hi, ako si Benji',hiN:'Hi {n}! Ako si Benji',sub:'Ako ang AI helper ng Returns Bench. Magtanong ka tungkol sa returns, o kung paano gamitin ang app.',try:'I-tap ang isang tanong para itanong kay Benji',ph:'Magtanong kay Benji…',listen:'Nakikinig… pindutin ang Enter para ipadala',dict:'I-tap ang 🎤 sa keyboard mo para magsalita',chip:'🌏 Wika: Filipino',title:'Anong wika ang gagamitin ni Benji?',pnote:'Sasagot si Benji sa napili mong wika. Nananatiling Ingles ang mga pangalan ng button para madali mong mahanap.',back:'← Bumalik',ai:'Si Benji ay AI assistant at puwedeng magkamali. Sine-save ang mga chat para mas matulungan ka ng team.',call:'Ano ang itatawag ko sa iyo?',first:'Pangalan mo',save:'I-save',not:'Hindi si {n}?',ok:'Sige! Mula ngayon, sasagot ako sa Filipino. Iiwan kong Ingles ang mga pangalan ng button para madali mong mahanap sa screen.',
+      q:['Aling RTS parcel ang pinakamatagal nang naghihintay?','Ilang returns ang dumating ngayong linggo?','Paano ako magla-log ng bagong return?','Paano mag-download ng report?','Paano idagdag ang app sa home screen ng phone ko?']},
+    ru:{hi:'Привет, я Benji',hiN:'Привет, {n}! Я Benji',sub:'Я AI-помощник Returns Bench. Спрашивайте меня о возвратах или о том, как пользоваться приложением.',try:'Нажмите на вопрос, чтобы спросить Benji',ph:'Спросите Benji…',listen:'Слушаю… нажмите Enter, чтобы отправить',dict:'Нажмите 🎤 на клавиатуре и говорите (сначала включите русскую клавиатуру)',chip:'🌏 Язык: Русский',title:'На каком языке Benji будет отвечать?',pnote:'Benji отвечает на выбранном языке. Названия кнопок остаются на английском, чтобы их было легко найти.',back:'← Назад',ai:'Benji — AI-помощник и может ошибаться. Чаты сохраняются, чтобы команда могла лучше помочь.',call:'Как к вам обращаться?',first:'Ваше имя',save:'Сохранить',not:'Не {n}?',ok:'Отлично! Теперь я буду отвечать по-русски. Названия кнопок оставлю на английском, чтобы вы легко нашли их на экране.',
+      q:['Какие RTS-посылки ждут дольше всех?','Сколько возвратов пришло на этой неделе?','Как оформить новый возврат?','Как скачать отчёт?','Как добавить приложение на главный экран телефона?']},
+    'zh-Hant':{hi:'嗨，我是 Benji',hiN:'嗨 {n}！我是 Benji',sub:'我是 Returns Bench 的 AI 小幫手。有關退貨或 App 使用方法的問題，都可以問我。',try:'點一個問題問 Benji',ph:'問 Benji…',listen:'正在聆聽…按 Enter 送出',dict:'點鍵盤上的 🎤 說話（先切換到中文鍵盤）',chip:'🌏 語言：繁體中文',title:'Benji 要用哪種語言回答你？',pnote:'Benji 會用你選的語言回答。按鈕名稱保留英文，方便你在畫面上找到。',back:'← 返回',ai:'Benji 是 AI 小幫手，可能會出錯。對話會被儲存，方便團隊更好地協助你。',call:'我該怎麼稱呼你？',first:'你的名字',save:'儲存',not:'不是 {n}？',ok:'沒問題！從現在起我會用繁體中文回答。App 裡的按鈕名稱我會保留英文，方便你在畫面上找到。',
+      q:['哪些 RTS 包裹等最久？','這週收到多少件退貨？','怎麼登記一筆新的退貨？','怎麼下載報表？','怎麼把這個 App 加到手機主畫面？']},
+    'zh-Hans':{hi:'嗨，我是 Benji',hiN:'嗨 {n}！我是 Benji',sub:'我是 Returns Bench 的 AI 助手。有关退货或 App 使用方法的问题，都可以问我。',try:'点一个问题问 Benji',ph:'问 Benji…',listen:'正在聆听…按 Enter 发送',dict:'点键盘上的 🎤 说话（先切换到中文键盘）',chip:'🌏 语言：简体中文',title:'Benji 用哪种语言回答你？',pnote:'Benji 会用你选的语言回答。按钮名称保留英文，方便你在屏幕上找到。',back:'← 返回',ai:'Benji 是 AI 助手，可能会出错。对话会被保存，方便团队更好地帮助你。',call:'我该怎么称呼你？',first:'你的名字',save:'保存',not:'不是 {n}？',ok:'没问题！从现在起我会用简体中文回答。App 里的按钮名称我会保留英文，方便你在屏幕上找到。',
+      q:['哪些 RTS 包裹等最久？','这周收到多少件退货？','怎么登记一笔新的退货？','怎么下载报表？','怎么把这个 App 添加到手机主屏幕？']}};
+  let lang='en',langOpen=false;try{const v=localStorage.getItem('benji-lang');if(v&&LANGS.some(l=>l.c===v))lang=v}catch(e){}
+  const LG=()=>LANGS.find(l=>l.c===lang)||LANGS[0];
+  const T=k=>{const t=TX[lang];return t&&t[k]!=null?t[k]:TX.en[k]};
+  const NONLATIN=/[Ͱ-ϿЀ-ԯ֐-ۿऀ-෿฀-໿ᄀ-ᇿ぀-ヿ㐀-鿿가-힯]/;
+  // Only the copy sent to Benji gets the language note; the chat on screen shows exactly what was typed.
+  function outMsgs(){const a=msgs.filter(m=>!m.local).map(m=>({role:m.role,content:m.content}));const L=LG(),last=a[a.length-1];
+    if(last&&last.role==='user'){
+      if(L.c!=='en')last.content='[Please reply in '+L.e+'. Keep the exact names of app buttons, tabs and statuses in English, in bold, so I can find them on screen. Keep reference, order and SKU numbers exactly as they are.]\n\n'+last.content;
+      else if(NONLATIN.test(last.content))last.content='[Please reply in the same language as my question. Keep app button names in English, in bold.]\n\n'+last.content}
+    return a}
+  function langLabel(){const b=root&&root.querySelector('.bj-lgb span');if(b)b.textContent=LG().k}
+  function applyLang(){if(!panel)return;panel.setAttribute('lang',lang);if(input&&!rec)input.placeholder=T('ph');const a=panel.querySelector('.bj-ai');if(a)a.textContent=T('ai');langLabel();if(!panel.hidden)draw()}
+  function setLang(c){if(!LANGS.some(l=>l.c===c))return;const was=lang;lang=c;langOpen=false;
+    try{localStorage.setItem('benji-lang',c)}catch(e){}
+    try{o.client.auth.updateUser({data:{benji_lang:c}})}catch(e){}
+    if(c!==was&&msgs.length){const L=LG();msgs.push({role:'assistant',content:TX[c]?T('ok'):"Got it! I'll answer in "+L.e+" from now on. Button names stay in English so you can find them on screen.",mood:'success',local:true});head('success');save()}
+    applyLang();draw();if(input)input.focus()}
+  function langPicker(){
+    return '<div class="bj-lp"><h3>'+esc(T('title'))+'</h3><p>'+esc(T('pnote'))+'</p><div class="bj-lg-grid">'+
+      LANGS.map(l=>'<button type="button" data-lang="'+l.c+'" aria-pressed="'+(l.c===lang)+'" lang="'+l.c+'"><b>'+esc(l.n)+'</b>'+(l.n!==l.e?'<small>'+esc(l.e)+'</small>':'')+'</button>').join('')+
+      '</div><button type="button" class="bj-ghost bj-lback" data-lang="close">'+esc(T('back'))+'</button></div>'}
+
   const SR=window.SpeechRecognition||window.webkitSpeechRecognition;let rec=null,micBtn=null,heard='';
   let unread=0;const UKEY='benji-unread';try{unread=+sessionStorage.getItem(UKEY)||0}catch(e){}
   function badge(){const b=root&&root.querySelector('.bj-badge');if(!b)return;b.textContent=unread>9?'9+':String(unread);b.hidden=!unread;
@@ -2189,6 +2235,22 @@ const Benji=(()=>{
 .bj-b{font-size:16.5px}
 @media (max-width:560px){.bj-hero b{font-size:23px}.bj-hero>div{font-size:18.5px}.bj-try{font-size:15px}.bj-p .bj-s button{font-size:17.5px;padding:15px 18px;min-height:56px}.bj-b,.bj-u{font-size:18.5px}}
 @media (prefers-reduced-motion:reduce){.bj-p .bj-s button{transition:none}}
+/* 30 Oct: language picker */
+.bj-lgb{margin-left:auto;height:40px;padding:0 10px;border-radius:12px;border:0;background:rgba(255,255,255,.1);color:#fff;cursor:pointer;display:flex;align-items:center;gap:6px;font:600 13px/1 var(--body,system-ui,sans-serif)}
+.bj-lgb~.bj-x{margin-left:0}
+.bj-h>div{min-width:0}.bj-h small{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bj-lp{display:flex;flex-direction:column;gap:10px;padding:2px 2px 6px}
+.bj-lp h3{margin:2px 0 0;text-align:center;font-family:var(--display,inherit);font-weight:500;font-size:20px;line-height:1.25}
+.bj-lp p{margin:0;text-align:center;font-size:14px;line-height:1.4;opacity:.8}
+.bj-lg-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:4px}
+.bj-lg-grid button{display:flex;flex-direction:column;justify-content:center;gap:2px;min-height:58px;padding:10px 12px;text-align:left;border:1.5px solid var(--line,#D5DAE8);border-radius:14px;background:transparent;color:inherit;font:inherit;cursor:pointer;transition:border-color .15s,background .15s}
+.bj-lg-grid button b{font-size:16px;font-weight:600;line-height:1.2}.bj-lg-grid button small{font-size:12px;opacity:.7}
+.bj-lg-grid button:hover{border-color:#2148F2}
+.bj-lg-grid button[aria-pressed=true]{border-color:#2148F2;background:rgba(33,72,242,.12)}
+.bj-p[data-tone="dark"] .bj-lg-grid button{border-color:rgba(255,255,255,.22)}
+.bj-p[data-tone="dark"] .bj-lg-grid button:hover,.bj-p[data-tone="dark"] .bj-lg-grid button[aria-pressed=true]{border-color:#8FA6FF;background:rgba(111,141,255,.22)}
+.bj-lback{align-self:center}
+@media (max-width:560px){.bj-lp h3{font-size:22px}.bj-lg-grid button b{font-size:17.5px}}
 `;
   const img=(m,cls,alt)=>'<img src="'+(POSE[MOOD[m]||m]||POSE.idle)+'" alt="'+esc(alt||'')+'"'+(cls?' class="'+cls+'"':'')+'>';
   const svg={x:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>',
@@ -2212,17 +2274,19 @@ const Benji=(()=>{
   function tone(){try{const c=getComputedStyle(document.body).backgroundColor.match(/\d+(\.\d+)?/g)||[255,255,255];const L=(.2126*c[0]+.7152*c[1]+.0722*c[2])/255;panel.dataset.tone=L<.5?'dark':'light'}catch(e){}}
   function draw(){tone();
     let h='';
-    if(!msgs.length)h='<div class="bj-hero">'+img('working','bj-pop','Benji at his Returns Bench laptop')+'<b>'+(who?'Hi '+esc(who)+'! I\'m Benji':'Hi, I\'m Benji')+'</b>'+(who?'<button type="button" class="bj-who" data-who="1">Not '+esc(who)+'?</button>':'<form class="bj-name"><label>What should I call you?</label><div><input name="n" maxlength="30" autocomplete="given-name" placeholder="Your first name"><button type="submit">Save</button></div></form>')+'<div>Returns Bench\'s AI helper. Ask me about your returns, or how to use '+(o.surface==='portal'?'the portal':'the app')+'.</div><div class="bj-try">Tap a question to ask Benji</div><div class="bj-s">'+SUGGEST[o.surface].map(s=>'<button type="button" data-q="'+esc(s)+'">'+esc(s)+'</button>').join('')+'</div></div>';
-    msgs.forEach((m,i)=>{h+=m.role==='user'?'<div class="bj-u">'+esc(m.content)+'</div>':'<div class="bj-m">'+img(m.mood||'happy','','')+'<div class="bj-b">'+fmt(m.content)+(m.action&&m.action.type==='email'?mailCard(m.action,i):'')+(m.action&&m.action.type==='report'&&o.onReport?'<button type="button" class="bj-act" data-rep="'+i+'"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v11M7 10l5 5 5-5M5 20h14"/></svg>Download Excel report</button>':'')+'</div></div>'});
+    if(langOpen){list.innerHTML=langPicker();list.scrollTop=0;return}
+    const sq=(lang!=='en'&&TX[lang]&&TX[lang].q&&o.surface==='app')?TX[lang].q:SUGGEST[o.surface];const chip=lang==='en'||TX[lang]?T('chip'):'🌏 Language: '+LG().n;
+    if(!msgs.length)h='<div class="bj-hero">'+img('working','bj-pop','Benji at his Returns Bench laptop')+'<b>'+esc(who?T('hiN').replace('{n}',who):T('hi'))+'</b>'+(who?'<button type="button" class="bj-who" data-who="1">'+esc(T('not').replace('{n}',who))+'</button>':'<form class="bj-name"><label>'+esc(T('call'))+'</label><div><input name="n" maxlength="30" autocomplete="given-name" placeholder="'+esc(T('first'))+'"><button type="submit">'+esc(T('save'))+'</button></div></form>')+'<div>'+esc(T('sub').replace('{w}',o.surface==='portal'?'the portal':'the app'))+'</div><div class="bj-try">'+esc(T('try'))+'</div><div class="bj-s"><button type="button" data-lang="open">'+esc(chip)+'</button>'+sq.map(s=>'<button type="button" data-q="'+esc(s)+'">'+esc(s)+'</button>').join('')+'</div></div>';
+    msgs.forEach((m,i)=>{h+=m.role==='user'?'<div class="bj-u" dir="auto">'+esc(m.content)+'</div>':'<div class="bj-m">'+img(m.mood||'happy','','')+'<div class="bj-b" dir="auto">'+fmt(m.content)+(m.action&&m.action.type==='email'?mailCard(m.action,i):'')+(m.action&&m.action.type==='report'&&o.onReport?'<button type="button" class="bj-act" data-rep="'+i+'"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v11M7 10l5 5 5-5M5 20h14"/></svg>Download Excel report</button>':'')+'</div></div>'});
     if(busy)h+='<div class="bj-m">'+img('run','bj-bob','Benji is looking that up')+'<div class="bj-b bj-dots" aria-label="Benji is typing"><span></span><span></span><span></span></div></div>';
     list.innerHTML=h;list.scrollTop=list.scrollHeight}
   async function ask(q){
-    q=(q||'').trim();if(!q||busy)return;micDetach();
-    if(q===HOME_Q){msgs.push({role:'user',content:q});msgs.push({role:'assistant',content:homeAnswer(),mood:'success'});input.value='';grow();head('success');draw();save();return}
+    q=(q||'').trim();if(!q||busy)return;micDetach();langOpen=false;
+    if(q===HOME_Q&&lang==='en'){msgs.push({role:'user',content:q});msgs.push({role:'assistant',content:homeAnswer(),mood:'success'});input.value='';grow();head('success');draw();save();return}
     msgs.push({role:'user',content:q});busy=true;input.value='';grow();sendBtn.disabled=true;head('working');draw();save();
     let reply='',mood='sorry',act=null;
     try{
-      const r=await o.client.functions.invoke('benji',{body:{surface:o.surface,device:DEV(),name:who||undefined,messages:msgs.map(m=>({role:m.role,content:m.content}))}});
+      const r=await o.client.functions.invoke('benji',{body:{surface:o.surface,device:DEV(),name:who||undefined,messages:outMsgs()}});
       if(r.error){const s=r.error.context&&r.error.context.status;reply=s===401?'Please sign in again, then ask me once more.':'Sorry, I couldn\'t answer just now. Please try again in a moment.'}
       else{reply=(r.data&&(r.data.reply||r.data.error))||'Sorry, I\'m not sure about that one.';mood=(r.data&&r.data.mood)||'happy';act=(r.data&&r.data.action)||null}
     }catch(e){reply='I can\'t reach the internet right now. Check your connection and try again.'}
@@ -2234,7 +2298,7 @@ const Benji=(()=>{
   const UA=navigator.userAgent||'';
   const STRICT=/iP(hone|ad|od)/.test(UA)||(/Macintosh/.test(UA)&&navigator.maxTouchPoints>1)||(/AppleWebKit/.test(UA)&&!/Chrome|Chromium|CriOS|Edg|OPR|Android/.test(UA));
   let micWant=false,micKeep='',micDog=null,micSess=0,micOne=null,micQuick=0,micEnding=null,micRetry=0;
-  function micUI(on,msg){if(!micBtn)return;micBtn.setAttribute('aria-pressed',on?'true':'false');micBtn.setAttribute('aria-label',on?'Stop listening':'Speak your question');if(input&&!/blocked/.test(input.placeholder))input.placeholder=msg||(on?'Listening… press Enter to send':'Ask Benji…')}
+  function micUI(on,msg){if(!micBtn)return;micBtn.setAttribute('aria-pressed',on?'true':'false');micBtn.setAttribute('aria-label',on?'Stop listening':'Speak your question');if(input&&!/blocked/.test(input.placeholder))input.placeholder=msg||(on?T('listen'):T('ph'))}
   function micReset(msg){rec=null;heard='';clearTimeout(micDog);micUI(false,msg)}
   function micHalt(r){if(!r)return;try{STRICT?r.stop():(r.abort?r.abort():r.stop())}catch(e){}}
   function micStop(msg){micWant=false;micRetry=0;micSess++;const r=rec;rec=null;if(r){if(!STRICT){r.onresult=null;r.onerror=null;
@@ -2249,6 +2313,7 @@ const Benji=(()=>{
   function micStart(){
     const r=micMake();if(!r){micWant=false;micUI(false);return false}
     const id=++micSess,t0=Date.now();rec=r;r.got=false;
+    try{r.lang=lang==='en'?((navigator.language&&/^en/i.test(navigator.language))?navigator.language:'en-AU'):LG().sr}catch(e){}
     micKeep=input.value?input.value.replace(/\s*$/,' '):'';
     r.onresult=e=>{if(micSess!==id)return;r.got=true;micRetry=0;clearTimeout(micDog);let t='';for(let i=0;i<e.results.length;i++)t+=e.results[i][0].transcript;heard=t;input.value=micKeep+t;grow()};
     r.onerror=e=>{if(micSess!==id)return;if(e.error==='not-allowed'||e.error==='service-not-allowed'){micStop('Microphone blocked. Allow it in your browser settings.')}};
@@ -2271,8 +2336,8 @@ const Benji=(()=>{
   // so the site never asks for microphone access on a phone.
   const PHONE=/iPhone|iPad|iPod|Android/i.test(UA)||(/Macintosh/.test(UA)&&navigator.maxTouchPoints>1);
   function phoneDictate(){input.focus();try{input.setSelectionRange(input.value.length,input.value.length)}catch(e){}
-    input.placeholder='Tap the 🎤 on your keyboard to talk';micBtn.classList.add('bj-kbd');
-    setTimeout(()=>{if(input.placeholder.startsWith('Tap the'))input.placeholder='Ask Benji…';micBtn.classList.remove('bj-kbd')},9000)}
+    input.placeholder=T('dict');micBtn.classList.add('bj-kbd');
+    setTimeout(()=>{if(input.placeholder===T('dict'))input.placeholder=T('ph');micBtn.classList.remove('bj-kbd')},9000)}
   function micToggle(){
     if(PHONE){phoneDictate();return}
     if(micWant){micStop();input.focus();return}
@@ -2292,7 +2357,7 @@ const Benji=(()=>{
     if(!/^[a-z]{2,12}$/.test(f)||GENERIC.has(f))return'';if(parts.length===1&&f.length>9)return'';return f[0].toUpperCase()+f.slice(1)}
   async function loadWho(){try{const r=await o.client.auth.getSession();const u=r&&r.data&&r.data.session&&r.data.session.user;if(!u)return'';
     const m=u.user_metadata||{};const n=String(m.first_name||m.name||m.full_name||'').trim().split(/\s+/)[0];
-    who=n?n[0].toUpperCase()+n.slice(1):guessName(u.email);whoAsked=!!m.first_name;return who}catch(e){return''}}
+    who=n?n[0].toUpperCase()+n.slice(1):guessName(u.email);whoAsked=!!m.first_name;if(m.benji_lang&&m.benji_lang!==lang&&LANGS.some(l=>l.c===m.benji_lang)){lang=m.benji_lang;try{localStorage.setItem('benji-lang',lang)}catch(e){}applyLang()}return who}catch(e){return''}}
   async function saveWho(v){v=String(v||'').trim().split(/\s+/)[0].slice(0,30);if(!v)return;who=v[0].toUpperCase()+v.slice(1);whoAsked=true;draw();
     try{await o.client.auth.updateUser({data:{first_name:who}})}catch(e){}}
   const hiName=t=>who?t.replace(/\{n\}/g,who):t.replace(/,? ?\{n\}/g,'');
@@ -2350,9 +2415,9 @@ const Benji=(()=>{
     root=document.createElement('div');root.className='bj';
     if(o.bottom)root.style.setProperty('--bj-b',o.bottom);
     root.innerHTML='<button type="button" class="bj-btn" aria-label="Ask Benji, the help assistant" aria-expanded="false" aria-controls="bj-panel">'+img('button','bj-i0','')+img('hover','bj-i1','')+img('sleep','bj-i2','')+'<span class="bj-tip">Ask Benji</span><span class="bj-badge" aria-hidden="true" hidden></span></button>'+
-      '<section id="bj-panel" class="bj-p" data-surface="'+o.surface+'" role="dialog" aria-label="Chat with Benji" hidden><div class="bj-h">'+img('face','','Benji')+'<div><b>Benji</b><small>AI assistant · Returns Bench</small></div><button type="button" class="bj-x" aria-label="Close chat">'+svg.x+'</button></div>'+
-      '<div class="bj-l" aria-live="polite"></div><form class="bj-f"><div class="bj-row"><label style="flex:1;display:flex"><span style="position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%)">Message Benji</span><textarea rows="1" maxlength="1500" placeholder="Ask Benji…"></textarea></label>'+((SR||PHONE)?'<button type="button" class="bj-mic" aria-label="Speak your question" aria-pressed="false">'+svg.mic+'</button>':'')+'<button type="submit" class="bj-send" aria-label="Send">'+svg.send+'</button></div>'+
-      '<small>Benji is an AI assistant and can make mistakes. Chats are saved so the team can help you better. <a href="#" class="bj-clear">Clear chat</a></small></form></section>';
+      '<section id="bj-panel" class="bj-p" data-surface="'+o.surface+'" role="dialog" aria-label="Chat with Benji" hidden><div class="bj-h">'+img('face','','Benji')+'<div><b>Benji</b><small>AI assistant · Returns Bench</small></div><button type="button" class="bj-lgb" aria-label="Choose Benji\'s language"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18"/></svg><span></span></button><button type="button" class="bj-x" aria-label="Close chat">'+svg.x+'</button></div>'+
+      '<div class="bj-l" aria-live="polite"></div><form class="bj-f"><div class="bj-row"><label style="flex:1;display:flex"><span style="position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%)">Message Benji</span><textarea rows="1" maxlength="1500" placeholder="'+esc(T('ph'))+'"></textarea></label>'+((SR||PHONE)?'<button type="button" class="bj-mic" aria-label="Speak your question" aria-pressed="false">'+svg.mic+'</button>':'')+'<button type="submit" class="bj-send" aria-label="Send">'+svg.send+'</button></div>'+
+      '<small><span class="bj-ai">Benji is an AI assistant and can make mistakes. Chats are saved so the team can help you better.</span> <a href="#" class="bj-clear">Clear chat</a></small></form></section>';
     document.body.appendChild(root);
     if(o.mobileBottom&&matchMedia('(max-width:899px)').matches)root.style.setProperty('--bj-b',o.mobileBottom);
     btn=root.querySelector('.bj-btn');micBtn=root.querySelector('.bj-mic');if(micBtn){micBtn.addEventListener('click',micToggle);if(PHONE)micBtn.setAttribute('aria-label','Talk using your keyboard\'s dictation')}panel=root.querySelector('.bj-p');list=root.querySelector('.bj-l');input=root.querySelector('textarea');sendBtn=root.querySelector('.bj-send');
@@ -2364,11 +2429,12 @@ const Benji=(()=>{
     let mmT=0;addEventListener('pointermove',()=>{const n=Date.now();if(n-mmT>2000){mmT=n;wake()}},{passive:true});wake();
     window.__bjNap=()=>{btn.classList.add('bj-zz')};
     root.querySelector('.bj-x').addEventListener('click',close);
+    root.querySelector('.bj-lgb').addEventListener('click',()=>{langOpen=!langOpen;draw()});applyLang();
     root.querySelector('form').addEventListener('submit',e=>{e.preventDefault();ask(input.value)});
     input.addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey&&!e.isComposing){e.preventDefault();ask(input.value)}});
     input.addEventListener('input',grow);
     panel.addEventListener('keydown',e=>{if(e.key==='Escape')close()});
-    list.addEventListener('click',e=>{if(e.target.closest('[data-who]')){who='';whoAsked=false;draw();const i=list.querySelector('.bj-name input');if(i)i.focus();return}const b=e.target.closest('[data-q]');if(b)ask(b.dataset.q);const mb=e.target.closest('[data-mail]');if(mb){mailAct(+mb.dataset.i,mb.dataset.mail);return}const rb=e.target.closest('[data-rep]');if(rb){const m=msgs[+rb.dataset.rep];if(m&&m.action)try{o.onReport(m.action);if(matchMedia('(max-width:560px)').matches)close()}catch(err){console.error(err)}}});
+    list.addEventListener('click',e=>{if(e.target.closest('[data-who]')){who='';whoAsked=false;draw();const i=list.querySelector('.bj-name input');if(i)i.focus();return}const lb=e.target.closest('[data-lang]');if(lb){const v=lb.dataset.lang;if(v==='open'){langOpen=true;draw()}else if(v==='close'){langOpen=false;draw()}else setLang(v);return}const b=e.target.closest('[data-q]');if(b)ask(b.dataset.q);const mb=e.target.closest('[data-mail]');if(mb){mailAct(+mb.dataset.i,mb.dataset.mail);return}const rb=e.target.closest('[data-rep]');if(rb){const m=msgs[+rb.dataset.rep];if(m&&m.action)try{o.onReport(m.action);if(matchMedia('(max-width:560px)').matches)close()}catch(err){console.error(err)}}});
     root.addEventListener('click',e=>{if(e.target.closest('.bj-clear')){e.preventDefault();msgs=[];save();head('hello');draw();input.focus()}});
     if(o.nudges!==false&&o.surface==='app')nudgeStart();
     loadWho();setTimeout(greet,4000);
