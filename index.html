@@ -1132,7 +1132,7 @@ function vForm(){
    +'<p class="note">'+(d.kind==='rts'?'The parcel never reached the customer. It stays open until the tenant says resend or back to stock.':'The customer sent it back. Count what is in good condition and what is damaged. No tenant approval is needed.')+'</p><div class="grid">'
    +'<label class="fld"><span>Tenant</span><select id="f-client" data-f="clientId">'+opts([['','Choose a tenant…']].concat(S.clients.map(c=>[c.id,c.name])),d.clientId)+'</select></label>'
    +'<div class="fld"><span>Reference number</span><div class="with-btn"><input id="f-job" class="mono" data-f="jobNo" value="'+esc(d.jobNo)+'" autocapitalize="characters" aria-label="Reference number"><button class="btn" data-act="ocr" data-v="jobNo" aria-label="Read the reference number (REF or #) from a photo of the label">'+ic('text')+'</button>'+micBtn('jobNo','reference number')+'</div><div class="row ocrPick" id="ocrPick-jobNo" style="padding-top:6px"></div>'+(d.kind!=='rts'?'<button type="button" class="btn noref" data-act="noRef">No reference provided</button>':'')+'</div>'
-   +'<label class="fld"><span>Date received</span><input id="f-date" type="date" data-f="dateReceived" value="'+esc(d.dateReceived)+'"></label>'
+   +'<label class="fld"><span>Date received</span><input id="f-date" type="date" data-f="dateReceived" max="'+ymd(new Date())+'" value="'+esc(d.dateReceived)+'"></label>'
    +'</div><div class="grid">'
    +'<div class="fld"><span>Order number</span><div class="with-btn"><input id="f-order" class="mono" data-f="orderNo" value="'+esc(d.orderNo)+'" aria-label="Order number"><button class="btn" data-act="scan" data-v="orderNo" aria-label="Scan the order barcode">'+ic('scan')+'</button><button class="btn" data-act="ocr" data-v="orderNo" aria-label="Read the order number from a photo of the label">'+ic('text')+'</button>'+micBtn('orderNo','order number')+'</div><div class="row ocrPick" id="ocrPick-orderNo" style="padding-top:6px"></div></div>'
    +'<div class="fld"><span>Tracking number</span><div class="with-btn"><input id="f-track" class="mono" data-f="tracking" value="'+esc(d.tracking)+'" aria-label="Tracking number"><button class="btn" data-act="scan" data-v="tracking" aria-label="Scan tracking number">'+ic('scan')+'</button></div></div>'
@@ -1165,6 +1165,7 @@ async function saveReturn(){
   if(!d.jobNo.trim())return toast('Add the reference number.');
   if(S.returns.some(r=>r.jobNo===d.jobNo.trim()&&r.id!==S.editId))return toast('Reference number '+d.jobNo+' is already used. Change it.');
   if(S.uploading)return toast('Photos are still uploading. Try again in a moment.');
+  if(d.dateReceived&&d.dateReceived>ymd(new Date()))return toast('The date received is in the future. Check the day and month.');
   if((d.status==='open'||d.status==='quar')&&!d.location)return toast('Choose a storage location before saving.');
   if((d.status==='open'||d.status==='quar')&&d.location&&locUsed(d.location,S.editId)>=S.store.cap)return toast('Location '+d.location+' is full. Choose another location.');
   const now=new Date().toISOString(),prev=S.editId?S.returns.find(r=>r.id===S.editId):null,by=S.uid||'';
