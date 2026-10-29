@@ -1981,7 +1981,7 @@ Object.assign(ACT,{
   signOut:(v,b)=>twice(b,()=>GH.signOut())
 });
 /* App version. Bump on EVERY update to this file: v = '2.' + updates since the Supabase move (17 Oct 2026); n = all updates since day one (11 Oct 2026). v1 = the GitHub-only Return Desk (31 updates, 11-16 Oct). */
-const RB_VER={v:'2.79',n:110,at:'30 Oct 2026, 8:35 am'};
+const RB_VER={v:'2.80',n:111,at:'30 Oct 2026, 8:40 am'};
 GH.panel=()=>{const m=GH.me(),role=m.role==='admin'?'Admin':m.role==='viewer'?'Client':'Staff';return'<div class="panel"><h3>Your account</h3><p class="note">Signed in as <strong>'+esc(m.email)+'</strong> · '+role+(m.initials?' · initials <strong>'+esc(m.initials)+'</strong> on the returns you log':'')+'.<br>Everything saves automatically and shows on your other devices within seconds.</p>'+'<p class="note rb-ver">App version <strong>'+RB_VER.v+'</strong> · update '+RB_VER.n+' since 11 Oct 2026 · last updated '+esc(RB_VER.at)+'</p>'+
   '<label class="fld"><span>New password</span><input id="sb-newpass" type="password" autocomplete="new-password" placeholder=" "></label><div class="row"><button class="btn" data-act="setPass">Change password</button> <button class="btn danger" data-act="signOut">Sign out</button></div></div>'};
 GH.adminPanels=()=>GH.me().role==='admin'?GH.staffPanel()+GH.portalPanel():'';
@@ -2340,20 +2340,24 @@ const Benji=(()=>{
   // 2) on Safari one recogniser is reused for the whole visit; it is stopped as soon as a question is sent.
   const UA=navigator.userAgent||'';
   const STRICT=/iP(hone|ad|od)/.test(UA)||(/Macintosh/.test(UA)&&navigator.maxTouchPoints>1)||(/AppleWebKit/.test(UA)&&!/Chrome|Chromium|CriOS|Edg|OPR|Android/.test(UA));
-  let micWant=false,micKeep='',micDog=null,micSess=0,micOne=null,micQuick=0,micEnding=null,micRetry=0;
+  let micWant=false,micKeep='',micDog=null,micSess=0,micOne=null,micQuick=0,micEnding=null,micRetry=0,micAgain=false;
   function micUI(on,msg){if(!micBtn)return;micBtn.setAttribute('aria-pressed',on?'true':'false');micBtn.setAttribute('aria-label',on?'Stop listening':'Speak your question');if(input&&!/blocked/.test(input.placeholder))input.placeholder=msg||(on?T('listen')+(lang!=='en'?' · '+LG().n:''):T('ph'))}
   function micReset(msg){rec=null;heard='';clearTimeout(micDog);micUI(false,msg)}
   function micHalt(r){if(!r)return;try{STRICT?r.stop():(r.abort?r.abort():r.stop())}catch(e){}}
   function micStop(msg){micWant=false;micRetry=0;micSess++;const r=rec;rec=null;if(r){if(!STRICT){r.onresult=null;r.onerror=null;
     // Chrome: remember when the old session has really closed, so the next one doesn't start deaf.
     micEnding=new Promise(res=>{let d=false;const f=()=>{if(!d){d=true;micEnding=null;res()}};r.onend=f;setTimeout(f,1200)})}micHalt(r)}micReset(msg)}
-  function micDetach(){micStop()}
+  function micDetach(){const r=rec;micStop();if(STRICT&&r){try{r.abort()}catch(e){}}}
   function micMake(){
     if(STRICT&&micOne)return micOne;
     let r;try{r=new SR()}catch(e){return null}
     r.lang=(navigator.language&&/^en/i.test(navigator.language))?navigator.language:'en-AU';r.interimResults=true;r.continuous=!STRICT;r.maxAlternatives=1;
+    /* 30 Oct: know whether Safari has really finished, so a busy or deaf listener is never reused */
+    r.live=false;try{r.addEventListener('start',()=>{r.live=true});r.addEventListener('end',()=>{r.live=false})}catch(e){}
     if(STRICT)micOne=r;return r}
+  function micFresh(){const old=micOne;micOne=null;if(old){old.onresult=null;old.onerror=null;old.onend=null;try{old.abort()}catch(e){}}}
   function micStart(){
+    if(STRICT&&micOne&&(micOne.live||micOne.deaf))micFresh();
     const r=micMake();if(!r){micWant=false;micUI(false);return false}
     const id=++micSess,t0=Date.now();rec=r;r.got=false;
     try{r.lang=lang==='en'?((navigator.language&&/^en/i.test(navigator.language))?navigator.language:'en-AU'):LG().sr}catch(e){}
@@ -2367,14 +2371,14 @@ const Benji=(()=>{
       micWant=false;micReset(r.got?'':'Didn\'t catch that. Tap the mic and try again.');input.focus();grow()};
     try{r.start()}catch(e){
       // Still finishing the last one: stop it; on Safari ask for one more tap (it needs a fresh tap to start).
-      micHalt(r);if(STRICT){micWant=false;micReset('One sec… tap the mic again.');return false}
+      micHalt(r);if(STRICT){rec=null;if(!micAgain){micAgain=true;micFresh();const ok=micStart();micAgain=false;return ok}micWant=false;micReset('One sec… tap the mic again.');return false}
       setTimeout(()=>{if(micWant&&micSess===id){try{r.start()}catch(e2){micStop('Tap the mic again.')}}},400)}
     micUI(true);
     // If nothing is heard for a while, stop cleanly so the next tap starts fresh.
     clearTimeout(micDog);micDog=setTimeout(()=>{if(micSess!==id||rec!==r||r.got)return;
       // Chrome: a session that says Listening but hears nothing is replaced once, automatically.
       if(!STRICT&&micRetry<1){micRetry++;micSess++;rec=null;r.onresult=null;r.onerror=null;micEnding=new Promise(res=>{let d=false;const f=()=>{if(!d){d=true;micEnding=null;res()}};r.onend=f;setTimeout(f,1200)});micHalt(r);micEnding.then(()=>{if(micWant&&!rec)micStart()});return}
-      micStop('Didn\'t hear anything. Tap the mic to try again.')},STRICT?8000:4500);
+      if(STRICT)r.deaf=true;micStop('Didn\'t hear anything. Tap the mic to try again.')},STRICT?8000:4500);
     return true}
   // Phones: use the keyboard's own dictation (Apple / Google voice typing). The button just opens the keyboard,
   // so the site never asks for microphone access on a phone.
