@@ -13,6 +13,7 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="robots" content="noindex">
 <style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style>
+<style id="dash-tenant">.fld.dash-tenant{flex:1 1 100%;width:100%;max-width:none}.fld.dash-tenant select{width:100%;background:#141518!important;color:#fff!important;border:1.5px solid #141518!important;font-weight:600;color-scheme:dark;box-shadow:0 6px 18px -8px rgba(0,0,0,.45)}.fld.dash-tenant span{color:rgba(255,255,255,.72)!important;font-weight:600}html:not([data-theme=light]) .fld.dash-tenant select{background:#F2F3F5!important;color:#141518!important;border-color:#F2F3F5!important;color-scheme:light}html:not([data-theme=light]) .fld.dash-tenant span{color:#4A4C52!important}</style>
 </head>
 <body>
 <title>Returns Bench</title>
@@ -1040,7 +1041,7 @@ function vDash(){
   if(S.returns.some(r=>r.example))h+='<div class="banner">Example data. Remove it in Settings before logging real returns.</div>';
   h+=board(all,rs);
   if(!S.returns.length)return h+emptyState();
-  h+='<div class="row"><label class="fld" style="max-width:320px"><span>Tenant</span><select id="dashClient" data-bind="dashClient">'+opts([['','All tenants']].concat(S.clients.map(c=>[c.id,c.name])),S.dashClient)+'</select></label></div>';
+  h+='<div class="row"><label class="fld dash-tenant"><span>Tenant</span><select id="dashClient" data-bind="dashClient">'+opts([['','All tenants']].concat(S.clients.map(c=>[c.id,c.name])),S.dashClient)+'</select></label></div>';
   const tally=(key)=>{const m={};rs.forEach(r=>key(r).forEach(k=>{if(k)m[k]=(m[k]||0)+1}));return Object.entries(m).sort((a,b)=>b[1]-a[1])};
   const bars=(rows)=>{rows=rows.filter(r=>r[1]);if(!rows.length)return'<p class="note">No data in this period.</p>';const mx=Math.max(...rows.map(r=>r[1]));return'<div class="bars">'+rows.slice(0,7).map(r=>'<div class="bar"><span class="nm">'+esc(r[0])+'</span><span class="tr"><span class="fl" data-w="'+Math.round(r[1]/mx*100)+'"></span></span><span class="n">'+r[1]+'</span></div>').join('')+'</div>'};
   const old=open.slice().sort((a,b)=>String(a.dateReceived).localeCompare(b.dateReceived)).slice(0,5);
