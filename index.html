@@ -1135,9 +1135,8 @@ function vForm(){
    +'<label class="fld"><span>Carrier</span><select id="f-carrier" data-f="carrier">'+opts(CARRIERS,d.carrier)+'</select></label>'
    +'</div><div class="pick"><span>Status</span>'+seg('f-status','Status',sts.map(s=>[s,s==='open'?'<i class="dot st-quar"></i>Quarantine (waiting)':'<i class="dot st-'+s+'"></i>'+SL(s)]),d.status)+'</div></div>';
   h+=GH.corForm?GH.corForm(d):'';
-  if(!d.location&&!S.editId)d.location=firstFreeLoc();
-  if(d.kind!=='rts')h+='<div class="panel"><div class="grid"><label class="fld"><span>Storage location (quarantine)</span><select id="f-loc" class="mono" data-f="location">'+locOpts(d.location,S.editId)+'</select></label></div><p class="note">Where the parcel waits until it is processed. Up to '+S.store.cap+' waiting parcels per location; the next free one is picked for you.</p></div>';
-  if(d.kind==='rts')h+='<div class="panel"><div class="grid"><label class="fld"><span>Storage location (quarantine)</span><select id="f-loc" class="mono" data-f="location">'+locOpts(d.location,S.editId)+'</select></label></div><p class="note">Up to '+S.store.cap+' waiting parcels per location. Full locations are greyed out. The next free one is picked for you.</p><div class="pick"><span>Package condition</span>'+seg('f-pack','Package condition',PACKS,d.pack||'')+'</div><p class="note">For an unopened parcel you can leave the items below empty. Add items only if the parcel was opened.</p></div>';
+  if(d.kind!=='rts')h+='<div class="panel"><div class="grid"><label class="fld"><span>Storage location (quarantine)</span><select id="f-loc" class="mono" data-f="location">'+locOpts(d.location,S.editId)+'</select></label></div><p class="note">Where the parcel waits until it is processed. Up to '+S.store.cap+' waiting parcels per location. Choose one before you save.</p></div>';
+  if(d.kind==='rts')h+='<div class="panel"><div class="grid"><label class="fld"><span>Storage location (quarantine)</span><select id="f-loc" class="mono" data-f="location">'+locOpts(d.location,S.editId)+'</select></label></div><p class="note">Up to '+S.store.cap+' waiting parcels per location. Full locations are greyed out. Choose one before you save.</p><div class="pick"><span>Package condition</span>'+seg('f-pack','Package condition',PACKS,d.pack||'')+'</div><p class="note">For an unopened parcel you can leave the items below empty. Add items only if the parcel was opened.</p></div>';
   h+='<h3>'+(d.kind==='rts'?'Items (optional)':'Items')+'</h3>';
   d.lines.forEach((l,i)=>{
     h+='<div class="line"><div class="line-h"><strong>Item '+(i+1)+'</strong>'+(d.lines.length>1?'<button class="btn danger" data-act="rmLine" data-v="'+i+'">Remove</button>':'')+'</div>'
@@ -1162,6 +1161,7 @@ async function saveReturn(){
   if(!d.jobNo.trim())return toast('Add the reference number.');
   if(S.returns.some(r=>r.jobNo===d.jobNo.trim()&&r.id!==S.editId))return toast('Reference number '+d.jobNo+' is already used. Change it.');
   if(S.uploading)return toast('Photos are still uploading. Try again in a moment.');
+  if((d.status==='open'||d.status==='quar')&&!d.location)return toast('Choose a storage location before saving.');
   if((d.status==='open'||d.status==='quar')&&d.location&&locUsed(d.location,S.editId)>=S.store.cap)return toast('Location '+d.location+' is full. Choose another location.');
   const now=new Date().toISOString(),prev=S.editId?S.returns.find(r=>r.id===S.editId):null,by=S.uid||'';
   const hist=((prev&&prev.history)||[]).slice(-40);
