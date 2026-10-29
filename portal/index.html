@@ -22,7 +22,7 @@
   --bg:#F3F5FC; --surface:#FFFFFF; --sunk:#EBEFFB; --line:#D9E0F5;
   --ink:#0C1A47; --muted:#5A6690; --accent:#2148F2; --accent-ink:#FFFFFF; --accent-soft:#E2E8FE;
   --bar:#0C1A4B; --bar-ink:#FFFFFF; --bar-muted:#AEB9E6; --bar-line:#22327A;
-  --good:#1F8F5F; --good-soft:#DDF3E8; --bad:#C2453B; --bad-soft:#FBE4E1; --warn:#B7791F; --warn-soft:#FCEFD8;
+  --good:#1F8F5F; --good-soft:#DDF3E8; --bad:#C2453B; --bad-soft:#FBE4E1; --warn:#1F42B7; --warn-soft:#D8E0FC;
   --display:"Unbounded","Instrument Sans",system-ui,sans-serif; --body:"Instrument Sans",system-ui,sans-serif; --mono:"IBM Plex Mono",ui-monospace,monospace;
   --shadow:0 18px 40px -28px rgba(13,43,46,.45);
 }
@@ -30,13 +30,13 @@
   --bg:#070F2E; --surface:#0E1A45; --sunk:#0B1539; --line:#1F2E6B;
   --ink:#EAF0FF; --muted:#9CA9D8; --accent:#5B7BFF; --accent-ink:#FFFFFF; --accent-soft:#1A2A6E;
   --bar:#0C1A4B; --bar-ink:#FFFFFF; --bar-muted:#AEB9E6; --bar-line:#22327A;
-  --good:#5BD39C; --good-soft:#0F3A2A; --bad:#F08A80; --bad-soft:#3E1C1A; --warn:#F2B866; --warn-soft:#3A2A10;
+  --good:#5BD39C; --good-soft:#0F3A2A; --bad:#F08A80; --bad-soft:#3E1C1A; --warn:#6687F2; --warn-soft:#3A2A10;
   --shadow:0 18px 40px -28px rgba(0,0,0,.8); color-scheme:dark}}
 :root[data-theme="dark"]{
   --bg:#070F2E; --surface:#0E1A45; --sunk:#0B1539; --line:#1F2E6B;
   --ink:#EAF0FF; --muted:#9CA9D8; --accent:#5B7BFF; --accent-ink:#FFFFFF; --accent-soft:#1A2A6E;
   --bar:#0C1A4B; --bar-ink:#FFFFFF; --bar-muted:#AEB9E6; --bar-line:#22327A;
-  --good:#5BD39C; --good-soft:#0F3A2A; --bad:#F08A80; --bad-soft:#3E1C1A; --warn:#F2B866; --warn-soft:#3A2A10;
+  --good:#5BD39C; --good-soft:#0F3A2A; --bad:#F08A80; --bad-soft:#3E1C1A; --warn:#6687F2; --warn-soft:#3A2A10;
   --shadow:0 18px 40px -28px rgba(0,0,0,.8); color-scheme:dark}
 *{box-sizing:border-box}
 html,body{background:var(--bg);color:var(--ink)}
@@ -510,7 +510,7 @@ const Benji=(()=>{
 .bj-s button{border:1px solid var(--line,#D5DAE8);background:transparent;color:inherit;border-radius:999px;padding:7px 12px;font:inherit;font-size:13px;cursor:pointer;min-height:36px}
 .bj-s button:hover{border-color:#111}.bj-p[data-tone="dark"] .bj-s button:hover{border-color:#fff}
 .bj-act{display:inline-flex;align-items:center;gap:8px;margin-top:10px;border:0;border-radius:10px;background:#111;color:#fff;font:inherit;font-weight:600;font-size:13.5px;padding:9px 14px;cursor:pointer;min-height:40px}
-.bj-act:hover{background:#FF7A1A}
+.bj-act:hover{background:#1A4FFF}
 .bj-ghost{margin-top:10px;border:1px solid var(--line,#D5DAE8);border-radius:10px;background:transparent;color:inherit;font:inherit;font-size:13.5px;padding:9px 14px;cursor:pointer;min-height:40px}
 .bj-mail{margin-top:10px;border:1px solid var(--line,#D5DAE8);border-radius:12px;padding:10px 12px;background:var(--surface,#fff);font-size:13.5px}
 .bj-mail-h{display:flex;flex-direction:column;gap:2px;padding-bottom:8px;border-bottom:1px solid var(--line,#E2E6F0);overflow-wrap:anywhere}
@@ -785,10 +785,10 @@ const CV={ex:{},ready:false,
   REASON:['','Return','MBG','Faulty']};
 document.head.insertAdjacentHTML('beforeend','<style>'+
  '.cv-sel{font:inherit;font-size:14px;padding:7px 10px;border-radius:10px;border:1px solid var(--line);background:var(--surface);color:var(--ink);max-width:190px}'+
- '.cv-sel.set{border-color:#E8A317;box-shadow:0 0 0 1px #E8A317 inset}'+
+ '.cv-sel.set{border-color:#1748E8;box-shadow:0 0 0 1px #1748E8 inset}'+
  '.cv-done{font-size:13px;color:var(--muted);white-space:nowrap}'+
  '.cv-ok{display:block;font-size:12px;color:var(--muted);margin-top:3px}'+
- '.cv-form{margin-top:14px;padding:14px;border:1.5px solid #E8A317;border-radius:14px}'+
+ '.cv-form{margin-top:14px;padding:14px;border:1.5px solid #1748E8;border-radius:14px}'+
  '.cv-form h3{margin:0 0 4px;font-size:16px}.cv-form label{display:block;margin-top:10px;font-size:13px;color:var(--muted)}'+
  '.cv-form input,.cv-form select,.cv-form textarea{display:block;width:100%;margin-top:4px;font:inherit;font-size:16px;padding:9px 11px;border-radius:10px;border:1px solid var(--line);background:var(--surface);color:var(--ink);box-sizing:border-box}'+
  '.cv-form .two{display:grid;grid-template-columns:1fr 1fr;gap:10px}@media(max-width:560px){.cv-form .two{grid-template-columns:1fr}}'+
