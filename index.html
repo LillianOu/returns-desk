@@ -1976,7 +1976,9 @@ Object.assign(ACT,{
     b.disabled=true;try{await GH.setPassword(a);cleanReload()}catch(e){er.textContent=/same/i.test(e.message)?'Choose a different password from your old one.':e.message;b.disabled=false}},
   signOut:(v,b)=>twice(b,()=>GH.signOut())
 });
-GH.panel=()=>{const m=GH.me(),role=m.role==='admin'?'Admin':m.role==='viewer'?'Client':'Staff';return'<div class="panel"><h3>Your account</h3><p class="note">Signed in as <strong>'+esc(m.email)+'</strong> · '+role+(m.initials?' · initials <strong>'+esc(m.initials)+'</strong> on the returns you log':'')+'.<br>Everything saves automatically and shows on your other devices within seconds.</p>'+
+/* App version. Bump on EVERY update to this file: v = '2.' + updates since the Supabase move (17 Oct 2026); n = all updates since day one (11 Oct 2026). v1 = the GitHub-only Return Desk (31 updates, 11-16 Oct). */
+const RB_VER={v:'2.75',n:106,at:'30 Oct 2026, 7:40 am'};
+GH.panel=()=>{const m=GH.me(),role=m.role==='admin'?'Admin':m.role==='viewer'?'Client':'Staff';return'<div class="panel"><h3>Your account</h3><p class="note">Signed in as <strong>'+esc(m.email)+'</strong> · '+role+(m.initials?' · initials <strong>'+esc(m.initials)+'</strong> on the returns you log':'')+'.<br>Everything saves automatically and shows on your other devices within seconds.</p>'+'<p class="note rb-ver">App version <strong>'+RB_VER.v+'</strong> · update '+RB_VER.n+' since 11 Oct 2026 · last updated '+esc(RB_VER.at)+'</p>'+
   '<label class="fld"><span>New password</span><input id="sb-newpass" type="password" autocomplete="new-password" placeholder=" "></label><div class="row"><button class="btn" data-act="setPass">Change password</button> <button class="btn danger" data-act="signOut">Sign out</button></div></div>'};
 GH.adminPanels=()=>GH.me().role==='admin'?GH.staffPanel()+GH.portalPanel():'';
 GH.onAuth(()=>{if($('#gate').hidden)showGate('Your sign-in has expired. Sign in again to carry on.')});
