@@ -1977,7 +1977,7 @@ Object.assign(ACT,{
   signOut:(v,b)=>twice(b,()=>GH.signOut())
 });
 /* App version. Bump on EVERY update to this file: v = '2.' + updates since the Supabase move (17 Oct 2026); n = all updates since day one (11 Oct 2026). v1 = the GitHub-only Return Desk (31 updates, 11-16 Oct). */
-const RB_VER={v:'2.75',n:106,at:'30 Oct 2026, 7:40 am'};
+const RB_VER={v:'2.76',n:107,at:'30 Oct 2026, 7:52 am'};
 GH.panel=()=>{const m=GH.me(),role=m.role==='admin'?'Admin':m.role==='viewer'?'Client':'Staff';return'<div class="panel"><h3>Your account</h3><p class="note">Signed in as <strong>'+esc(m.email)+'</strong> · '+role+(m.initials?' · initials <strong>'+esc(m.initials)+'</strong> on the returns you log':'')+'.<br>Everything saves automatically and shows on your other devices within seconds.</p>'+'<p class="note rb-ver">App version <strong>'+RB_VER.v+'</strong> · update '+RB_VER.n+' since 11 Oct 2026 · last updated '+esc(RB_VER.at)+'</p>'+
   '<label class="fld"><span>New password</span><input id="sb-newpass" type="password" autocomplete="new-password" placeholder=" "></label><div class="row"><button class="btn" data-act="setPass">Change password</button> <button class="btn danger" data-act="signOut">Sign out</button></div></div>'};
 GH.adminPanels=()=>GH.me().role==='admin'?GH.staffPanel()+GH.portalPanel():'';
@@ -2108,7 +2108,10 @@ const Benji=(()=>{
     {c:'ko',n:'한국어',e:'Korean',sr:'ko-KR',k:'KO'},
     {c:'id',n:'Bahasa Indonesia',e:'Indonesian',sr:'id-ID',k:'ID'},
     {c:'es',n:'Español',e:'Spanish',sr:'es-ES',k:'ES'},
-    {c:'ar',n:'العربية',e:'Arabic',sr:'ar-SA',k:'AR'}];
+    {c:'ar',n:'العربية',e:'Arabic',sr:'ar-SA',k:'AR'},
+    {c:'ar-EG',n:'العربية المصرية',e:'Egyptian Arabic (use the Egyptian dialect)',s:'Egyptian Arabic',sr:'ar-EG',k:'EG'},
+    {c:'my',n:'မြန်မာ',e:'Burmese (Myanmar)',sr:'my-MM',k:'MY'},
+    {c:'th',n:'ไทย',e:'Thai',sr:'th-TH',k:'TH'}];
   const TX={
     en:{hi:"Hi, I'm Benji",hiN:"Hi {n}! I'm Benji",sub:"Returns Bench's AI helper. Ask me about your returns, or how to use {w}.",try:'Tap a question to ask Benji',ph:'Ask Benji…',listen:'Listening… press Enter to send',dict:'Tap the 🎤 on your keyboard to talk',chip:'🌏 Speak another language · 中文 · Русский · Filipino',title:'Which language should Benji speak?',pnote:'Benji replies in your language. Button names stay in English so you can find them on screen.',back:'← Back',ai:'Benji is an AI assistant and can make mistakes. Chats are saved so the team can help you better.',call:'What should I call you?',first:'Your first name',save:'Save',not:'Not {n}?',ok:"Back to English! Ask me anything."},
     fil:{hi:'Hi, ako si Benji',hiN:'Hi {n}! Ako si Benji',sub:'Ako ang AI helper ng Returns Bench. Magtanong ka tungkol sa returns, o kung paano gamitin ang app.',try:'I-tap ang isang tanong para itanong kay Benji',ph:'Magtanong kay Benji…',listen:'Nakikinig… pindutin ang Enter para ipadala',dict:'I-tap ang 🎤 sa keyboard mo para magsalita',chip:'🌏 Wika: Filipino',title:'Anong wika ang gagamitin ni Benji?',pnote:'Sasagot si Benji sa napili mong wika. Nananatiling Ingles ang mga pangalan ng button para madali mong mahanap.',back:'← Bumalik',ai:'Si Benji ay AI assistant at puwedeng magkamali. Sine-save ang mga chat para mas matulungan ka ng team.',call:'Ano ang itatawag ko sa iyo?',first:'Pangalan mo',save:'I-save',not:'Hindi si {n}?',ok:'Sige! Mula ngayon, sasagot ako sa Filipino. Iiwan kong Ingles ang mga pangalan ng button para madali mong mahanap sa screen.',
@@ -2135,11 +2138,11 @@ const Benji=(()=>{
   function setLang(c){if(!LANGS.some(l=>l.c===c))return;const was=lang;lang=c;langOpen=false;
     try{localStorage.setItem('benji-lang',c)}catch(e){}
     try{o.client.auth.updateUser({data:{benji_lang:c}})}catch(e){}
-    if(c!==was&&msgs.length){const L=LG();msgs.push({role:'assistant',content:TX[c]?T('ok'):"Got it! I'll answer in "+L.e+" from now on. Button names stay in English so you can find them on screen.",mood:'success',local:true});head('success');save()}
+    if(c!==was&&msgs.length){const L=LG();msgs.push({role:'assistant',content:TX[c]?T('ok'):"Got it! I'll answer in "+(L.s||L.e)+" from now on. Button names stay in English so you can find them on screen.",mood:'success',local:true});head('success');save()}
     applyLang();draw();if(input)input.focus()}
   function langPicker(){
     return '<div class="bj-lp"><h3>'+esc(T('title'))+'</h3><p>'+esc(T('pnote'))+'</p><div class="bj-lg-grid">'+
-      LANGS.map(l=>'<button type="button" data-lang="'+l.c+'" aria-pressed="'+(l.c===lang)+'" lang="'+l.c+'"><b>'+esc(l.n)+'</b>'+(l.n!==l.e?'<small>'+esc(l.e)+'</small>':'')+'</button>').join('')+
+      LANGS.map(l=>'<button type="button" data-lang="'+l.c+'" aria-pressed="'+(l.c===lang)+'" lang="'+l.c+'"><b>'+esc(l.n)+'</b>'+(l.n!==l.e?'<small>'+esc(l.s||l.e)+'</small>':'')+'</button>').join('')+
       '</div><button type="button" class="bj-ghost bj-lback" data-lang="close">'+esc(T('back'))+'</button></div>'}
 
   const SR=window.SpeechRecognition||window.webkitSpeechRecognition;let rec=null,micBtn=null,heard='';
