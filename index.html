@@ -1127,7 +1127,7 @@ function vForm(){
   if(d.kind==='rts'&&d.status==='quar')d.status='open';
   const sts=d.kind==='rts'?['open','resent','shelf','discarded']:['quar','shelf','discarded'];if(!sts.includes(d.status))d.status=sts[0];
   const prev=S.editId?S.returns.find(r=>r.id===S.editId):null;
-  let h='<div class="row"><h2 style="flex:1 1 auto">'+(S.editId?'Edit return':'New return')+'</h2>'+(S.editId?'<button class="btn" data-act="newDraft">Start a new one</button>':'')+'</div>';
+  let h='<div class="row"><h2 style="flex:1 1 auto">'+(S.editId?'Edit return':'New return')+'</h2>'+(S.editId?'<button class="btn" data-act="newDraft">Start a new one</button>':(window.__draftHas&&window.__draftHas(S.draft)?'<button class="btn" type="button" data-clear-draft>Clear form</button>':''))+'</div>';
   h+='<div class="panel"><div class="pick"><span>Type</span>'+seg('f-kind','Type',KINDS,d.kind)+'</div>'
    +'<p class="note">'+(d.kind==='rts'?'The parcel never reached the customer. It stays open until the tenant says resend or back to stock.':'The customer sent it back. Count what is in good condition and what is damaged. No tenant approval is needed.')+'</p><div class="grid">'
    +'<label class="fld"><span>Tenant</span><select id="f-client" data-f="clientId">'+opts([['','Choose a tenant…']].concat(S.clients.map(c=>[c.id,c.name])),d.clientId)+'</select></label>'
@@ -2918,6 +2918,8 @@ try{var raw=localStorage.getItem(K);if(raw){var o=JSON.parse(raw);if(o&&o.d&&Dat
 function has(d){if(!d)return false;if(d.jobNo||d.clientId||d.orderNo||d.tracking||d.notes||d.clientNote||d.location)return true;return(d.lines||[]).some(function(l){return l.barcode||l.sku||l.name||l.reason||+l.qtyDamaged>0||(l.photos&&l.photos.length)})}
 function clean(d){return JSON.parse(JSON.stringify(d,function(k,v){return typeof v==='string'&&v.length>200000?undefined:v}))}
 function clear(){pending=null;try{localStorage.removeItem(K)}catch(e){}}
+window.__draftHas=has;
+addEventListener('click',function(e){var b=e.target.closest&&e.target.closest('[data-clear-draft]');if(!b)return;e.preventDefault();e.stopPropagation();if(b.dataset.armed){clear();newDraft();render();toast('Form cleared.');return}b.dataset.armed='1';b.textContent='Tap again to clear';setTimeout(function(){if(b.isConnected){delete b.dataset.armed;b.textContent='Clear form'}},3000)},true);
 var tm;function save(){clearTimeout(tm);tm=setTimeout(function(){try{if(S.tab==='new'&&!S.editId&&has(S.draft)&&!pending)localStorage.setItem(K,JSON.stringify({t:Date.now(),d:clean(S.draft)}))}catch(e){}},400)}
 var nd=newDraft;newDraft=function(){var x=nd.apply(this,arguments);if(S.returns&&S.returns.length)clear();return x};
 var r0=render;render=function(){if(pending&&S.tab==='new'&&!S.editId&&!has(S.draft)&&S.clients&&S.clients.length){S.draft=Object.assign(S.draft,pending);pending=null;setTimeout(function(){toast('Your unfinished return is back. Carry on where you left off.')},300)}var x=r0.apply(this,arguments);save();return x};
