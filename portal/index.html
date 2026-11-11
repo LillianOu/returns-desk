@@ -225,8 +225,8 @@ h2.mono{font-family:var(--mono);font-weight:500}
     <div class="toprow"><div><h1>Returns</h1><p class="sub">Tap a return to see items, photos and the team's note.</p></div></div>
     <div class="filters">
       <input id="q" placeholder="Search reference, order or SKU" aria-label="Search returns">
-      <select id="kind" aria-label="Type"><option value="">All types</option><option value="return">Customer returns</option><option value="rts">Return to sender</option></select>
-      <select id="dmg" aria-label="Condition"><option value="">All</option><option value="1">Damaged only</option></select>
+      <select id="kind" aria-label="Type"><option value="">All types</option><option value="return">Customer returns</option><option value="rts">Return to sender</option><option value="damaged">Damaged</option></select>
+      <select id="dmg" aria-label="Condition"><option value="">All conditions</option><option value="1">Damaged only</option><option value="good">Good only</option></select>
     </div>
     <div class="tbl"><table><thead><tr><th>Received</th><th>Reference #</th><th>Order #</th><th>Type</th><th class="num">Good</th><th class="num">Damaged</th><th>Status</th></tr></thead><tbody id="rows"></tbody></table></div>
     <p class="sub" id="count" style="margin-top:10px"></p>
@@ -369,7 +369,7 @@ $('#period').addEventListener('change',drawOverview);
 
 /* ---------- returns list ---------- */
 function drawRows(){const q=$('#q').value.trim().toLowerCase(),k=$('#kind').value,dm=$('#dmg').value;
-  const list=P.rows.filter(r=>(!k||r.kind===k)&&(!dm||bad(r)>0)&&(!q||[r.job_no,r.order_no].concat((r.lines||[]).flatMap(l=>[l.sku,l.name,l.barcode])).join(' ').toLowerCase().includes(q)));
+  const list=P.rows.filter(r=>(!k||(k==='damaged'?bad(r)>0:r.kind===k))&&(!dm||(dm==='good'?bad(r)===0:bad(r)>0))&&(!q||[r.job_no,r.order_no].concat((r.lines||[]).flatMap(l=>[l.sku,l.name,l.barcode])).join(' ').toLowerCase().includes(q)));
   $('#rows').innerHTML=list.slice(0,500).map(r=>'<tr class="row" tabindex="0" data-id="'+esc(r.id)+'"><td>'+fmtD(r.date_received)+'</td><td class="mono">'+esc(r.job_no||'—')+'</td><td class="mono">'+esc(r.order_no||'—')+'</td><td>'+kindL(r)+'</td><td class="num">'+(sealed(r)?'—':good(r))+'</td><td class="num">'+(sealed(r)?'—':bad(r))+'</td><td>'+pill(r)+'</td></tr>').join('')||'<tr><td colspan="7" class="sub">No returns match.</td></tr>';
   $('#count').textContent=list.length+' of '+P.rows.length+' returns'+(list.length>500?' (showing the latest 500)':'');
 }
@@ -819,7 +819,7 @@ CV.cell=r=>{const d=r.decision||{};
    +(d.action?'<span class="cv-ok">Sent to Fulfilment Australia</span>':'')};
 
 drawRows=function(){const q=$('#q').value.trim().toLowerCase(),k=$('#kind').value,dm=$('#dmg').value,on=CV.on()&&CV.ready,dv=on&&$('#cvf')?$('#cvf').value:'';
-  const list=P.rows.filter(r=>(!k||r.kind===k)&&(!dm||bad(r)>0)&&(!q||[r.job_no,r.order_no,r.tracking].concat((r.lines||[]).flatMap(l=>[l.sku,l.name,l.barcode])).join(' ').toLowerCase().includes(q))
+  const list=P.rows.filter(r=>(!k||(k==='damaged'?bad(r)>0:r.kind===k))&&(!dm||(dm==='good'?bad(r)===0:bad(r)>0))&&(!q||[r.job_no,r.order_no,r.tracking].concat((r.lines||[]).flatMap(l=>[l.sku,l.name,l.barcode])).join(' ').toLowerCase().includes(q))
     &&(!dv||(dv==='need'?(r.status==='open'&&!(r.decision&&r.decision.action)):!!(r.decision&&r.decision.action))));
   const cols=on?8:7;
   $('#rows').innerHTML=list.slice(0,500).map(r=>'<tr class="row" tabindex="0" data-id="'+esc(r.id)+'"><td>'+fmtD(r.date_received)+'</td><td class="mono">'+esc(r.job_no||'—')+'</td>'+(on?'<td class="cv-act">'+CV.cell(r)+'</td>':'')+'<td class="mono">'+esc(r.order_no||'—')+'</td><td>'+kindL(r)+'</td><td class="num">'+(sealed(r)?'—':good(r))+'</td><td class="num">'+(sealed(r)?'—':bad(r))+'</td><td>'+pill(r)+'</td></tr>').join('')||'<tr><td colspan="'+cols+'" class="sub">No returns match.</td></tr>';
@@ -877,6 +877,22 @@ CV.xlsx=()=>{const f=$('#from').value,t=$('#to').value,m=$('#rep-msg');
 ['q','kind','dmg'].forEach(id=>{const e=$('#'+id);if(e)e.addEventListener('input',()=>drawRows())});
 /* if the portal finished loading before this part ran, load once more so the Coravin parts appear */
 (function cvKick(n){if(P.me&&P.rows&&P.rows.length&&!CV.ready&&CV.on())load();else if(!P.me&&n<40)setTimeout(()=>cvKick(n+1),250)})(0);
+</script>
+<script>
+/* ---- Activity log (11 Nov 2026): portal opens and downloads, so admins can see client activity ---- */
+(function(){
+  const dev=()=>{const u=navigator.userAgent||'',ipad=/iPad/.test(u)||(/Macintosh/.test(u)&&navigator.maxTouchPoints>1);
+    return(/iPhone|iPod/.test(u)?'iPhone':ipad?'iPad':/Android/.test(u)?'Android':/Macintosh/.test(u)?'Mac':/Windows/.test(u)?'Windows PC':'Computer')+' · portal'};
+  const log=(a,d)=>{try{sb.rpc('log_activity',{p_action:a,p_detail:d?String(d).slice(0,300):null,p_device:dev()}).then(()=>{},()=>{})}catch(e){}};
+  let done=false,hid=0;
+  const tryOpen=async()=>{if(done)return;try{const s=await sb.auth.getSession();if(s&&s.data&&s.data.session){done=true;log('open')}}catch(e){}};
+  tryOpen();const iv=setInterval(()=>{if(done)clearInterval(iv);else tryOpen()},3000);setTimeout(()=>clearInterval(iv),120000);
+  try{sb.auth.onAuthStateChange(ev=>{if(ev==='SIGNED_IN'&&!done){done=true;log('sign_in')}})}catch(e){}
+  document.addEventListener('visibilitychange',()=>{if(document.hidden)hid=Date.now();else if(hid&&Date.now()-hid>30*60*1000){hid=0;log('open')}});
+  if(typeof save==='function'){const s0=save;save=function(url,name){log('download',name);return s0.apply(this,arguments)}}
+  const wx=()=>{if(window.XLSX&&XLSX.writeFile&&!XLSX.writeFile.__rbLog){const w0=XLSX.writeFile;const w=function(wb,name){log('download',name);return w0.apply(this,arguments)};w.__rbLog=1;XLSX.writeFile=w}};
+  wx();window.addEventListener('load',wx);setTimeout(wx,3000);
+})();
 </script>
 </body>
 </html>

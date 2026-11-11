@@ -1981,7 +1981,7 @@ Object.assign(ACT,{
   signOut:(v,b)=>twice(b,()=>GH.signOut())
 });
 /* App version. Bump on EVERY update to this file: v = '2.' + updates since the Supabase move (17 Oct 2026); n = all updates since day one (11 Oct 2026). v1 = the GitHub-only Return Desk (31 updates, 11-16 Oct). */
-const RB_VER={v:'2.82',n:113,at:'30 Oct 2026, 9:00 am'};
+const RB_VER={v:'2.83',n:114,at:'11 Nov 2026, 3:50 pm'};
 GH.panel=()=>{const m=GH.me(),role=m.role==='admin'?'Admin':m.role==='viewer'?'Client':'Staff';return'<div class="panel"><h3>Your account</h3><p class="note">Signed in as <strong>'+esc(m.email)+'</strong> · '+role+(m.initials?' · initials <strong>'+esc(m.initials)+'</strong> on the returns you log':'')+'.<br>Everything saves automatically and shows on your other devices within seconds.</p>'+'<p class="note rb-ver">App version <strong>'+RB_VER.v+'</strong> · update '+RB_VER.n+' since 11 Oct 2026 · last updated '+esc(RB_VER.at)+'</p>'+
   '<label class="fld"><span>New password</span><input id="sb-newpass" type="password" autocomplete="new-password" placeholder=" "></label><div class="row"><button class="btn" data-act="setPass">Change password</button> <button class="btn danger" data-act="signOut">Sign out</button></div></div>'};
 GH.adminPanels=()=>GH.me().role==='admin'?GH.staffPanel()+GH.portalPanel():'';
@@ -3164,5 +3164,75 @@ addEventListener('keydown',function(e){if(e.key==='Escape'&&cur)close()});addEve
 scan();
 })();</script>
 <style id="rts-white">html:root[data-kind=rts] .seg[data-seg=f-kind] button[aria-pressed=true],html:root[data-kind=rts] .seg[data-seg=f-kind] button[aria-pressed=true] *{color:#FFFFFF!important;-webkit-text-fill-color:#FFFFFF!important}</style>
+<script>
+/* ---- Activity log (11 Nov 2026): who opened the app, downloaded files or changed settings, and when.
+   Saves to Supabase public.activity_log through log_activity(); admins read it with activity_list().
+   "Last active" in Settings comes from team_last_active(). Nothing here blocks the app if the SQL isn't in yet. ---- */
+(function(){
+  const dev=()=>{const u=navigator.userAgent||'',ipad=/iPad/.test(u)||(/Macintosh/.test(u)&&navigator.maxTouchPoints>1);
+    const d=/iPhone|iPod/.test(u)?'iPhone':ipad?'iPad':/Android/.test(u)?'Android':/Macintosh/.test(u)?'Mac':/Windows/.test(u)?'Windows PC':'Computer';
+    const app=(window.matchMedia&&matchMedia('(display-mode: standalone)').matches)||navigator.standalone;return d+(app?' · app':' · browser')};
+  const ready=()=>{try{const m=GH.me();return m&&m.email&&GH.sb}catch(e){return false}};
+  const log=(action,detail)=>{if(!ready())return;try{GH.sb.rpc('log_activity',{p_action:action,p_detail:detail?String(detail).slice(0,300):null,p_device:dev()}).then(()=>{},()=>{})}catch(e){}};
+  GH.logAct=log;
+
+  /* opening the app (the server keeps at most one "opened" per person every 10 minutes) */
+  let hiddenAt=0;
+  const opened=()=>{let k='open';try{if(sessionStorage.getItem('rb-pw-signin')){sessionStorage.removeItem('rb-pw-signin');k='sign_in'}}catch(e){}log(k)};
+  const wait=setInterval(()=>{if(ready()){clearInterval(wait);opened()}},800);setTimeout(()=>clearInterval(wait),120000);
+  document.addEventListener('visibilitychange',()=>{if(document.hidden)hiddenAt=Date.now();else if(hiddenAt&&Date.now()-hiddenAt>30*60*1000){hiddenAt=0;log('open')}});
+  if(GH.signIn){const s=GH.signIn;GH.signIn=async(...a)=>{const r=await s(...a);try{sessionStorage.setItem('rb-pw-signin','1')}catch(e){}return r}}
+
+  /* every download (reports, Excel, PDF, CSV, photo zips) goes through saveFile */
+  if(typeof saveFile==='function'){const sf=saveFile;saveFile=async function(filename,data){log('download',filename);return sf.apply(this,arguments)}}
+
+  /* admin changes */
+  const LBL={addClient:'Added a client',saveClient:'Saved client details',delClient:'Deleted a client',saveOrg:'Changed branding',logo:'Changed the logo',resetColor:'Reset the brand colour',
+    saveStore:'Changed storage settings',storeLoc:'Changed storage locations',billSave:'Changed storage billing',teamInvite:'Invited someone',teamRemove:'Removed someone',teamResend:'Resent an invite or password reset',
+    staffGrant:'Gave staff access',staffRevoke:'Removed staff access',portalGrant:'Gave portal access',portalRevoke:'Removed portal access',del:'Deleted a return',rmExamples:'Removed example data',csvPick:'Imported a SKU list'};
+  const wrap=()=>{Object.keys(LBL).forEach(k=>{const f=ACT[k];if(typeof f!=='function'||f.__rbLog)return;const guarded=/twice\(/.test(String(f));
+    const w=function(v,b){try{if(!guarded||(b&&b.dataset&&b.dataset.armed)){let d=LBL[k];
+      if(/^(team|staff|portal)/.test(k)){const e=String(v||($('#tm-email')||$('#sa-email')||$('#pa-email')||{}).value||'').split('|').pop();if(e)d+=': '+e}
+      else if(k==='addClient'){const n=($('#cN')||{}).value;if(n)d+=': '+n}
+      else if((k==='delClient'||k==='saveClient')&&v){const c=(S.clients||[]).find(x=>x.id===v||x.id===S.editClient);if(c)d+=': '+c.name}
+      else if(k==='del'&&v){const r=(S.returns||[]).find(x=>x.id===v);if(r&&r.jobNo)d+=': '+r.jobNo}
+      log('admin',d)}}catch(e){}return f.apply(this,arguments)};w.__rbLog=1;ACT[k]=w})};
+  wrap();setTimeout(wrap,1500);setTimeout(wrap,6000);
+
+  /* Settings: "Last active" with date and time */
+  const when=d=>{const t=new Date(d),now=new Date(),y=new Date(now);y.setDate(now.getDate()-1);
+    const tm=t.toLocaleTimeString('en-AU',{hour:'numeric',minute:'2-digit'}).replace(' ',' ');
+    return t.toDateString()===now.toDateString()?'today '+tm:t.toDateString()===y.toDateString()?'yesterday '+tm:t.toLocaleDateString('en-AU',{day:'numeric',month:'short',year:t.getFullYear()===now.getFullYear()?undefined:'numeric'})+', '+tm};
+  GH.lastActive={};
+  GH.teamPill=(d,a)=>d||a?'<span class="tm-pill on" title="'+esc(a?'Last active '+new Date(a).toLocaleString('en-AU'):'Last signed in '+new Date(d).toLocaleString('en-AU'))+'">Active</span>':'<span class="tm-pill wait">Invite sent</span>';
+  GH.teamRow=(u,sub,kind)=>{const you=u.email===GH.me().email,a=GH.lastActive[(u.email||'').toLowerCase()];
+    const seen=a?' · last active '+when(a):u.last_sign_in?' · last signed in '+new Date(u.last_sign_in).toLocaleDateString('en-AU'):'';
+    return'<div class="tm-row"><div class="tm-who"><b>'+esc(u.email)+(you?' (you)':'')+'</b><small>'+esc(sub)+esc(seen)+'</small></div>'+GH.teamPill(u.last_sign_in,a)+
+    '<div class="tm-act">'+(you?'':'<button class="btn" data-act="teamResend" data-v="'+esc(u.email)+'">'+(u.last_sign_in?'Reset password':'Resend')+'</button><button class="btn danger" data-act="teamRemove" data-v="'+esc(kind+'|'+u.email)+'">Remove</button>')+'</div></div>'};
+  const tl=GH.teamList;
+  GH.teamList=async()=>{try{const r=await GH.sb.rpc('team_last_active');if(!r.error){GH.lastActive={};(r.data||[]).forEach(x=>{if(x.email)GH.lastActive[x.email.toLowerCase()]=x.last_active})}}catch(e){}
+    await tl();GH.actList()};
+
+  /* Settings: Activity list for admins */
+  const AL={open:'Opened the app',sign_in:'Signed in',download:'Downloaded',admin:''};
+  GH.actRows=[];
+  GH.actPanel=()=>'<div class="panel" id="activity"><h3>Activity</h3><p class="note">Who opened the app, downloaded reports or changed settings, newest first. Only admins can see this.</p>'+
+    '<div class="row" style="gap:10px;flex-wrap:wrap;align-items:flex-end"><label class="fld" style="flex:1 1 200px"><span>Person</span><select id="act-who"><option value="">Everyone</option></select></label>'+
+    '<label class="fld" style="flex:1 1 180px"><span>What</span><select id="act-what"><option value="">Everything</option><option value="open">Opened the app</option><option value="download">Downloads</option><option value="admin">Admin changes</option></select></label>'+
+    '<label class="fld" style="flex:0 1 170px"><span>Date</span><input id="act-day" type="date"></label></div>'+
+    '<div class="tm-list" id="act-list" style="margin-top:10px"><div class="tm-empty">Loading…</div></div></div>';
+  GH.actDraw=()=>{const el=$('#act-list');if(!el)return;const w=($('#act-who')||{}).value||'',k=($('#act-what')||{}).value||'',dy=($('#act-day')||{}).value||'';
+    const rows=GH.actRows.filter(r=>(!w||r.email===w)&&(!k||(k==='open'?r.action==='open'||r.action==='sign_in':r.action===k))&&(!dy||ymdLocal(r.at)===dy)).slice(0,300);
+    el.innerHTML=rows.map(r=>'<div class="tm-row act-row"><div class="tm-who"><b>'+esc(AL[r.action]===''?r.detail:AL[r.action]+(r.action==='download'&&r.detail?': '+r.detail:''))+'</b><small>'+esc(r.email+' · '+when(r.at)+(r.device?' · '+r.device:''))+'</small></div></div>').join('')||'<div class="tm-empty">Nothing yet for this filter.</div>'};
+  const ymdLocal=d=>{const t=new Date(d);return t.getFullYear()+'-'+String(t.getMonth()+1).padStart(2,'0')+'-'+String(t.getDate()).padStart(2,'0')};
+  GH.actList=async()=>{const el=$('#act-list');if(!el)return;try{const r=await GH.sb.rpc('activity_list',{p_limit:1000});
+    if(r.error){el.innerHTML='<div class="tm-empty">'+(/activity_list|function/i.test(r.error.message)?'The activity log is being set up.':esc(r.error.message))+'</div>';return}
+    GH.actRows=r.data||[];const who=$('#act-who');if(who){const cur=who.value,ppl=[...new Set(GH.actRows.map(x=>x.email))].sort();who.innerHTML='<option value="">Everyone</option>'+ppl.map(p=>'<option'+(p===cur?' selected':'')+'>'+esc(p)+'</option>').join('')}
+    GH.actDraw()}catch(e){el.innerHTML='<div class="tm-empty">Could not load the activity log.</div>'}};
+  document.addEventListener('change',e=>{if(e.target&&/^act-(who|what|day)$/.test(e.target.id))GH.actDraw()});
+  document.head.insertAdjacentHTML('beforeend','<style>.act-row{grid-template-columns:minmax(0,1fr)!important}.act-row .tm-who b{font-weight:600}</style>');
+  const ap=GH.adminPanels;GH.adminPanels=()=>{const h=ap();return h?h+GH.actPanel():h};
+})();
+</script>
 </body>
 </html>
