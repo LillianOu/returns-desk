@@ -1981,7 +1981,7 @@ Object.assign(ACT,{
   signOut:(v,b)=>twice(b,()=>GH.signOut())
 });
 /* App version. Bump on EVERY update to this file: v = '2.' + updates since the Supabase move (17 Oct 2026); n = all updates since day one (11 Oct 2026). v1 = the GitHub-only Return Desk (31 updates, 11-16 Oct). */
-const RB_VER={v:'2.83',n:114,at:'11 Nov 2026, 3:50 pm'};
+const RB_VER={v:'2.84',n:115,at:'11 Nov 2026, 8:10 pm'};
 GH.panel=()=>{const m=GH.me(),role=m.role==='admin'?'Admin':m.role==='viewer'?'Client':'Staff';return'<div class="panel"><h3>Your account</h3><p class="note">Signed in as <strong>'+esc(m.email)+'</strong> · '+role+(m.initials?' · initials <strong>'+esc(m.initials)+'</strong> on the returns you log':'')+'.<br>Everything saves automatically and shows on your other devices within seconds.</p>'+'<p class="note rb-ver">App version <strong>'+RB_VER.v+'</strong> · update '+RB_VER.n+' since 11 Oct 2026 · last updated '+esc(RB_VER.at)+'</p>'+
   '<label class="fld"><span>New password</span><input id="sb-newpass" type="password" autocomplete="new-password" placeholder=" "></label><div class="row"><button class="btn" data-act="setPass">Change password</button> <button class="btn danger" data-act="signOut">Sign out</button></div></div>'};
 GH.adminPanels=()=>GH.me().role==='admin'?GH.staffPanel()+GH.portalPanel():'';
@@ -3231,7 +3231,7 @@ scan();
     GH.actDraw()}catch(e){el.innerHTML='<div class="tm-empty">Could not load the activity log.</div>'}};
   document.addEventListener('change',e=>{if(e.target&&/^act-(who|what|day)$/.test(e.target.id))GH.actDraw()});
   document.head.insertAdjacentHTML('beforeend','<style>.act-row{grid-template-columns:minmax(0,1fr)!important}.act-row .tm-who b{font-weight:600}</style>');
-  const ap=GH.adminPanels;GH.adminPanels=()=>{const h=ap();return h?h+GH.actPanel():h};
+  /* Activity panel removed from Settings at Lillian's request (11 Nov 2026, 8:05 pm); logging and "last active" stay. */
 })();
 </script>
 </body>
