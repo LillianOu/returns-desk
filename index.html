@@ -1981,7 +1981,7 @@ Object.assign(ACT,{
   signOut:(v,b)=>twice(b,()=>GH.signOut())
 });
 /* App version. Bump on EVERY update to this file: v = '2.' + updates since the Supabase move (17 Oct 2026); n = all updates since day one (11 Oct 2026). v1 = the GitHub-only Return Desk (31 updates, 11-16 Oct). */
-const RB_VER={v:'2.85',n:116,at:'11 Nov 2026, 8:20 pm'};
+const RB_VER={v:'2.86',n:117,at:'11 Nov 2026, 8:18 pm'};
 GH.panel=()=>{const m=GH.me(),role=m.role==='admin'?'Admin':m.role==='viewer'?'Client':'Staff';return'<div class="panel"><h3>Your account</h3><p class="note">Signed in as <strong>'+esc(m.email)+'</strong> · '+role+(m.initials?' · initials <strong>'+esc(m.initials)+'</strong> on the returns you log':'')+'.<br>Everything saves automatically and shows on your other devices within seconds.</p>'+'<p class="note rb-ver">App version <strong>'+RB_VER.v+'</strong> · update '+RB_VER.n+' since 11 Oct 2026 · last updated '+esc(RB_VER.at)+'</p>'+
   '<label class="fld"><span>New password</span><input id="sb-newpass" type="password" autocomplete="new-password" placeholder=" "></label><div class="row"><button class="btn" data-act="setPass">Change password</button> <button class="btn danger" data-act="signOut">Sign out</button></div></div>'};
 GH.adminPanels=()=>GH.me().role==='admin'?GH.staffPanel()+GH.portalPanel():'';
@@ -3216,8 +3216,8 @@ scan();
     const sum=[nOpen?nOpen+(nOpen===1?' visit':' visits'):'',nDl?nDl+(nDl===1?' download':' downloads'):'',nAd?nAd+(nAd===1?' change':' changes'):''].filter(Boolean).join(' · ');
     const list=acts.length?'<details class="tm-acts"><summary>Activity · '+esc(sum)+'</summary><ul>'+acts.slice(0,15).map(x=>'<li><span>'+esc(actLine(x))+'</span><small>'+esc(when(x.at)+(x.device?' · '+x.device:''))+'</small></li>').join('')+'</ul></details>':
       (u.last_sign_in?'<p class="tm-noact">No activity since 11 Nov 2026 3:50 pm. It shows here the next time they open the app.</p>':'');
-    return'<div class="tm-row"><div class="tm-who"><b>'+esc(u.email)+(you?' (you)':'')+'</b><small>'+esc(sub)+esc(seen)+esc(a?dv:'')+'</small></div>'+GH.teamPill(u.last_sign_in,a)+
-    '<div class="tm-act">'+(you?'':'<button class="btn" data-act="teamResend" data-v="'+esc(u.email)+'">'+(u.last_sign_in?'Reset password':'Resend')+'</button><button class="btn danger" data-act="teamRemove" data-v="'+esc(kind+'|'+u.email)+'">Remove</button>')+'</div>'+list+'</div>'};
+    return'<div class="tm-row"><div class="tm-who"><b>'+esc(u.email)+(you?' (you)':'')+'</b><small>'+esc(sub)+esc(seen)+'</small></div>'+GH.teamPill(u.last_sign_in,a)+
+    '<div class="tm-act">'+(you?'':'<button class="btn" data-act="teamResend" data-v="'+esc(u.email)+'">'+(u.last_sign_in?'Reset password':'Resend')+'</button><button class="btn danger" data-act="teamRemove" data-v="'+esc(kind+'|'+u.email)+'">Remove</button>')+'</div></div>'};
   const tl=GH.teamList;
   GH.teamList=async()=>{try{const [r,q]=await Promise.all([GH.sb.rpc('team_last_active'),GH.sb.rpc('activity_list',{p_limit:2000})]);
       if(!r.error){GH.lastActive={};(r.data||[]).forEach(x=>{if(x.email)GH.lastActive[x.email.toLowerCase()]=x.last_active})}
